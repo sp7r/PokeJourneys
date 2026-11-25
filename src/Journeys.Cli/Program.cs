@@ -261,7 +261,7 @@ public static class Program
     {
         var journeyId = a.Required("journey");
         var library = JourneyLibrary.Load(paths);
-        library.Journey(journeyId);
+        library.Shared(journeyId);
         var slot = ReadSlot(a);
         var entry = Vault.Open(paths).Deposit(new DiskSaveStore(paths, library), journeyId, slot);
         o.WriteLine($"{entry.Summary} is in the vault (id {entry.Id}).");
@@ -281,8 +281,8 @@ public static class Program
         var slot = ReadSlot(a);
         var to = a.Required("journey to move it to");
         var library = JourneyLibrary.Load(paths);
-        library.Journey(from);
-        library.Journey(to);
+        library.Shared(from);
+        library.Shared(to);
         var saves = new DiskSaveStore(paths, library);
         var target = Vault.Open(paths).Move(saves, from, slot, to);
         o.WriteLine($"Moved from {from}, {slot} to {to}, {target}.");
@@ -364,7 +364,7 @@ public static class Program
         var entry = vault.Find(a.Required("vault id"));
         var journeyId = a.Required("journey");
         var library = JourneyLibrary.Load(paths);
-        library.Journey(journeyId);
+        library.Shared(journeyId);
         var slot = vault.Withdraw(new DiskSaveStore(paths, library), journeyId, entry);
         o.WriteLine($"{entry.Summary} is in {journeyId}, {slot}.");
         return 0;

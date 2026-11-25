@@ -63,7 +63,7 @@ internal object IntroSkipDs {
         val session = armed ?: return keys
         if (keys != 0) session.bootFrames = BOOT_TIMEOUT
         if (session.bootFrames >= BOOT_TIMEOUT) return keys
-        return if (session.bootFrames++ % 32 < 3) MgbaCore.Key.START or MgbaCore.Key.A else 0
+        return if (session.bootFrames++ % 32 < 3) com.pokedaisy.app.companion.data.CoreKey.START or com.pokedaisy.app.companion.data.CoreKey.A else 0
     }
 
     fun frame(calls: GameCalls) {

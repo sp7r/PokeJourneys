@@ -93,8 +93,8 @@ android {
         targetSdk = 34
         // Bump both for every GitHub release: the updater compares versionName
         // against the release tag (v<versionName>), Android needs versionCode to grow.
-        versionCode = 22
-        versionName = "1.6.1"
+        versionCode = 24
+        versionName = "1.7.1"
         // Whether this build can send crash reports at all (CrashReports.available).
         buildConfigField("boolean", "CRASHLYTICS", crashlytics.toString())
         buildConfigField("String", "SCREENSCRAPER_DEV_ID", "\"${buildSecret("screenscraper.devId", "SCREENSCRAPER_DEV_ID")}\"")
@@ -473,10 +473,6 @@ android.sourceSets["main"].assets.srcDir(hubAssetsDir)
 // The hub's .godot folder: the default pattern skips every name starting with a dot.
 android.androidResources.ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
 tasks.named("preBuild") { dependsOn(hubAssets) }
-// The Godot library and the Kotlin 2.1 standard library it brings are newer than this app's Kotlin 1.9 compiler reads.
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
-}
 // Discord sign-in (journeys/DiscordSignIn.kt): the Discord application's client id, discord.clientId in
 // local.properties or DISCORD_CLIENT_ID. Without one the hub has no sign-in screen. The redirect's scheme is
 // discord-<client id>, as Discord asks of mobile apps.

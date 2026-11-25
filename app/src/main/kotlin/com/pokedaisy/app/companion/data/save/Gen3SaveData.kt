@@ -121,7 +121,7 @@ class Gen3SaveData(
 
     fun mon(at: BoxSlot): Gen3BoxMon = Gen3BoxMon.read(storage, recordOff(at))
 
-    internal fun eventFlag(id: Int): Boolean =
+    fun eventFlag(id: Int): Boolean =
         (saveBlock1[format.flagsOff + id / 8].toInt() shr (id % 8)) and 1 == 1
 
     /** The Pokémon at [at] (null past the party), and its level: the party's level byte, a box record's from its EXP. */
@@ -264,7 +264,10 @@ class Gen3SaveEditor(val file: Gen3SaveFile) : MonSaveEditor, TrainerBagEditor {
 
     fun flag(id: Int): Boolean = data.eventFlag(id)
 
-    internal fun setEventFlag(id: Int, enabled: Boolean) {
+    private fun setFlag(id: Int) = setEventFlag(id, true)
+
+    /** PokeJourneys: the Vault's DEBUG page sets and clears event flags. */
+    fun setEventFlag(id: Int, enabled: Boolean) {
         require(id in 1 until f.eventFlagCount)
         val o = f.flagsOff + id / 8
         val mask = 1 shl (id % 8)

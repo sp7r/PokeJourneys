@@ -779,7 +779,9 @@ class SaveEditorActivity : ComponentActivity() {
                 com.pokedaisy.app.companion.ui.CollectionScreen(
                     p.state, m, onBack = { finish() },
                     icons = { i -> collectionOpened.getOrNull(i)?.let { icons[it.rom.absolutePath] } },
-                    onOpen = { collectionOpen(it) }, onTrade = { collectionTrade(it) }, onPalPark = { collectionPalPark(it) },
+                    /* PokeJourneys: COLLECTION only lists Pokémon; moving them is the Vault's. */
+                    onOpen = { if (JourneyRules.SAVE_TOOLS) collectionOpen(it) }, onTrade = { if (JourneyRules.SAVE_TOOLS) collectionTrade(it) },
+                    onPalPark = { if (JourneyRules.SAVE_TOOLS) collectionPalPark(it) },
                 )
             }
             is Page.Transfer -> {

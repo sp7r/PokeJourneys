@@ -2,7 +2,7 @@ package com.pokedaisy.app.journeys
 
 import android.content.Context
 import android.util.AtomicFile
-import com.pokedaisy.app.RomCategory
+import com.pokedaisy.app.companion.data.RomCategory
 import com.pokedaisy.app.RomIdentity
 import org.json.JSONArray
 import org.json.JSONObject

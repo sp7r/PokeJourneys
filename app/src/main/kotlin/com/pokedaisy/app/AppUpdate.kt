@@ -178,7 +178,7 @@ class AppUpdateFlow(private val activity: ComponentActivity, val required: Boole
         launchInstaller(apk)
     }
 
-    private fun apkName(r: AppUpdater.Release) = "PokeDaisy-${r.version}.apk"
+    private fun apkName(r: AppUpdater.Release) = "PokeJourneys-${r.version}.apk"
 
     private fun launchInstaller(apk: File) {
         val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.updates", apk)

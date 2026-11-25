@@ -40,6 +40,31 @@ internal object FollowerPackArt {
         return folders.firstNotNullOfOrNull { folder -> decode(read(context, folder, "$name.png")) }
     }
 
+    /**
+     * [species]'s sheet for a GBA journey's FOLLOWER (FollowerGba): its frame size and sixteen frames at one pixel each,
+     * in the pack's order (down, left, right, up; four steps each). Null when the pack lacks it.
+     */
+    fun frames(context: Context, species: Int): Pair<Int, List<IntArray>>? {
+        val name = sheetNames[species] ?: JourneysBridge.run(context, "follower-sprite", species.toString())
+            .takeIf { it.ok && spriteName.matches(it.output) }?.output?.also { sheetNames[species] = it } ?: return null
+        val png = read(context, NORMAL, "$name.png") ?: return null
+        val bitmap = BitmapFactory.decodeByteArray(png, 0, png.size) ?: return null
+        val size = bitmap.width
+        val pixels = IntArray(size * size)
+        try {
+            if (size !in 128..512 || bitmap.height != size || size % (GRID * SOURCE_PIXEL) != 0) return null
+            bitmap.getPixels(pixels, 0, size, 0, 0, size, size)
+        } finally {
+            bitmap.recycle()
+        }
+        val cell = size / GRID
+        val frame = cell / SOURCE_PIXEL
+        return frame to List(GRID * GRID) { index ->
+            val row = index / GRID; val column = index % GRID
+            IntArray(frame * frame) { i -> pixels[(row * cell + (i / frame) * SOURCE_PIXEL) * size + column * cell + (i % frame) * SOURCE_PIXEL] }
+        }
+    }
+
     /** One sheet's PNG: the local pack's file, else the bundled one. */
     private fun read(context: Context, folder: String, file: String): ByteArray? {
         val local = File(File(File(HubActivity.dataDir(context), "followers"), folder), file)

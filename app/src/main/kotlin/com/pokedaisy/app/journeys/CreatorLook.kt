@@ -29,16 +29,23 @@ import java.io.File
  */
 object CreatorLook {
     /** The pick's name in [com.pokedaisy.app.Prefs.playerLookFor]. */
-    const val PICK = "CREATOR"
+    const val PICK = com.pokedaisy.app.companion.JourneyHooks.CREATOR_PICK
 
     /** The picker tile's name and where it comes from (as a hero's tile says its game). */
     const val LABEL = "YOU"
-    const val SOURCE = "CREATOR"
+    const val SOURCE = com.pokedaisy.app.companion.JourneyHooks.CREATOR_SOURCE
 
     /** The running game wears the creator's look now (Compose state): the companion's MAP head ([HEAD], RomArt's
      * `regionmap/` like a hero's) and CARD picture ([frontPic]) follow it, as they do PlayerLook.worn. */
-    val worn = androidx.compose.runtime.mutableStateOf(false)
-    const val HEAD = "player_creator"
+    val worn = com.pokedaisy.app.companion.JourneyHooks.creatorWorn
+
+    /** Process start (PokeDaisyApp): the companion's screens reach the look through JourneyHooks. */
+    fun hook(context: Context) {
+        val app = context.applicationContext
+        com.pokedaisy.app.companion.JourneyHooks.creatorFrontPic = { frontPic(app.filesDir) }
+        com.pokedaisy.app.companion.JourneyHooks.creatorWalk = { walk(app) }
+    }
+    const val HEAD = com.pokedaisy.app.companion.JourneyHooks.CREATOR_HEAD
 
     private fun lookDir(filesDir: File) = File(com.pokedaisy.app.companion.data.LookArt.dir(filesDir), "creator")
 

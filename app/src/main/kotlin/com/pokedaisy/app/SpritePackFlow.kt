@@ -149,7 +149,7 @@ private fun spritePackLines(step: SpritePackFlow.Step): List<String> = when (ste
                 if (r.mons > 0) add(tr("Pokémon to follow you or dress up as: {0}", r.mons))
                 add(tr("Pick them in a game's SETTINGS > MAKEOVER."))
             }
-            if (r.refused > 0) add(tr("{0} files in it aren't graphics PokeDaisy knows, so they were left out.", r.refused))
+            if (r.refused > 0) add(tr("{0} files in it aren't graphics PokeJourneys knows, so they were left out.", r.refused))
         }
     }
 }

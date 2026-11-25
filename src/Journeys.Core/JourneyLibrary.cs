@@ -49,6 +49,16 @@ public sealed class JourneyLibrary
 
     public void Save(JourneysPaths paths) => JsonFile.Write(paths.LibraryFile, this);
 
+    /// A journey whose Pokémon can go to the Vault and on to other journeys: an official one. Any other (a ROM hack,
+    /// an unknown or unsupported dump) keeps what it has to itself.
+    public JourneyEntry Shared(string id)
+    {
+        var journey = Journey(id);
+        if (journey.Kind != JourneyKind.Official)
+            throw new JourneysException($"{journey.Title ?? id} stays apart: its Pokémon and items stay in that game and don't go to the Vault.");
+        return journey;
+    }
+
     public JourneyEntry Journey(string id) =>
         Journeys.TryGetValue(id, out var journey)
             ? journey

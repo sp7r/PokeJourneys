@@ -569,7 +569,7 @@ fun CompanionScreen(
                 }
                 if (onReturnToHub != null) {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                        com.pokedaisy.app.journeys.ReturnToHubButton { returnOpen = true }
+                        ReturnToHubButton { returnOpen = true }
                     }
                     Spacer(Modifier.height(4.dp))
                 }
@@ -1041,7 +1041,7 @@ fun CompanionScreen(
                 }
             }
             if (returnOpen && onReturnToHub != null) {
-                com.pokedaisy.app.journeys.ReturnToHubConfirm(
+                ReturnToHubConfirm(
                     onConfirm = {
                         returnOpen = false
                         onReturnToHub()

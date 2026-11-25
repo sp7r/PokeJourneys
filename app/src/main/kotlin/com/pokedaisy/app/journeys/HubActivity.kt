@@ -20,7 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.pokedaisy.app.DualScreenPresentation
 import com.pokedaisy.app.GameTitles
 import com.pokedaisy.app.Prefs
-import com.pokedaisy.app.RomCategory
+import com.pokedaisy.app.companion.data.RomCategory
 import com.pokedaisy.app.RomIdentity
 import com.pokedaisy.app.RomFolder
 import com.pokedaisy.app.Screens
@@ -94,6 +94,8 @@ class HubActivity : GodotActivity() {
                 if ((answer.exceptionOrNull() as? JourneyServer.Failure)?.status == 426) UpdateRequiredActivity.open(hub)
                 // The server's wallet and bag win: bring them onto the phone each time the island connects.
                 if (answer.getOrNull() != null) runCatching { ServerWallet.refresh(hub) }
+                // The character from the account (HubCharacter): a new install skips the creator.
+                if (answer.getOrNull() != null) runCatching { HubCharacter.sync(hub) }
                 // The bottom screen's card waits for this: signed in, and the trainer fetched from the server.
                 val waiting = when {
                     answer.getOrNull() != null -> ""
@@ -125,6 +127,12 @@ class HubActivity : GodotActivity() {
         }
 
         // Discord sign-in (DiscordSignIn.kt, the hub's signin.gd).
+
+        /** The creator saved the look (character.gd): the server keeps it with the account. */
+        @UsedByGodot
+        fun character_saved() {
+            thread(name = "pokejourneys-character") { runCatching { HubCharacter.upload(hub) } }
+        }
 
         @UsedByGodot
         fun sign_in_available(): Boolean = DiscordSignIn.available()
@@ -483,12 +491,12 @@ class HubActivity : GodotActivity() {
                         RomCategory.NDS -> if (RomIdentity.ndsGameCode(rom)?.take(3) in setOf("IRB", "IRA", "IRE", "IRD")) 5 else 4
                         else -> 3
                     }
-                    val variant = GameTitles.isKnownDsVariant(context, rom)
+                    // A supported game is listed by its plain name (no variant or revision); the rest go under OTHER.
+                    val shared = JourneyIds.shared(context, rom)
                     val label = GameTitles.label(context, prefs, rom)
-                    val name = if (variant && !label.endsWith(JourneyDsCatalog.VARIANT_SUFFIX)) label + JourneyDsCatalog.VARIANT_SUFFIX else label
+                    val name = if (shared) label.removeSuffix(JourneyDsCatalog.VARIANT_SUFFIX) else label
                     list.put(JSONObject().put("name", name).put("rom", rom.absolutePath)
-                        .put("generation", generation).put("official", GameTitles.isKnownRetail(context, rom))
-                        .put("variant", variant))
+                        .put("generation", generation).put("shared", shared))
                 }
                 val json = AtomicFile(File(dataDir(context), "journeys.json"))
                 val output = json.startWrite()

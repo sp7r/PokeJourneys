@@ -233,14 +233,14 @@ object NdsArt {
     }
 
     /** Carts on Platinum's files: USA rev 1, France rev 0, the Platinum language ports. */
-    internal fun isPlatinum(code: String, rev: Int) =
+    fun isPlatinum(code: String, rev: Int) =
         code == "CPUE" && rev == 1 || code == "CPUF" && rev == 0 || portIs(code, rev, GameKind.PLATINUM)
 
     /** English Diamond / Pearl (any revision): the save editor's only (their text banks, read off rev 5). */
     private fun isDiamondPearl(code: String) = code == "ADAE" || code == "APAE"
 
     /** Carts on HeartGold / SoulSilver's files: USA, Germany and France, rev 0. */
-    internal fun isHgss(code: String, rev: Int) =
+    fun isHgss(code: String, rev: Int) =
         code in setOf("IPKE", "IPKD", "IPKF", "IPGE", "IPGD", "IPGF") && rev == 0 || DsPorts.of(code, rev)?.kind.isHgss
 
     /** A language port running as [kind] ([NDS_PORTS]). */
@@ -1102,10 +1102,10 @@ object NdsArt {
     }
 
     /** A Gen 5 front picture's OAM blocks in the order its tiles come: x, y, width, height. */
-    internal val BLACK_FRONT_BLOCKS = listOf(listOf(0, 0, 64, 64), listOf(64, 0, 32, 64), listOf(0, 64, 64, 32), listOf(64, 64, 32, 32))
+    val BLACK_FRONT_BLOCKS = listOf(listOf(0, 0, 64, 64), listOf(64, 0, 32, 64), listOf(0, 64, 64, 32), listOf(64, 64, 32, 32))
 
     /** An NCGR's tile bytes (its RAHC block's data). */
-    internal fun ncgrData(ncgr: ByteArray?): ByteArray? {
+    fun ncgrData(ncgr: ByteArray?): ByteArray? {
         ncgr ?: return null
         val o = indexOf(ncgr, "RAHC") ?: return null
         val size = u32(ncgr, o + 0x18).toInt()
@@ -1114,7 +1114,7 @@ object NdsArt {
     }
 
     /** One 4bpp 8x8 tile's pixel ([x], [y]) colour index. */
-    internal fun tilePixel(tiles: ByteArray, tile: Int, x: Int, y: Int): Int {
+    fun tilePixel(tiles: ByteArray, tile: Int, x: Int, y: Int): Int {
         val i = tile * 32 + y * 4 + x / 2
         if (i !in tiles.indices) return 0
         val b = u8(tiles, i)
@@ -1198,9 +1198,9 @@ object NdsArt {
 
     private fun FileHandle.read(off: Long, len: Int): ByteArray = readFully(off, len)
 
-    internal fun u8(b: ByteArray, o: Int) = b[o].toInt() and 0xFF
-    internal fun u16(b: ByteArray, o: Int) = u8(b, o) or (u8(b, o + 1) shl 8)
-    internal fun u32(b: ByteArray, o: Int) = (u16(b, o).toLong() or (u16(b, o + 2).toLong() shl 16))
+    fun u8(b: ByteArray, o: Int) = b[o].toInt() and 0xFF
+    fun u16(b: ByteArray, o: Int) = u8(b, o) or (u8(b, o + 1) shl 8)
+    fun u32(b: ByteArray, o: Int) = (u16(b, o).toLong() or (u16(b, o + 2).toLong() shl 16))
 
     /**
      * HeartGold / SoulSilver's Pokégear map (pgmap_gra, a/1/4/4): its pieces raw, for [PokegearMap] to put together for the
@@ -1588,7 +1588,7 @@ object NdsArt {
 
     /** pokepic.c's UnscanPokepic_PtHGSS: the first 3200 u16s XORed in turn with an LCG (x 1103515245 + 24691) seeded by
      * the first one's own value, its low half each time. */
-    internal fun unscanPokepic(data: ByteArray): ByteArray {
+    fun unscanPokepic(data: ByteArray): ByteArray {
         val out = data.copyOf()
         var seed = u16(data, 0).toLong()
         for (i in 0 until 3200) {
@@ -1651,10 +1651,10 @@ object NdsArt {
     }
 
     /** A NARC's members: BTAF (start / end offsets), BTNF, then GMIF holding the bytes. */
-    internal class Narc(val d: ByteArray) {
+    class Narc(val d: ByteArray) {
         private val count: Int
-        internal val fat: Int
-        internal val base: Int
+        val fat: Int
+        val base: Int
 
         init {
             require(asciiString(d, 0, 4) == "NARC") { "not a NARC" }
@@ -1677,7 +1677,7 @@ object NdsArt {
     }
 
     /** An NCLR's palettes: TTLP's 16-colour BGR555 rows, as ARGB. */
-    internal fun palettes(nclr: ByteArray?): List<IntArray> {
+    fun palettes(nclr: ByteArray?): List<IntArray> {
         nclr ?: return emptyList()
         val o = indexOf(nclr, "TTLP") ?: return emptyList()
         val data = o + 0x18

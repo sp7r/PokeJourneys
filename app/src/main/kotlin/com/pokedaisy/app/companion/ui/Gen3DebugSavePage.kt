@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.pokedaisy.app.companion.data.save.Gen3SaveFormat
 import com.pokedaisy.app.companion.data.save.eventFlagCount
-import com.pokedaisy.app.companion.data.save.speciesNationalDex
 import com.pokedaisy.app.companion.data.speciesNames
 import com.pokedaisy.app.companion.i18n.tr
 import kotlinx.coroutines.CancellationException
@@ -48,9 +47,9 @@ private fun Gen3SaveFormat.storyFlags(): List<Pair<Int, String>> = when (this) {
 }
 
 private val debugSpecies by lazy {
-    speciesNationalDex.mapIndexed { gameSpecies, national ->
-        speciesNames[gameSpecies]?.takeIf { national in 1..386 }?.let { national to it }
-    }.filterNotNull().sortedBy { it.first }
+    (1 until com.pokedaisy.app.companion.data.save.SPECIES_EGG).mapNotNull { gameSpecies ->
+        com.pokedaisy.app.companion.data.save.Gen3Species.nationalDex(gameSpecies)?.let { national -> speciesNames[gameSpecies]?.let { national to it } }
+    }.sortedBy { it.first }
 }
 
 @Composable

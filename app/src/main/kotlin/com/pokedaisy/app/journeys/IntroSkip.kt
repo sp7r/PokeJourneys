@@ -97,7 +97,7 @@ object IntroSkip {
         val a = armed ?: return keys
         if (keys != 0) a.bootFrames = BOOT_TIMEOUT
         if (a.bootFrames >= BOOT_TIMEOUT) return keys
-        return if (a.bootFrames++ % 32 == 0) MgbaCore.Key.START or MgbaCore.Key.A else 0
+        return if (a.bootFrames++ % 32 == 0) com.pokedaisy.app.companion.data.CoreKey.START or com.pokedaisy.app.companion.data.CoreKey.A else 0
     }
 
     /** Gen 3's text: A-Z 0xBB.., a-z 0xD5.., 0-9 0xA1.., space 0; up to 7, ended by 0xFF. Null if nothing's left. */

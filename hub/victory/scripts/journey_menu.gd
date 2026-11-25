@@ -83,7 +83,7 @@ func _load_legacy(root: String, dir: String) -> void:
 		_glyphs[g.id] = g
 
 func _setup_screens() -> void:
-	for generation in [1, 2, 3, 4, 5, 0]:
+	for generation in [1, 2, 3, 4, 5, 6, 7, 0]:
 		if journeys.any(func(j): return _picker_generation(j) == generation): _groups.append(generation)
 	if Engine.has_singleton("PokeJourneys"):
 		_plugin = Engine.get_singleton("PokeJourneys")
@@ -183,10 +183,10 @@ func _bar(screen: Control, rect: Rect2, active := false) -> void:
 	screen.draw_style_box(style, rect)
 
 func _title() -> String:
-	return "ROM hacks" if _group == 0 else "Gen %d - games" % _group
+	return "Other" if _group == 0 else "Gen %d - games" % _group
 
 func _labels() -> Array:
-	if _page == 0: return _groups.map(func(g): return "ROM hacks" if g == 0 else "Gen %d" % g)
+	if _page == 0: return _groups.map(func(g): return "Other" if g == 0 else "Gen %d" % g)
 	if _page == 1: return _games.map(func(j): return String(j.get("name", "Journey")))
 	return ["SAIL", "BACK"]
 
@@ -216,27 +216,31 @@ func _draw_screen(screen: Control, list: bool) -> void:
 	else:
 		_bar(screen, Rect2(8, 36, 240, 124))
 		var game: Dictionary = _chosen if _page == 2 else (_games[_row] if _page == 1 else {})
-		if game.is_empty():
+		var other: bool = (_page == 0 and not _groups.is_empty() and _groups[_row] == 0) or (not game.is_empty() and _picker_generation(game) == 0)
+		if game.is_empty() and not other:
 			_text(screen, "Choose a generation, then a game to set sail.", Vector2(22, 44), 208, true)
+		elif other:
+			# OTHER: hacks and games the companion doesn't fully support keep what they earn to themselves.
+			_text(screen, String(game.get("name", "Other games")), Vector2(22, 44), 208)
+			_text(screen, OTHER_NOTE, Vector2(22, 66), 208, true)
 		else:
 			_text(screen, String(game.get("name", "Journey")), Vector2(22, 44), 208, true)
-			var gen := int(game.get("generation", 0))
-			_text(screen, "Generation %d" % gen if gen > 0 else "ROM hack", Vector2(22, 104))
+			_text(screen, "Generation %d" % int(game.get("generation", 0)), Vector2(22, 104))
 			_text(screen, _region(game), Vector2(22, 126))
 		_text(screen, "A selects / B goes back", Vector2(18, 172))
 
+const OTHER_NOTE := "Full companion support may not be available. Pokémon, items and progress stay in this game only."
+
 func _region(game: Dictionary) -> String:
-	if _picker_generation(game) == 0: return "Region: ROM hack"
 	var name := String(game.get("name", "")).to_lower()
 	if "heartgold" in name or "soulsilver" in name: return "Johto / Kanto"
 	if "firered" in name or "leafgreen" in name: return "Kanto"
 	return {1:"Kanto", 2:"Johto / Kanto", 3:"Hoenn", 4:"Sinnoh", 5:"Unova"}.get(int(game.get("generation", 0)), "Region unknown")
 
 func _picker_generation(game: Dictionary) -> int:
+	# A supported game (journeys.json's "shared": HubActivity.writeJourneys) under its generation; the rest are Other.
 	var generation := int(game.get("generation", 0))
-	if (game.get("official", false) or game.get("variant", false)) and generation in range(1, 6):
-		return generation
-	return 0
+	return generation if game.get("shared", false) and generation in range(1, 8) else 0
 
 func _refresh() -> void:
 	_scroll = 0.0

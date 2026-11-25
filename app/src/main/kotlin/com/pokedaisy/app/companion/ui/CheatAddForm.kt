@@ -76,7 +76,7 @@ fun CheatAddForm(m: GbaTextMetrics, small: GbaTextMetrics, ds: Boolean, nextNumb
 fun cheatImportNotice(r: CheatStore.Import?): Pair<String, String> = when {
     r == null -> tk("CAN'T READ THAT FILE") to tr("Pick a RetroArch .cht or an mGBA .cheats file.")
     r.added == 0 && r.badCheats == 0 && r.duplicates == 0 ->
-        tk("NO CHEATS FOUND") to tr("That file has no cheats in a format PokeDaisy reads (RetroArch .cht, mGBA .cheats).")
+        tk("NO CHEATS FOUND") to tr("That file has no cheats in a format PokeJourneys reads (RetroArch .cht, mGBA .cheats).")
     else -> (if (r.added == 0) tk("NO CHEATS ADDED") else tr("{0} CHEATS ADDED", r.added)) to listOfNotNull(
         tr("They start OFF: tap one to turn it on.").takeIf { r.added > 0 },
         tr("{0} left out: mGBA can't read {1} of their code lines.", r.badCheats, r.badLines).takeIf { r.badCheats > 0 },

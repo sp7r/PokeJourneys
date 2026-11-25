@@ -102,7 +102,7 @@ class PcBoxesState(editor: MonSaveEditor) {
     var editing by mutableStateOf<Editing?>(null)
 
     /** PokeJourneys: the Vault's DEBUG page is making a Pokémon. */
-    internal var generatingPokemon by mutableStateOf(false)
+    var generatingPokemon by mutableStateOf(false)
 
     enum class Page { POKEMON, BAG, TRAINER, /* PokeJourneys: the Vault's debug generator. */ DEBUG }
     enum class DetailTab { INFO, STATS, MOVES }

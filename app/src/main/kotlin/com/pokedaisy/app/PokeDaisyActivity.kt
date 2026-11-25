@@ -1756,7 +1756,8 @@ class PokeDaisyActivity : Activity() {
         val on = Prefs(this).follower && followerSupported()
         val n = followerLead
         engine.follower = if (on && n != null) engine.follower?.takeIf { it.national == n }
-            ?: com.pokedaisy.app.companion.data.MonArt.load(filesDir.toOkioPath(), n) else null
+            ?: com.pokedaisy.app.companion.data.MonArt.load(filesDir.toOkioPath(), n)
+            ?: com.pokedaisy.app.journeys.FollowerGba.cached(n) else null
     }
 
     /** DAY AND NIGHT works here: a GBA game (not a Game Boy or DS one) that doesn't change with the time itself. */
@@ -2450,6 +2451,10 @@ class PokeDaisyActivity : Activity() {
                         runCatching { com.pokedaisy.app.companion.data.PokedexSource.nationalOf(tables, sp) }.getOrNull()
                     }
                 }?.takeIf { it in 1..com.pokedaisy.app.companion.data.MonArt.LAST }
+                // PokeJourneys: the hub's follower sheets where no hack's art was kept (journeys/FollowerGba.kt).
+                followerLead?.let { n -> kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    if (com.pokedaisy.app.companion.data.MonArt.load(filesDir.toOkioPath(), n) == null) runCatching { com.pokedaisy.app.journeys.FollowerGba.prepare(this@PokeDaisyActivity, n) }
+                } }
                 applyFollower()
             }
         }

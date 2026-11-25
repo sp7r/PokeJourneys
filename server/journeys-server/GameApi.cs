@@ -102,6 +102,26 @@ internal static class GameApi
             return Results.Ok(player);
         });
 
+        // The character from the hub's creator, kept with the account: a new install skips the creator.
+        api.MapGet("/character", (HttpContext context, Db db) =>
+        {
+            var look = db.Row("SELECT look FROM characters WHERE player_id = $id", ("id", PlayerId(context)))?["look"] as string;
+            return Results.Text("{\"look\":" + (look ?? "null") + "}", "application/json");
+        });
+        api.MapPost("/character", async (HttpContext context, Db db) =>
+        {
+            var body = await Body(context.Request, "look");
+            if (!body.TryGetProperty("look", out var look) || look.ValueKind != JsonValueKind.Object) throw new ApiError("look must be a JSON object.");
+            var text = look.GetRawText();
+            if (text.Length > 16384) throw new ApiError("look is over 16 KB.");
+            var id = PlayerId(context);
+            db.Write(() => db.Execute("""
+                INSERT INTO characters (player_id, look, updated) VALUES ($id, $look, $now)
+                ON CONFLICT(player_id) DO UPDATE SET look = excluded.look, updated = excluded.updated
+                """, ("id", id), ("look", text), ("now", Db.Now())));
+            return Results.Ok(new { saved = true });
+        });
+
         api.MapGet("/shop", (Db db) => Results.Ok(db.Rows("SELECT * FROM shop WHERE enabled = 1 ORDER BY item")));
         api.MapPost("/shop/buy", async (HttpContext context, Db db) =>
         {

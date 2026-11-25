@@ -1,4 +1,4 @@
-package com.pokedaisy.app.journeys
+package com.pokedaisy.app.companion.ui
 
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable

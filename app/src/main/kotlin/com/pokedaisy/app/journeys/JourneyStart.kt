@@ -3,7 +3,7 @@ package com.pokedaisy.app.journeys
 import android.content.Context
 import com.pokedaisy.app.GameTitles
 import com.pokedaisy.app.Prefs
-import com.pokedaisy.app.RomCategory
+import com.pokedaisy.app.companion.data.RomCategory
 import com.pokedaisy.app.RomCrcs
 import com.pokedaisy.app.RomIdentity
 import com.pokedaisy.app.SaveStates

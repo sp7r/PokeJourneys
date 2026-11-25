@@ -35,6 +35,10 @@ val sharedCoreSources by extra(
         "com/pokedaisy/app/Hotkeys.kt",
         "com/pokedaisy/app/ScriptInput.kt",
         "com/pokedaisy/app/companion/KeyCapture.kt",
+        // PokeJourneys: its rules, read by the shared screens too.
+        "com/pokedaisy/app/JourneyRules.kt",
+        // PokeJourneys: its rules, read by the shared screens too.
+        "com/pokedaisy/app/JourneyRules.kt",
     ),
 )
 // The companion's screens and what they need (shared-ui/build.gradle.kts), as paths under app/src/main/kotlin: the

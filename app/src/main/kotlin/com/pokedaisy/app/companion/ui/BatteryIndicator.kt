@@ -27,13 +27,16 @@ private val BatteryCharging = Color(0xFF20A040)
  * reading ([DeviceBattery]).
  */
 @Composable
-fun BatteryIndicator(m: GbaTextMetrics, modifier: Modifier = Modifier, status: BatteryStatus? = null) {
+fun BatteryIndicator(m: GbaTextMetrics, modifier: Modifier = Modifier, status: BatteryStatus? = null, onHeader: Boolean = false) {
     val live by DeviceBattery.status.collectAsState()
     val b = status ?: live ?: return
+    // PokeJourneys: [onHeader], in a title window, takes its colours (a MENU STYLE's header isn't white), so it reads on it.
+    val text = if (onHeader) OptionColors.headerText else OptionColors.titleText
+    val shadow = if (onHeader) OptionColors.headerShadow else OptionColors.titleShadow
     val fill = when {
         b.charging -> BatteryCharging
         b.percent <= 15 -> OptionColors.value
-        else -> OptionColors.titleText
+        else -> text
     }
     val art = batteryBitmap(b.percent)
     // One font pixel, so the body is as tall as the capitals (~9 font pixels).
@@ -41,11 +44,11 @@ fun BatteryIndicator(m: GbaTextMetrics, modifier: Modifier = Modifier, status: B
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         PixelArt(
             art,
-            mapOf('o' to OptionColors.titleText, 'f' to fill, 's' to OptionColors.titleShadow),
+            mapOf('o' to text, 'f' to fill, 's' to shadow),
             Modifier.size(cell * art[0].length, cell * art.size),
         )
         Spacer(Modifier.width(cell * 3))
-        GbaText("${b.percent}%", OptionColors.titleText, OptionColors.titleShadow, m)
+        GbaText("${b.percent}%", text, shadow, m)
     }
 }
 

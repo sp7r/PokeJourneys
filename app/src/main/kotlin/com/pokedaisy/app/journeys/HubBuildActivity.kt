@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
 import com.pokedaisy.app.Prefs
 import java.io.File
 import kotlin.concurrent.thread
@@ -20,7 +21,6 @@ import kotlin.concurrent.thread
  */
 class HubBuildActivity : ComponentActivity() {
 
-    private lateinit var screen: FireRedScreen
     private lateinit var setup: HubSetup
     @Volatile private var running = false
 
@@ -28,14 +28,17 @@ class HubBuildActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // a sleeping screen would let Android pause the build
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        screen = FireRedScreen(this, File(HubActivity.dataDir(this), "ui/firered"))
-        setContentView(screen)
-        setup = HubSetup(this, screen, ::start)
+        setup = HubSetup(this, ::start)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (setup.active) setup.back() else if (!running) finish()
-            }
+            override fun handleOnBackPressed() { if (!running) finish() }
         })
+        setContent {
+            com.pokedaisy.app.companion.ui.theme.AppTheme {
+                val m = com.pokedaisy.app.companion.ui.rememberGbaTextMetrics()
+                val small = com.pokedaisy.app.companion.ui.rememberGbaTextMetrics(textScale = 1f)
+                HubSetupScreen(setup, m, small) { if (!running) finish() }
+            }
+        }
         setup.show(savedInstanceState)
     }
 
@@ -51,40 +54,27 @@ class HubBuildActivity : ComponentActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (setup.active && setup.handlesKey(keyCode)) return true
-        return super.onKeyDown(keyCode, event)
-    }
-
-    // A, Start or Enter answer the blinking arrow, as a tap does
+    // A builds (or chooses the ROM folder when one is missing), Y the ROM folder, X checks again; B is back.
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (setup.onKeyUp(keyCode)) return true
-        if (keyCode in listOf(KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER)) {
-            screen.answer(); return true
-        }
+        if (!running && setup.onKeyUp(keyCode)) return true
         return super.onKeyUp(keyCode, event)
     }
 
     private fun start(roms: Map<String, File>) {
         if (running) return
         val prefs = Prefs(this)
-        screen.title = "Building Victory Island"; screen.lines = emptyList(); screen.progress = null; screen.onA = null
-        screen.message = "Looking for your cartridges…"
+        setup.page = HubSetup.Page.Building(step = "Getting ready…")
         running = true
         thread(name = "pokejourneys-hub-build") {
             // the hub's trainer card is drawn from PokeDaisy's FireRed art, which is otherwise only scanned when FireRed is played
             com.pokedaisy.app.companion.data.RomArt.prefetch(filesDir, "hub-firered", roms.getValue("firered"))
-            runOnUiThread { screen.message = "This only happens once." }
             val ok = runCatching { build(roms) }.onFailure { Log.e(TAG, "hub build failed", it) }
             running = false
             runOnUiThread {
                 if (ok.getOrNull() == true && ready(this)) {
                     HubActivity.open(this, prefs); finish()
                 } else {
-                    screen.title = "The build stopped."; screen.progress = null
-                    screen.lines = listOf((ok.exceptionOrNull()?.message ?: lastLine).take(200))
-                    screen.message = "Something went wrong. Press A to try again."
-                    screen.onA = { setup.checkAgain() }
+                    setup.page = HubSetup.Page.Failed((ok.exceptionOrNull()?.message ?: lastLine).take(200))
                 }
             }
         }
@@ -142,9 +132,8 @@ class HubBuildActivity : ComponentActivity() {
             if (step != null) {
                 val (i, n, name) = step.destructured
                 runOnUiThread {
-                    screen.reload() // FireRed's own windows and font, once step 2 has made them
-                    screen.progress = (i.toInt() - 1) / n.toFloat()
-                    screen.lines = listOf((STEP_NAMES[name] ?: name) + "…", "Step $i of $n")
+                    val building = setup.page as? HubSetup.Page.Building ?: HubSetup.Page.Building()
+                    setup.page = building.copy(step = (STEP_NAMES[name] ?: name) + "…  Step $i of $n", progress = (i.toInt() - 1) / n.toFloat())
                     if (i == "1") showTips()
                 }
             }
@@ -152,14 +141,17 @@ class HubBuildActivity : ComponentActivity() {
         return process.waitFor() == 0
     }
 
-    /** A fun fact or trainer tip in the message box, a new one every few seconds while the build runs. */
+    private val tipHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    /** A fun fact or trainer tip under the progress, a new one every few seconds while the build runs. */
     private fun showTips() {
         var next = TIPS.indices.random()
         val show = object : Runnable {
             override fun run() {
                 if (!running || isFinishing) return
-                screen.message = TIPS[next % TIPS.size]; next++
-                screen.postDelayed(this, 6000)
+                (setup.page as? HubSetup.Page.Building)?.let { setup.page = it.copy(tip = TIPS[next % TIPS.size]) }
+                next++
+                tipHandler.postDelayed(this, 6000)
             }
         }
         show.run()
@@ -183,7 +175,7 @@ class HubBuildActivity : ComponentActivity() {
             "island" to "Raising Victory Island", "frames" to "Waking up the townsfolk", "rooms-platinum" to "Furnishing Platinum's rooms",
             "rooms-heartgold" to "Furnishing HeartGold's rooms", "rooms-black2" to "Furnishing Black 2's rooms", "finish" to "Final touches"
         )
-        /** Short enough for the message box's two lines. */
+        /** One short line each, under the build's progress. */
         private val TIPS = listOf(
             "FireRed and LeafGreen remade the first Pokémon games in 2004.",
             "FireRed's Sevii Islands lie south of Kanto, past Cinnabar.",

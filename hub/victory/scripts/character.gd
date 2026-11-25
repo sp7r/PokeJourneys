@@ -64,7 +64,12 @@ static func save(look: Dictionary) -> bool:
 	if file == null: return false
 	file.store_string(JSON.stringify(look, "  "))
 	file.flush()
-	return file.get_error() == OK
+	var ok := file.get_error() == OK
+	file.close()
+	# The server keeps it with the account too (HubCharacter.kt), so a new install skips the creator.
+	if ok and Engine.has_singleton("PokeJourneys"):
+		Engine.get_singleton("PokeJourneys").character_saved()
+	return ok
 
 
 ## The parts for one slot and gender: [{name, colors: [{label, rel}]}], with "None" first for

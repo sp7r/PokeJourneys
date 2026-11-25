@@ -118,6 +118,9 @@ sealed class Db : IDisposable
         CREATE INDEX IF NOT EXISTS chat_from ON chat(from_player, id);
         CREATE INDEX IF NOT EXISTS chat_to ON chat(to_player, id) WHERE to_player IS NOT NULL;
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL CHECK(json_valid(value)));
+        CREATE TABLE IF NOT EXISTS characters (
+            player_id INTEGER PRIMARY KEY REFERENCES players(id), look TEXT NOT NULL CHECK(json_valid(look)), updated TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS releases (
             id INTEGER PRIMARY KEY AUTOINCREMENT, version TEXT NOT NULL UNIQUE,
             version_code INTEGER NOT NULL CHECK(version_code > 0), notes TEXT NOT NULL,

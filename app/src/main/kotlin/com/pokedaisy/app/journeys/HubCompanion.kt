@@ -310,7 +310,7 @@ object HubCompanion {
                 ?.let { receiver.onReceive(context, it) }
             onDispose { context.unregisterReceiver(receiver) }
         }
-        BatteryIndicator(m)
+        BatteryIndicator(m, onHeader = true)
     }
 
     /** One line of the trainer's facts: its [label], then its [value] in the settings' value colour. */

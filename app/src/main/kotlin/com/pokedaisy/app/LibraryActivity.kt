@@ -524,8 +524,9 @@ class LibraryActivity : ComponentActivity() {
         )
             .filter { /* PokeJourneys: hide the LINK PLAY tool card. */ JourneyRules.LINK_PLAY || it.id != "LINK" }
             .filter { /* PokeJourneys: no save editor, save trading or Pokémon moved outside the Vault. */ JourneyRules.SAVE_TOOLS || it.id !in JourneyRules.SAVE_TOOL_CARDS }
+            .filter { /* PokeJourneys: COLLECTION on its own rule. */ JourneyRules.COLLECTION || it.id != "COLLECTION" }
             .filter { /* PokeJourneys: no ROM patching. */ JourneyRules.ROM_PATCH || it.id != "PATCH" }
-            .filter { /* PokeJourneys: sprite packs are for MAKEOVER, which is off. */ JourneyRules.MAKEOVERS || it.id != "SPRITES" }
+            .filter { /* PokeJourneys: sprite packs on their own rule. */ JourneyRules.SPRITE_PACK || it.id != "SPRITES" }
     }
 
     /** Main thread: host metadata is cached once per game for the common projection. */

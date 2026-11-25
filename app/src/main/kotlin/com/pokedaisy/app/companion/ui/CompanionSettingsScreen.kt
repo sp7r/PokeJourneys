@@ -151,7 +151,7 @@ fun CompanionSettingsScreen(
                 OptionTitleWindow(page.title, titleM, trailing = trailing, joined = true, onBack = if (page != Page.HOME) ({ if (page != Page.HELP || !ui.docs.back()) page = page.parent }) else null) {
                     if (!statusBarShown && !application) {
                         Spacer(Modifier.width(titleM.u * 8))
-                        BatteryIndicator(titleM)
+                        BatteryIndicator(titleM, onHeader = true) // PokeJourneys: in the title window's colours
                     }
                 }
                 WindowGap(m)

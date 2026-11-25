@@ -7,7 +7,6 @@ import com.pokedaisy.app.companion.data.DsPorts
 import com.pokedaisy.app.companion.data.GameKind
 import com.pokedaisy.app.companion.data.Gen5Lz
 import com.pokedaisy.app.companion.data.NdsArt
-import com.pokedaisy.app.companion.data.NdsArt.read
 import com.pokedaisy.app.companion.data.NdsArt.u8
 import com.pokedaisy.app.companion.data.NdsArt.u16
 import com.pokedaisy.app.companion.data.NdsArt.u32
@@ -58,7 +57,7 @@ internal class DsBattleArt(private val filesDir: File, private val roms: () -> L
             if (source.game.lastSpecies == 493) gen4(narc, species, back, shiny) else gen5(narc, species, back, shiny)
         } ?: return null
         val png = image.png()
-        runCatching { NdsArt.write(root, path, png) }
+        runCatching { File(root, path).apply { parentFile?.mkdirs() }.let { out -> File(out.path + ".tmp").apply { writeBytes(png) }.renameTo(out) } }
         return png
     }
 
@@ -199,3 +198,5 @@ internal class DsBattleArt(private val filesDir: File, private val roms: () -> L
         }
     }
 }
+
+private fun RandomAccessFile.read(off: Long, len: Int): ByteArray = ByteArray(len).also { seek(off); readFully(it) }

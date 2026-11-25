@@ -85,8 +85,13 @@ public static class Collection
             JsonFile.Write(paths.DexFile, dex.ToList());
     }
 
-    public static CollectionView View(JourneysPaths paths) =>
-        new(Vault.Open(paths).Entries.ToList(), All(paths), Dex(paths));
+    /// The Vault and the official journeys' Pokémon: a ROM hack's or unsupported game's stay in that game.
+    public static CollectionView View(JourneysPaths paths)
+    {
+        var library = JourneyLibrary.Load(paths);
+        var shared = All(paths).Where(s => library.Journeys.TryGetValue(s.JourneyId, out var j) && j.Kind == JourneyKind.Official).ToList();
+        return new(Vault.Open(paths).Entries.ToList(), shared, Dex(paths));
+    }
 
     private static CollectedMon Describe(SlotRef slot, PKM pk)
     {

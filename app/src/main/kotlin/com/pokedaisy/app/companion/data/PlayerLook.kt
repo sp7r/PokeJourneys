@@ -516,7 +516,7 @@ object PlayerLook {
     }
 
     /** [frame]'s colour indices through [map]. */
-    internal fun remap(frame: ByteArray, map: IntArray): ByteArray =
+    fun remap(frame: ByteArray, map: IntArray): ByteArray =
         ByteArray(frame.size) { i -> val b = frame[i].toInt(); (map[b and 15] or (map[(b shr 4) and 15] shl 4)).toByte() }
 
     /** Writes merged into blocks that don't overlap (a later write wins), each with the CRC32 of the file under it. */
@@ -605,7 +605,7 @@ object PlayerLook {
 
     /** A reflection palette for a hero who has none (Ruby / Sapphire's): [pal] washed toward the water, like the
      * other games' hand-made ones. */
-    internal fun reflect(pal: ByteArray): ByteArray = ByteArray(32).also { out ->
+    fun reflect(pal: ByteArray): ByteArray = ByteArray(32).also { out ->
         for (i in 0 until 16) {
             val c = (pal[i * 2].toInt() and 0xFF) or ((pal[i * 2 + 1].toInt() and 0xFF) shl 8)
             val r = ((c and 31) * 3 + 25 * 2) / 5

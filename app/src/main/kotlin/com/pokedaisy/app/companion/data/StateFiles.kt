@@ -23,8 +23,10 @@ class StateFiles(val directory: Path, private val extraSidecars: List<String> = 
     val freshBootFile get() = directory / "boot_fresh"
 
     fun exists(slot: Int) = present(stateFile(slot))
-    fun latestResumeSource(): Path? = (listOf(resumeFile) + (0..9).map(::stateFile))
-        .filter(::present).maxByOrNull { it.lastModified }
+    fun latestResumeSource(): Path? =
+        // PokeJourneys: resume never falls back to a manual slot.
+        if (!com.pokedaisy.app.JourneyRules.SAVE_STATE_SLOTS) resumeFile.takeIf(::present)
+        else (listOf(resumeFile) + (0..9).map(::stateFile)).filter(::present).maxByOrNull { it.lastModified }
 
     /** A failed/partial native write never replaces a usable slot or its undo copy. */
     fun saveSlot(slot: Int, writer: (Path) -> Boolean, thumbnail: ByteArray? = null, snapshot: ByteArray? = null): Boolean =

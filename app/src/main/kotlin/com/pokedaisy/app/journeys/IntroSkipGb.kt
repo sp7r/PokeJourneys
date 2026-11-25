@@ -30,7 +30,7 @@ internal object IntroSkipGb {
         val current = session ?: return keys
         if (keys != 0 || current.frames >= 1800) { cancel(); return keys }
         if (!current.ready) return keys
-        return if (current.frames++ % 37 < 6) MgbaCore.Key.A else 0
+        return if (current.frames++ % 37 < 6) com.pokedaisy.app.companion.data.CoreKey.A else 0
     }
 
     fun frame(calls: GameCalls) {

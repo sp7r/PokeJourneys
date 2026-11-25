@@ -259,7 +259,7 @@ object RomArt {
     private fun expand(v: Int) = (v shl 3) or (v shr 2)
 
     /** BGR555 -> opaque ARGB. */
-    internal fun palette(b: ByteArray): IntArray = IntArray(b.size / 2) {
+    fun palette(b: ByteArray): IntArray = IntArray(b.size / 2) {
         val c = (b[it * 2].toInt() and 0xFF) or ((b[it * 2 + 1].toInt() and 0xFF) shl 8)
         (0xFF shl 24) or (expand(c and 31) shl 16) or (expand((c shr 5) and 31) shl 8) or expand((c shr 10) and 31)
     }
@@ -292,7 +292,7 @@ object RomArt {
     }
 
     /** A sprite of [w]x[h] from consecutive 4bpp tiles, index 0 transparent. */
-    internal fun sprite(tiles: ByteArray, pal: IntArray, w: Int, h: Int, tileOf: (Int, Int) -> Int = { tx, ty -> ty * (w / 8) + tx }): Image {
+    fun sprite(tiles: ByteArray, pal: IntArray, w: Int, h: Int, tileOf: (Int, Int) -> Int = { tx, ty -> ty * (w / 8) + tx }): Image {
         val img = Image(w, h)
         for (ty in 0 until h / 8) for (tx in 0 until w / 8) for (y in 0 until 8) for (x in 0 until 8) {
             val v = px4(tiles, tileOf(tx, ty), x, y)

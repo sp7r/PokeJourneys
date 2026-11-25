@@ -39,7 +39,7 @@ fun SetupFrame(
     Box(Modifier.fillMaxSize()) {
         AppBackdrop()
         Column(Modifier.fillMaxSize().padding(16.dp)) {
-            OptionTitleWindow(tr("WELCOME TO POKéDAISY"), m, trailing = "${index + 1} / $total",
+            OptionTitleWindow(tr("WELCOME TO POKEJOURNEYS"), m, trailing = "${index + 1} / $total",
                 onBack = if (canGoBack) onBack else null)
             Spacer(Modifier.height(m.u * 4))
             OptionListWindow(m, Modifier.fillMaxWidth().weight(1f)) {
@@ -75,8 +75,8 @@ private fun Para(text: String, small: GbaTextMetrics, muted: Boolean = false) {
 fun SetupRomsPage(s: SetupRomsModel, m: GbaTextMetrics, small: GbaTextMetrics, onChoose: () -> Unit, onRemove: ((String) -> Unit)? = null) {
     Heading(tr(if (s.linked) "YOUR ROMS FOLDERS" else "ADD GAMES"), m)
     Para(
-        if (s.linked) tr("Pick the folders you keep your games in. PokéDaisy adds every game from them that the second screen supports, plays them right where they are (nothing is copied), and looks for new ones each time you open the app.")
-        else tr("Add your own GBA or Game Boy ROMs from Files. Copies are kept in PokeDaisy's folder."),
+        if (s.linked) tr("Pick the folders you keep your games in. PokeJourneys adds every game from them that the second screen supports, plays them right where they are (nothing is copied), and looks for new ones each time you open the app.")
+        else tr("Add your own GBA or Game Boy ROMs from Files. Copies are kept in PokeJourneys' folder."),
         small,
     )
     if (s.linked) Para(
@@ -85,7 +85,7 @@ fun SetupRomsPage(s: SetupRomsModel, m: GbaTextMetrics, small: GbaTextMetrics, o
     )
     if (!s.hasAccess) {
         Para(
-            tr("Android asks you to allow All files access first, so PokéDaisy can open games and saves outside its own folder. Turn it on and come back here."),
+            tr("Android asks you to allow All files access first, so PokeJourneys can open games and saves outside its own folder. Turn it on and come back here."),
             small, muted = true,
         )
     }
@@ -150,11 +150,11 @@ fun SetupSavesPage(
     Heading(tr("GAME SAVES"), m)
     Para(
         if (onChoose != null) tr("Where should your saves go? If you already play these games in another emulator, pick its save folder (RetroArch's, for one) and carry on with the same saves: a game finds its save by the ROM's file name (.sav or .srm).")
-        else tr("Your saves stay in PokeDaisy's folder. Use Files to copy them to or from another emulator."),
+        else tr("Your saves stay in PokeJourneys' folder. Use Files to copy them to or from another emulator."),
         small,
     )
     val listed = s.suggestions.map { it.path }
-    OptionLine(tr("KEEP THEM IN POKéDAISY"), tr("DEFAULT"), selected = s.savesDir == null, m, labelWeight = 0.75f, divider = true) { onUse(null) }
+    OptionLine(tr("KEEP THEM IN POKEJOURNEYS"), tr("DEFAULT"), selected = s.savesDir == null, m, labelWeight = 0.75f, divider = true) { onUse(null) }
     s.suggestions.forEach { sug ->
         OptionLine(
             setupPath(sug.path), if (sug.saves == 1) tr("1 SAVE") else tr("{0} SAVES", sug.saves),

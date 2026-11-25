@@ -178,7 +178,7 @@ class Prefs(
 
     /** RUN INDOORS: every map lets the player run (gMapHeader.allowRunning). */
     var runIndoors: Boolean
-        get() = p.getBoolean("run_indoors", false)
+        get() = JourneyRules.CHEATS && p.getBoolean("run_indoors", false) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("run_indoors", v).apply()
 
     /** WILD ENCOUNTERS: the percent of wild encounters left - 100 = the game's own rate (ON), 0 = none (OFF). The
@@ -196,33 +196,34 @@ class Prefs(
     /** FLY STYLE: the companion's FLY the game's way (CLASSIC) or flown over the field (SCENIC, the default: a game without
      * FREE FLIGHT flies the classic way whatever this says), a [com.pokedaisy.app.companion.FlyStyle] id. */
     var flyStyleId: Int
-        get() = p.getInt("fly_style", com.pokedaisy.app.companion.FlyStyle.SCENIC.id)
+        // PokeJourneys: FLY flies over the map for everyone (JourneyRules.SCENIC_FLY).
+        get() = if (JourneyRules.SCENIC_FLY) com.pokedaisy.app.companion.FlyStyle.SCENIC.id else p.getInt("fly_style", com.pokedaisy.app.companion.FlyStyle.SCENIC.id)
         set(v) = p.edit().putInt("fly_style", v).putBoolean("fly_style_asked", true).apply()
     val flyStyle: com.pokedaisy.app.companion.FlyStyle get() = com.pokedaisy.app.companion.FlyStyle.of(flyStyleId)
 
     /** FLIGHT AREA: where FREE FLIGHT and the scenic FLY may go, a [com.pokedaisy.app.companion.FlightAreaMode] id (0 = only
      * the maps the player has seen, the default). For every game. */
     var flightAreaId: Int
-        get() = p.getInt("flight_area", com.pokedaisy.app.companion.FlightAreaMode.SEEN.id)
+        get() = if (JourneyRules.SCENIC_FLY) com.pokedaisy.app.companion.FlightAreaMode.SEEN.id else p.getInt("flight_area", com.pokedaisy.app.companion.FlightAreaMode.SEEN.id)
         set(v) = p.edit().putInt("flight_area", v).apply()
     val flightArea: com.pokedaisy.app.companion.FlightAreaMode get() = com.pokedaisy.app.companion.FlightAreaMode.of(flightAreaId)
 
     /** MAKEOVER > FLY ON: what FREE FLIGHT and the scenic FLY fly on, a [com.pokedaisy.app.companion.data.FlightVehicle] id
      * (0 the game's own bird). For every game. */
     var flightVehicleId: Int
-        get() = p.getInt("flight_vehicle", 0)
+        get() = if (JourneyRules.VEHICLES) p.getInt("flight_vehicle", 0) else 0 // PokeJourneys: the game's own Pokémon
         set(v) = p.edit().putInt("flight_vehicle", v).apply()
 
     /** MAKEOVER > RIDE ON: what the player rides when they get on their bike, a
      * [com.pokedaisy.app.companion.data.RideVehicle] id (0 the game's own bike). For every game. */
     var rideVehicleId: Int
-        get() = p.getInt("ride_vehicle", 0)
+        get() = if (JourneyRules.VEHICLES) p.getInt("ride_vehicle", 0) else 0 // PokeJourneys: the game's own bike
         set(v) = p.edit().putInt("ride_vehicle", v).apply()
 
     /** The first scenic FLY's landing asked KEEP IT / USE CLASSIC (FlyStyleAsk), or the player picked a FLY STYLE themselves:
      * never asked again. */
     var flyStyleAsked: Boolean
-        get() = p.getBoolean("fly_style_asked", false)
+        get() = JourneyRules.SCENIC_FLY || p.getBoolean("fly_style_asked", false) // PokeJourneys: nothing to ask
         set(v) = p.edit().putBoolean("fly_style_asked", v).apply()
 
     /** REUSABLE TMS: a TM stays in the bag after it teaches a move, as an HM does (ReusableTms.kt). */
@@ -232,7 +233,7 @@ class Prefs(
 
     /** EXP SHARE: OFF / SPLIT / FULL, by [com.pokedaisy.app.companion.data.ExpShare.Mode.id]. */
     var expShare: Int
-        get() = p.getInt("exp_share", 0)
+        get() = if (JourneyRules.CHEATS) p.getInt("exp_share", 0) else 0 // PokeJourneys: the game's own
         set(v) = p.edit().putInt("exp_share", v).apply()
 
     /** GAME LOOK (DISPLAY OPTIONS on both screens, CompanionSkins.enabled): the companion and the HUD in the running game's
@@ -255,11 +256,11 @@ class Prefs(
         set(v) = p.edit().putBoolean("low_hp_beep", v).apply()
     /** RUNNING SHOES (companion GAMEPLAY, a Game Boy game): B held while walking moves at the bike's speed. Off. */
     var runningShoes: Boolean
-        get() = p.getBoolean("running_shoes", false)
+        get() = JourneyRules.CHEATS && p.getBoolean("running_shoes", false) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("running_shoes", v).apply()
 
     var fieldPoison: Boolean
-        get() = p.getBoolean("field_poison", true)
+        get() = !JourneyRules.CHEATS || p.getBoolean("field_poison", true) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("field_poison", v).apply()
 
     /** AUTO REFILL: another REPEL of the kind working goes on before it runs out (RepelRefill.kt). */
@@ -269,12 +270,12 @@ class Prefs(
 
     /** LEVEL CAP: no Pokémon goes past the next boss's top level (LevelCap.kt). */
     var levelCap: Boolean
-        get() = p.getBoolean("level_cap", false)
+        get() = JourneyRules.CHEATS && p.getBoolean("level_cap", false) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("level_cap", v).apply()
 
     /** NO HMS NEEDED: the field moves work without a Pokémon that knows them, once the badge is in (HmFree.kt). */
     var hmFree: Boolean
-        get() = p.getBoolean("hm_free", false)
+        get() = JourneyRules.CHEATS && p.getBoolean("hm_free", false) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("hm_free", v).apply()
 
     /** INSTANT TEXT: a text box's words appear at once (InstantText.kt). */
@@ -291,19 +292,21 @@ class Prefs(
 
     /** PLAYER LOOK per ROM (keyed by CRC32): the hero the player wears ([com.pokedaisy.app.companion.data.LookChar]'s
      * name), null = the game's own. */
-    fun playerLookFor(romKey: String): String? = p.getString("player_look_$romKey", null)
+    // PokeJourneys: with the makeovers off every journey wears the creator's look ("YOU"), nothing else.
+    fun playerLookFor(romKey: String): String? =
+        if (JourneyRules.MAKEOVERS) p.getString("player_look_$romKey", null) else com.pokedaisy.app.companion.JourneyHooks.CREATOR_PICK
     fun setPlayerLookFor(romKey: String, look: String?) = p.edit().putString("player_look_$romKey", look).apply()
 
     /** FOLLOWER: the party's lead Pokémon walks behind the player (every game it works in; off to start with). */
     var follower: Boolean
-        // PokeJourneys: no follower from saved preferences.
-        get() = JourneyRules.MAKEOVERS && p.getBoolean("follower", false)
+        // PokeJourneys: the same for everyone (JourneyRules.FOLLOWER).
+        get() = if (JourneyRules.MAKEOVERS) p.getBoolean("follower", false) else JourneyRules.FOLLOWER
         set(v) = p.edit().putBoolean("follower", v).apply()
 
     /** DAY AND NIGHT: the overworld tinted by the device's clock (every GBA game; off to start with). */
     var dayNight: Boolean
-        // PokeJourneys: no day and night tint from saved preferences.
-        get() = JourneyRules.MAKEOVERS && p.getBoolean("day_night", false)
+        // PokeJourneys: the same for everyone (JourneyRules.DAY_AND_NIGHT).
+        get() = if (JourneyRules.MAKEOVERS) p.getBoolean("day_night", false) else JourneyRules.DAY_AND_NIGHT
         set(v) = p.edit().putBoolean("day_night", v).apply()
 
     /** TEXT LOOK per ROM: the style worn (a LookEngine name, "FIRERED" / "EMERALD"), null = the game's own. */
@@ -319,7 +322,7 @@ class Prefs(
     /** Remembered speed-cycle index per ROM (keyed by CRC32). */
     /** BOSS RETRY: a state as each trainer battle starts, offered back after a loss (BattleRetryAsk). */
     var battleRetry: Boolean
-        get() = p.getBoolean("battle_retry", false)
+        get() = JourneyRules.CHEATS && p.getBoolean("battle_retry", false) // PokeJourneys: the game's own
         set(v) = p.edit().putBoolean("battle_retry", v).apply()
 
     /** SHINY ALERT: on, and its hunt's count of wild battles per ROM (since the last shiny, or since it was turned on). */
@@ -355,7 +358,7 @@ class Prefs(
         p.edit().putString("favorite_items_$romKey", ids.sorted().joinToString(",")).apply()
 
     /** SETTINGS > NUZLOCKE per ROM (keyed by CRC32), and its run ([com.pokedaisy.app.companion.data.NuzlockeRun.encode]). */
-    fun nuzlockeFor(romKey: String): Boolean = p.getBoolean("nuzlocke_$romKey", false)
+    fun nuzlockeFor(romKey: String): Boolean = JourneyRules.CHEATS && p.getBoolean("nuzlocke_$romKey", false) // PokeJourneys
     fun setNuzlockeFor(romKey: String, on: Boolean) = p.edit().putBoolean("nuzlocke_$romKey", on).apply()
     fun nuzlockeRunFor(romKey: String): String? = p.getString("nuzlocke_run_$romKey", null)
     fun setNuzlockeRunFor(romKey: String, run: String) = p.edit().putString("nuzlocke_run_$romKey", run).apply()

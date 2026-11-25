@@ -6,6 +6,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.pokedaisy.app.Prefs
 import com.pokedaisy.app.RomArchive
 import com.pokedaisy.app.RomFolder
@@ -13,26 +16,37 @@ import com.pokedaisy.app.StorageAccess
 import java.io.File
 import kotlin.concurrent.thread
 
-/** First-run pages and the library's existing folder/link/scan flow. */
+/**
+ * Victory Island's first run, one page (HubSetupScreen): the five cartridges it's built from, found or not. All five:
+ * BUILD VICTORY ISLAND. Otherwise it names what's missing (or why a copy doesn't fit) and offers the ROM folder.
+ * Then the build's own progress, on the same page.
+ */
 internal class HubSetup(
     private val activity: ComponentActivity,
-    private val screen: FireRedScreen,
     private val onBuild: (Map<String, File>) -> Unit,
 ) {
-    private data class Rejected(val file: File, val problems: List<String>)
-    private data class Cartridges(
+    data class Rejected(val file: File, val problems: List<String>)
+    data class Cartridges(
         val found: Map<String, File> = emptyMap(),
         val rejected: Map<String, List<Rejected>> = emptyMap(),
     )
 
+    sealed interface Page {
+        data object Checking : Page
+        data object Preparing : Page
+        /** The checklist: [Cartridges.found] all five or not, and a note (a folder that couldn't be read). */
+        data class Checklist(val cartridges: Cartridges, val note: String = "") : Page {
+            val ready get() = HubCartridgeHeaders.games.all { it.key in cartridges.found }
+        }
+        data class Building(val step: String = "", val progress: Float? = null, val tip: String = "") : Page
+        data class Failed(val reason: String) : Page
+    }
+
+    var page by mutableStateOf<Page>(Page.Checking)
+
     private val prefs = Prefs(activity)
-    private var cartridges = Cartridges()
-    private var started = false
     private var awaitingAccess = false
-    private var busy = false
     private var generation = 0
-    private var checklistSelection = HubCartridgeHeaders.games.size
-    var active = true; private set
 
     private val pickFolder = activity.registerForActivityResult(StorageAccess.PickFolder()) { uri ->
         if (uri == null) {
@@ -56,182 +70,87 @@ internal class HubSetup(
     }
 
     fun show(state: Bundle?) {
-        started = state?.getBoolean("hub-setup-started") == true
         awaitingAccess = state?.getBoolean("hub-setup-access") == true
-        if (started) checkAgain() else showWelcome()
+        checkAgain()
     }
 
     fun saveState(state: Bundle) {
-        state.putBoolean("hub-setup-started", started)
         state.putBoolean("hub-setup-access", awaitingAccess)
     }
 
     fun onResume() {
-        if (!active || !awaitingAccess) return
+        if (!awaitingAccess) return
         // Older Android versions return a permission result even when the dialog did not pause the activity.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && !StorageAccess.hasAllFilesAccess(activity)) return
         onPermissionsResult()
     }
 
     fun onPermissionsResult() {
-        if (!active || !awaitingAccess) return
+        if (!awaitingAccess) return
         awaitingAccess = false
         if (StorageAccess.hasAllFilesAccess(activity)) pickFolder.launch(null) else {
-            checkAgain("Folder access was not granted. Choose ROM folder to try again.")
+            checkAgain("Folder access was not granted. Choose your ROM folder to try again.")
         }
     }
 
-    fun handlesKey(key: Int) = key in KEYS
-
+    /** A controller: A the page's main button, Y the ROM folder, B back. True when the key was this page's. */
     fun onKeyUp(key: Int): Boolean {
-        if (!active || !handlesKey(key)) return false
+        val p = page
         when (key) {
-            KeyEvent.KEYCODE_DPAD_UP -> screen.moveSelection(-1)
-            KeyEvent.KEYCODE_DPAD_DOWN -> screen.moveSelection(1)
-            KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> back()
-            KeyEvent.KEYCODE_DPAD_LEFT -> if (screen.options.isEmpty()) back() else screen.moveSelection(-1)
-            KeyEvent.KEYCODE_DPAD_RIGHT -> if (screen.options.isEmpty()) screen.answer() else screen.moveSelection(1)
-            else -> screen.answer()
+            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> when {
+                p is Page.Checklist && p.ready -> build()
+                p is Page.Checklist -> chooseFolder()
+                p is Page.Failed -> checkAgain()
+                else -> return false
+            }
+            KeyEvent.KEYCODE_BUTTON_Y -> if (p is Page.Checklist) chooseFolder() else return false
+            KeyEvent.KEYCODE_BUTTON_X -> if (p is Page.Checklist) checkAgain() else return false
+            else -> return false
         }
         return true
     }
 
-    fun back() { if (!busy) screen.onB?.invoke() }
-
-    private fun showWelcome() {
-        showPages(
-            "Victory Island setup",
-            listOf(
-                "Built on this phone from", "your own cartridges.", "No game data ships with the app.",
-                "FireRed: English Rev 1", "HeartGold: US (IPKE)", "Platinum: US (CPUE)",
-                "Black: English (IRBO)", "Black 2: English (IREO)",
-            ).joinToString("\n"),
-            "Check ROMs", { checkAgain() }, { activity.finish() },
-        )
-    }
-
-    /** A long file name or version explanation can always be read to its end. */
-    private fun showPages(title: String, body: String, done: String, onDone: () -> Unit, onBack: () -> Unit) {
-        val pages = screen.wrapLines(body).chunked(4)
-        fun page(index: Int) {
-            clearScreen()
-            screen.title = if (pages.size == 1) title else "$title ${index + 1}/${pages.size}"
-            screen.lines = pages[index]
-            screen.message = "B: Back / A: ${if (index < pages.lastIndex) "Next" else done}\nTap left / right."
-            screen.onB = { if (index > 0) page(index - 1) else onBack() }
-            screen.onA = { if (index < pages.lastIndex) page(index + 1) else onDone() }
-        }
-        page(0)
-    }
-
-    private fun showChecklist() {
-        clearScreen()
-        screen.title = "Cartridges: ${cartridges.found.size}/5 found"
-        val ready = cartridges.found.size == HubCartridgeHeaders.games.size
-        val choices = HubCartridgeHeaders.games.map { game ->
-            val file = cartridges.found[game.key]
-            FireRedScreen.Option(
-                "${game.name}: ${if (file == null) "MISSING" else "FOUND"}",
-                file?.name ?: if (cartridges.rejected[game.key].isNullOrEmpty()) game.version else "Wrong version: tap for details",
-            ) {
-                checklistSelection = screen.selection
-                val details = buildString {
-                    appendLine("${game.name}: ${game.version}")
-                    appendLine("Needs code ${game.code}.")
-                    if (file != null) {
-                        appendLine("FOUND")
-                        appendLine("File: ${file.name}")
-                    } else {
-                        appendLine("MISSING")
-                        if (cartridges.rejected[game.key].isNullOrEmpty()) appendLine("No matching cartridge found.")
-                    }
-                    for (copy in cartridges.rejected[game.key].orEmpty()) {
-                        appendLine("File: ${copy.file.name}")
-                        appendLine(copy.problems.joinToString("\n"))
-                    }
-                }.trimEnd()
-                showPages(game.name, details, "Checklist", ::showChecklist, ::showChecklist)
-            }
-        } + listOf(
-            FireRedScreen.Option("Choose ROM folder") { chooseFolder() },
-            FireRedScreen.Option("Check again") { checklistSelection = screen.selection; checkAgain() },
-            FireRedScreen.Option("Build Victory Island", if (ready) null else "Find all five first", ready) { prepareBuild() },
-        )
-        screen.onB = { showWelcome() }
-        screen.options = choices
-        screen.moveSelection(checklistSelection)
-        screen.message = "B: Welcome   A: Select\nSwipe or use D-pad to scroll."
-    }
-
     fun checkAgain(extraNote: String = "") {
-        active = true
-        started = true
-        busy = true
         val request = ++generation
-        clearScreen()
-        screen.title = "Checking cartridges"
-        screen.message = "Looking in your ROM folders..."
+        page = Page.Checking
         thread(name = "pokejourneys-hub-scan") {
             var warning = extraNote
             val result = runCatching {
                 val scan = RomFolder.scan(activity, prefs)
                 RomFolder.checkImported(activity)
-                if (!scan.readable) warning += "\nSome folders could not be read. Choose ROM folder to check access."
+                if (!scan.readable) warning += "\nSome folders could not be read. Choose your ROM folder again to give access."
                 readCartridges(activity, prefs)
             }
             activity.runOnUiThread {
                 if (request != generation || activity.isFinishing || activity.isDestroyed) return@runOnUiThread
-                busy = false
-                cartridges = result.getOrDefault(Cartridges())
-                val note = if (result.isFailure) "Could not check cartridges. ${result.exceptionOrNull()?.message.orEmpty()}" else warning.trim()
-                showChecklist()
-                if (note.isNotEmpty()) showPages("Cartridge check", note, "Checklist", ::showChecklist, ::showChecklist)
+                val note = if (result.isFailure) "Could not check your cartridges. ${result.exceptionOrNull()?.message.orEmpty()}" else warning.trim()
+                page = Page.Checklist(result.getOrDefault(Cartridges()), note)
             }
         }
     }
 
-    private fun chooseFolder() {
-        checklistSelection = screen.selection
+    fun chooseFolder() {
         if (!StorageAccess.hasAllFilesAccess(activity)) {
             awaitingAccess = true
-            screen.message = "Allow folder access, then\nchoose your ROM folder."
             StorageAccess.requestAllFilesAccess(activity)
         } else pickFolder.launch(null)
     }
 
-    private fun prepareBuild() {
-        if (busy || cartridges.found.size != HubCartridgeHeaders.games.size) return
-        checklistSelection = screen.selection
-        busy = true
-        clearScreen()
-        screen.title = "Preparing cartridges"
-        screen.message = "Opening your ROMs and archives..."
+    fun build() {
+        val list = page as? Page.Checklist ?: return
+        if (!list.ready) return
+        page = Page.Preparing
         thread(name = "pokejourneys-hub-cartridges") {
-            val prepared = runCatching { prepare(activity, cartridges.found) }
+            val prepared = runCatching { prepare(activity, list.cartridges.found) }
             activity.runOnUiThread {
                 if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
-                busy = false
-                prepared.onSuccess { roms -> active = false; clearScreen(); onBuild(roms) }
+                prepared.onSuccess { roms -> page = Page.Building(); onBuild(roms) }
                     .onFailure { checkAgain(it.message ?: "Could not open a cartridge.") }
             }
         }
     }
 
-    private fun clearScreen() {
-        screen.options = emptyList()
-        screen.lines = emptyList()
-        screen.progress = null
-        screen.onA = null
-        screen.onB = null
-    }
-
     companion object {
-        private val KEYS = setOf(
-            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_START,
-            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_BACK,
-            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
-        )
-
         private fun readCartridges(context: Context, prefs: Prefs): Cartridges {
             val found = linkedMapOf<String, File>()
             val rejected = linkedMapOf<String, MutableList<Rejected>>()

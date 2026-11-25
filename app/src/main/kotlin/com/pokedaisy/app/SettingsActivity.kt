@@ -214,6 +214,11 @@ class SettingsActivity : ComponentActivity() {
     private val dsUnavailable get() = com.pokedaisy.app.companion.DsCore.unavailableOn(prefs.dsCore.runs())
 
     private val updates by lazy { AppUpdateFlow(this) }
+    /** PokeJourneys: SETTINGS > JOURNEYS > SPRITE PACK (the library's TOOLS card, which PokeJourneys hides). */
+    private val spritePack by lazy { SpritePackFlow(this) }
+    private val pickSpritePack = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { spritePack.start(it) }
+    }
 
     /** HELP: the manual (DocsScreen.kt), its place kept while Settings is open. */
     private val docsUi = com.pokedaisy.app.companion.ui.DocsUiState()
@@ -513,6 +518,7 @@ class SettingsActivity : ComponentActivity() {
             }
 
             UpdateDialog(updates, m, small)
+            if (JourneyRules.SPRITE_PACK) SpritePackWindow(spritePack, m, small)
 
             removingCheat?.let { i ->
                 val c = cheatList.getOrNull(i)
@@ -744,6 +750,12 @@ class SettingsActivity : ComponentActivity() {
         val rows = com.pokedaisy.app.companion.ui.settingsLookRows { revision++ } + listOfNotNull(
             groupTitle(tk("JOURNEYS")),
             SettingRow(tk("SERVER"), com.pokedaisy.app.journeys.JourneyServer.label(this), opensPage = true) { screen = Screen.SERVER },
+            if (JourneyRules.COLLECTION) SettingRow(tk("COLLECTION"), null, subtitle = "Every Pokémon in all your saves, in one list", opensPage = true) {
+                startActivity(Intent(this, SaveEditorActivity::class.java).putExtra(SaveEditorActivity.EXTRA_COLLECTION, true))
+            } else null,
+            if (JourneyRules.SPRITE_PACK) SettingRow(tk("SPRITE PACK"), null, subtitle = "Load other games' looks for MAKEOVER") {
+                pickSpritePack.launch(arrayOf("*/*"))
+            } else null,
             groupTitle(tk("FF / SPEED")),
             SettingRow(tk("FF SPEED"), rateLabel(prefs.ffMaxSpeed)) {
                 selector = Selector(tk("FF SPEED"), rateLabels, rateLabel(prefs.ffMaxSpeed)) {

@@ -14,6 +14,7 @@ import com.pokedaisy.app.companion.i18n.tr
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import okio.Path.Companion.toOkioPath
 
 /** The hub's follower is a Vault entry. Sending it out doesn't move or modify the Pokémon. */
 internal object HubFollower {
@@ -94,7 +95,9 @@ internal object HubFollower {
         val rom = JourneyIds.roms(context)[journey]?.takeIf { it.isFile } ?: return null
         val tables = RomMonIcons.tablesFor(RomIdentity.sha1(rom), RomIdentity.gameCode(rom), RomIdentity.revision(rom)) ?: return null
         val playable = RomArchive.playable(rom, context.cacheDir) ?: return null
-        return RomMonIcons.open(playable, tables)?.get(national)
+        // PokeDaisy 1.6.2 reads the icons as pixels (shared with its iPad app).
+        return RomMonIcons.open(playable.toOkioPath(), tables)?.get(national)
+            ?.let { Bitmap.createBitmap(it.argb, it.width, it.height, Bitmap.Config.ARGB_8888) }
     }
 
     private fun overworldSheet(mon: MonArt.Mon): ByteArray {

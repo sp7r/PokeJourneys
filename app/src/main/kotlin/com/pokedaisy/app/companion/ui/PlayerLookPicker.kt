@@ -92,7 +92,7 @@ internal fun PlayerLookPicker(
             tiles.filterNotNull().mapNotNull { name ->
                 val mon = MonArt.monOf(name)
                 val frames = if (mon != null) runCatching { MonArt.walk(RomArt.filesDir, mon) }.getOrNull() ?: return@mapNotNull null
-                else if (name == com.pokedaisy.app.journeys.CreatorLook.PICK) runCatching { com.pokedaisy.app.journeys.CreatorLook.walk() }.getOrNull() ?: return@mapNotNull null
+                else if (name == com.pokedaisy.app.companion.JourneyHooks.CREATOR_PICK) runCatching { com.pokedaisy.app.companion.JourneyHooks.creatorWalk() }.getOrNull() ?: return@mapNotNull null
                 else {
                     val c = LookChar.byName(name) ?: return@mapNotNull null
                     runCatching { LookArt.walk(RomArt.filesDir, c) }.getOrNull() ?: return@mapNotNull null
@@ -140,7 +140,7 @@ internal fun PlayerLookPicker(
                                     LookTile(
                                         name = if (i == 0) tk("OFF") else name?.let(label).orEmpty(),
                                         game = if (i == 0) c?.label.orEmpty() else c?.game ?: MonArt.monOf(name)?.let { monSources[it] }
-                                            ?: com.pokedaisy.app.journeys.CreatorLook.SOURCE.takeIf { name == com.pokedaisy.app.journeys.CreatorLook.PICK }.orEmpty(),
+                                            ?: com.pokedaisy.app.companion.JourneyHooks.CREATOR_SOURCE.takeIf { name == com.pokedaisy.app.companion.JourneyHooks.CREATOR_PICK }.orEmpty(),
                                         sprite = name?.let { sprites[it] }?.let { it[if (lit) frame else 0] }, box = box,
                                         lit = lit, current = picked == i, m = m, small = small,
                                         onFocus = { focusedTile = if (it) i else if (focusedTile == i) -1 else focusedTile },

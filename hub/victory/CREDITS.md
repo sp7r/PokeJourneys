@@ -6,7 +6,7 @@
 Based on PokeDaisy by Lidor Itzhari - https://github.com/lidor30/pokedaisy
 
 - [Godot Engine](https://godotengine.org), 4.7.2, by Juan Linietsky, Ariel Manzur and contributors, MIT License. The engine and its bundled dependencies are installed separately; see its `COPYRIGHT.txt`.
-- The owner's Frontier Terraces Godot export supplies the camera, player movement, overworld sprite animation, island scene and doorway positions. The existing `hub/godot` project supplies the runtime OBJ loader, message box, interaction and automated capture/check patterns. These project scripts are adapted here.
+- The owner's Frontier Terraces Godot export supplies the camera, player movement, overworld sprite animation, island scene and doorway positions. The owner's earlier Godot hub prototype (since removed) supplied the runtime OBJ loader, message box, interaction and automated capture/check patterns. These project scripts are adapted here.
 - The owner's PokeJourneys Online icon, logo and splash art (`branding/`), also in `assets/branding/`.
 - Pixel Operator font (`fonts/PixelOperator.ttf`, the text box font), by Jayvee Enaguas, CC0 1.0, copied from PokeDaisy's `app/src/main/assets/fonts`.
 - [apicula](https://github.com/scurest/apicula), by scurest: `tools/hub/victory/frames.js` reads animation frames and `interiors.js` converts the owner's room and furniture models with an installed copy. It is not distributed here; all converted assets stay in the external data folder.

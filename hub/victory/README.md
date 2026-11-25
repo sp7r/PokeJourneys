@@ -15,7 +15,7 @@ The default output is `C:/Projects/hub-work/victory-island-data`. The exporter p
 Start the project with Godot 4.7.2:
 
 ```powershell
-$godot = 'C:/Users/spang/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7.2-stable_win64.exe'
+$godot = "$env:LOCALAPPDATA/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7.2-stable_win64.exe"
 & $godot --path hub/victory -- --data=C:/Projects/hub-work/victory-island-data
 ```
 

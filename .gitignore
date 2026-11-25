@@ -96,3 +96,7 @@ reference/
 .godot/
 # Local save bridge data folder
 journeys-data/
+
+# PokeJourneys: local working notes, kept off GitHub.
+docs/BATTLE_DOME_HANDOFF.md
+docs/DECISIONS.md

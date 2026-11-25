@@ -67,13 +67,13 @@ android {
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId = "com.pokedaisy.app"
+        applicationId = "com.pokejourneys.app"
         minSdk = 26
         targetSdk = 34
         // Bump both for every GitHub release: the updater compares versionName
         // against the release tag (v<versionName>), Android needs versionCode to grow.
-        versionCode = 20
-        versionName = "1.5.0.1"
+        versionCode = 22
+        versionName = "1.6.1"
         // Whether this build can send crash reports at all (CrashReports.available).
         buildConfigField("boolean", "CRASHLYTICS", crashlytics.toString())
         buildConfigField("String", "SCREENSCRAPER_DEV_ID", "\"${buildSecret("screenscraper.devId", "SCREENSCRAPER_DEV_ID")}\"")
@@ -176,12 +176,14 @@ android {
 // (licenses.txt; a line "=== <name>" starts each part).
 val licensesAsset by tasks.registering {
     val parts = listOf(
-        "PokeDaisy (NOTICE)" to "NOTICE",
-        "GNU General Public License v3 (PokeDaisy)" to "LICENSE",
+        "PokeJourneys and PokeDaisy (NOTICE)" to "NOTICE",
+        "GNU General Public License v3 (PokeJourneys, PokeDaisy)" to "LICENSE",
         "mGBA - Mozilla Public License 2.0" to "third_party/mgba/LICENSE",
         "blip_buf (in mGBA) - GNU LGPL 2.1" to "third_party/mgba/src/third-party/blip_buf/license.txt",
         "inih (in mGBA) - BSD" to "third_party/mgba/src/third-party/inih/LICENSE.txt",
         "rcheevos - MIT" to "third_party/rcheevos/LICENSE",
+        "PKHeX.Core (save bridge) - GNU GPL 3.0 or later" to "LICENSE",
+        ".NET runtime (save bridge) - MIT" to "third_party/licenses/dotnet-runtime-MIT.txt",
         "melonDS - GNU GPL 3.0" to "third_party/melonds/LICENSE",
         "FatFs (in melonDS)" to "third_party/melonds/src/fatfs/LICENSE.txt",
         "Teakra (in melonDS) - MIT" to "third_party/melonds/src/teakra/LICENSE",
@@ -195,10 +197,17 @@ val licensesAsset by tasks.registering {
         "Galmuri - SIL Open Font License 1.1" to "app/src/main/assets/fonts/LICENSE-Galmuri.txt",
         "Atkinson Hyperlegible - SIL Open Font License 1.1" to "app/src/main/assets/fonts/LICENSE-AtkinsonHyperlegible.txt",
         "PokeAPI data - BSD 3-Clause" to "third_party/licenses/PokeAPI-BSD-3-Clause.txt",
+        "apicula (DS model converter) - BSD Zero Clause" to "third_party/licenses/apicula-0BSD.txt",
+        "QuickJS (quickjs-ng) - MIT" to "third_party/licenses/quickjs-MIT.txt",
+        "SSEQ Player (hub music) - WTFPL" to "third_party/licenses/SSEQPlayer-WTFPL.txt",
+        "QOA (hub music) - MIT" to "third_party/licenses/qoa-MIT.txt",
+        "Godot Engine (Victory Island) - MIT" to "third_party/licenses/Godot-MIT.txt",
+        "Godot Engine's bundled libraries" to "third_party/licenses/Godot-COPYRIGHT.txt",
         "AndroidX, Jetpack Compose, Kotlin, Apache Commons Compress / IO / Codec / Lang, Firebase Crashlytics, ZXing, OkHttp, Okio - Apache License 2.0" to "third_party/licenses/Apache-2.0.txt",
         "Apache Commons - NOTICE" to "third_party/licenses/Apache-Commons-NOTICE.txt",
         "XZ for Java - BSD Zero Clause" to "third_party/licenses/XZ-Java-0BSD.txt",
         "Bouncy Castle (co-op) - MIT" to "third_party/licenses/BouncyCastle-MIT.txt",
+        "Generation 8 Pack follower sprites (hub followers) - credits" to "third_party/licenses/Gen8-Pack-credits.txt",
     ).map { (name, path) -> name to rootProject.file(path) }
     inputs.files(parts.map { it.second })
     val out = layout.buildDirectory.file("generated/licenses/licenses.txt")
@@ -211,6 +220,204 @@ val licensesAsset by tasks.registering {
     }
 }
 tasks.named("preBuild") { dependsOn(licensesAsset) }
+
+// The offline Battle Dome runs the browser-compatible Showdown simulator in Android's existing WebView.
+val domeAssetsDir = layout.buildDirectory.dir("generated/domeAssets")
+val domeDependencies by tasks.registering(Exec::class) {
+    inputs.files(rootProject.file("tools/battle/package.json"), rootProject.file("tools/battle/package-lock.json"))
+    outputs.file(rootProject.file("tools/battle/node_modules/.package-lock.json"))
+    val install = listOf("npm", "ci", "--ignore-scripts", "--prefix", rootProject.file("tools/battle").path)
+    commandLine(if (org.gradle.internal.os.OperatingSystem.current().isWindows) listOf("cmd", "/c") + install else install)
+}
+val domeAssets by tasks.registering(Exec::class) {
+    dependsOn(domeDependencies)
+    inputs.files(rootProject.fileTree("tools/battle") { exclude("node_modules/**") })
+    inputs.file(rootProject.file("third_party/licenses/pkmn-MIT.txt"))
+    outputs.dir(domeAssetsDir)
+    commandLine("node", rootProject.file("tools/battle/build.mjs").path, domeAssetsDir.get().asFile.path)
+}
+android.sourceSets["main"].assets.srcDir(domeAssetsDir)
+tasks.named("preBuild") { dependsOn(domeAssets) }
+licensesAsset.configure {
+    dependsOn(domeAssets)
+    val notices = domeAssetsDir.map { it.file("dome/licenses.txt") }
+    inputs.file(notices)
+    doLast {
+        layout.buildDirectory.file("generated/licenses/licenses.txt").get().asFile
+            .appendText("\n\n=== Battle Dome simulator dependencies - MIT\n\n" + notices.get().asFile.readText())
+    }
+}
+
+// PokeJourneys: the save bridge (src/Journeys.Cli on PKHeX.Core), compiled ahead of time for Android arm64 and
+// shipped as lib/arm64-v8a/libjourneys.so, an executable the app runs from its native library folder
+// (journeys/JourneysBridge.kt). Building it needs the .NET 10 SDK; the NDK supplies the linker.
+val journeysPublishDir = layout.buildDirectory.dir("journeys/publish")
+val journeysBridge by tasks.registering(Exec::class) {
+    val os = org.gradle.internal.os.OperatingSystem.current()
+    val host = when { os.isWindows -> "windows-x86_64"; os.isMacOsX -> "darwin-x86_64"; else -> "linux-x86_64" }
+    val llvm = android.ndkDirectory.resolve("toolchains/llvm/prebuilt/$host")
+    val exe = if (os.isWindows) ".exe" else ""
+    inputs.dir(rootProject.file("src"))
+    outputs.dir(journeysPublishDir)
+    environment("PATH", llvm.resolve("bin").path + File.pathSeparator + System.getenv("PATH"))
+    commandLine(
+        "dotnet", "publish", rootProject.file("src/Journeys.Cli").path,
+        "-c", "Release", "-r", "linux-bionic-arm64", "-o", journeysPublishDir.get().asFile.path,
+        "-p:PublishAot=true", "-p:PublishAotUsingRuntimePack=true", "-p:DisableUnsupportedError=true",
+        "-p:CppCompilerAndLinker=aarch64-linux-android26-clang" + (if (os.isWindows) ".cmd" else ""),
+        "-p:SysRoot=" + llvm.resolve("sysroot").path,
+        "-p:ObjCopyName=llvm-objcopy$exe",
+    )
+}
+val journeysJniLibs = layout.buildDirectory.dir("generated/journeysJni")
+val journeysJniLib by tasks.registering(Copy::class) {
+    dependsOn(journeysBridge)
+    from(journeysPublishDir) { include("journeys"); rename { "libjourneys.so" } }
+    into(journeysJniLibs.map { it.dir("arm64-v8a") })
+}
+android.sourceSets["main"].jniLibs.srcDir(journeysJniLibs)
+
+// PokeJourneys: apicula (https://github.com/scurest/apicula, 0BSD), which converts the DS models in the player's own
+// ROMs on first run. Cloned at a fixed commit, built without its model viewer (tools/apicula/no-viewer.patch) and
+// shipped as lib/arm64-v8a/libapicula.so, run as a program like libjourneys.so. Needs Rust (rustup target add
+// aarch64-linux-android); cargo from pokejourneys.cargo in local.properties, CARGO, or ~/.cargo/bin. Skipped without it.
+val apiculaCommit = "3d4e91e14045392a49c89e86dab8cb936225588c"
+val apiculaSrc = layout.buildDirectory.dir("apicula/src")
+val cargo = (localProps?.getProperty("pokejourneys.cargo") ?: System.getenv("CARGO"))?.takeIf { it.isNotBlank() }
+    ?: File(System.getProperty("user.home"), ".cargo/bin/cargo" + if (org.gradle.internal.os.OperatingSystem.current().isWindows) ".exe" else "")
+        .takeIf { it.isFile }?.path
+val apiculaBuild by tasks.registering {
+    onlyIf { cargo != null }
+    val patch = rootProject.file("tools/apicula/no-viewer.patch")
+    inputs.file(patch)
+    outputs.file(apiculaSrc.map { it.file("target/aarch64-linux-android/release/apicula") })
+    doLast {
+        val os = org.gradle.internal.os.OperatingSystem.current()
+        val host = when { os.isWindows -> "windows-x86_64"; os.isMacOsX -> "darwin-x86_64"; else -> "linux-x86_64" }
+        val bin = android.ndkDirectory.resolve("toolchains/llvm/prebuilt/$host/bin")
+        val clang = bin.resolve("aarch64-linux-android26-clang" + if (os.isWindows) ".cmd" else "").path
+        val src = apiculaSrc.get().asFile
+        fun run(dir: File, vararg command: String, env: Map<String, String> = emptyMap()) {
+            // Output is read here rather than inherited: inheriting the daemon's handles leaves cargo hanging on Windows.
+            val process = ProcessBuilder(*command).directory(dir).redirectErrorStream(true)
+                .also { it.environment().putAll(env) }.start()
+            process.outputStream.close()
+            process.inputStream.bufferedReader().forEachLine { logger.lifecycle(it) }
+            check(process.waitFor() == 0) { command.joinToString(" ") + " failed" }
+        }
+        if (!src.resolve(".git").isDirectory) {
+            src.deleteRecursively(); src.parentFile.mkdirs()
+            run(src.parentFile, "git", "clone", "-q", "https://github.com/scurest/apicula", src.path)
+        }
+        run(src, "git", "checkout", "-q", "-f", apiculaCommit)
+        run(src, "git", "apply", patch.path)
+        run(src, cargo!!, "build", "--release", "--locked", "--no-default-features", "--target", "aarch64-linux-android",
+            env = mapOf("CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER" to clang, "CC_aarch64_linux_android" to clang,
+                "AR_aarch64_linux_android" to bin.resolve("llvm-ar" + if (os.isWindows) ".exe" else "").path))
+    }
+}
+val apiculaJniLib by tasks.registering(Copy::class) {
+    dependsOn(apiculaBuild)
+    from(apiculaSrc.map { it.dir("target/aarch64-linux-android/release") }) { include("apicula"); rename { "libapicula.so" } }
+    into(journeysJniLibs.map { it.dir("arm64-v8a") })
+}
+tasks.named("preBuild") { dependsOn(apiculaJniLib) }
+
+// PokeJourneys: QuickJS (quickjs-ng, https://github.com/quickjs-ng/quickjs, MIT), whose qjs program runs the hub's
+// build scripts (tools/hub, as assets under hub-build/) on the phone to make the hub data from the player's ROMs.
+// Built at a pinned release with the SDK's CMake and the NDK, packed as lib/arm64-v8a/libqjs.so.
+val qjsTag = "v0.10.1"
+val qjsSrc = layout.buildDirectory.dir("quickjs/src")
+val qjsBuild by tasks.registering {
+    outputs.file(qjsSrc.map { it.file("build-android/qjs") })
+    doLast {
+        val src = qjsSrc.get().asFile
+        val sdk = android.sdkDirectory
+        val cmake = sdk.resolve("cmake").listFiles()?.filter { it.resolve("bin").isDirectory }?.maxByOrNull { it.name }?.resolve("bin")
+            ?: error("CMake is missing from the Android SDK")
+        val exe = if (org.gradle.internal.os.OperatingSystem.current().isWindows) ".exe" else ""
+        fun run(dir: File, vararg command: String) {
+            val process = ProcessBuilder(*command).directory(dir).redirectErrorStream(true).start()
+            process.outputStream.close()
+            process.inputStream.bufferedReader().forEachLine { logger.lifecycle(it) }
+            check(process.waitFor() == 0) { command.joinToString(" ") + " failed" }
+        }
+        if (!src.resolve(".git").isDirectory) {
+            src.deleteRecursively(); src.parentFile.mkdirs()
+            run(src.parentFile, "git", "clone", "-q", "--depth", "1", "--branch", qjsTag, "https://github.com/quickjs-ng/quickjs", src.path)
+        }
+        run(src, cmake.resolve("cmake$exe").path, "-S", ".", "-B", "build-android", "-G", "Ninja",
+            "-DCMAKE_MAKE_PROGRAM=" + cmake.resolve("ninja$exe").path,
+            "-DCMAKE_TOOLCHAIN_FILE=" + android.ndkDirectory.resolve("build/cmake/android.toolchain.cmake").path,
+            "-DANDROID_ABI=arm64-v8a", "-DANDROID_PLATFORM=android-26", "-DCMAKE_BUILD_TYPE=Release")
+        run(src, cmake.resolve("cmake$exe").path, "--build", "build-android", "--target", "qjs_exe")
+        val strip = android.ndkDirectory.resolve("toolchains/llvm/prebuilt").listFiles()!!.first().resolve("bin/llvm-strip$exe")
+        run(src, strip.path, "build-android/qjs")
+    }
+}
+val qjsJniLib by tasks.registering(Copy::class) {
+    dependsOn(qjsBuild)
+    from(qjsSrc.map { it.dir("build-android") }) { include("qjs"); rename { "libqjs.so" } }
+    into(journeysJniLibs.map { it.dir("arm64-v8a") })
+}
+tasks.named("preBuild") { dependsOn(qjsJniLib) }
+// The hub build scripts and the owner's design data they read (no game data), as assets under hub-build/.
+val hubBuildAssetsDir = layout.buildDirectory.dir("generated/hubBuildAssets")
+val hubBuildAssets by tasks.registering(Sync::class) {
+    from(rootProject.file("tools/hub")) {
+        include("qjs/*.mjs", "qjs/*.js", "victory/*.js", "victory/*.json", "dsms/glb-to-obj.js", "build/**")
+        into("hub-build/tools/hub")
+    }
+    from(rootProject.file("hub/victory/data/layout.json")) { into("hub-build/hub/victory/data") }
+    into(hubBuildAssetsDir)
+}
+android.sourceSets["main"].assets.srcDir(hubBuildAssetsDir)
+tasks.named("preBuild") { dependsOn(hubBuildAssets) }
+// Native libraries are extracted to the device, so libjourneys.so can be run as a program.
+android.packaging.jniLibs.useLegacyPackaging = true
+tasks.named("preBuild") { dependsOn(journeysJniLib) }
+
+// PokeJourneys: Victory Island (hub/victory), exported by Godot 4.7.2 as plain project files at the root of the APK's
+// assets, which is where the Godot library looks for res://, with the creator art (assets/creator) as res://creator.
+// Needs the Godot editor: pokejourneys.godot=<path to Godot_v4.7.2-stable_win64_console.exe> in local.properties, or
+// GODOT. Without it the APK has no hub and the app opens on the library (journeys/HubActivity.kt).
+val godotEditor = (localProps?.getProperty("pokejourneys.godot") ?: System.getenv("GODOT"))?.takeIf { it.isNotBlank() }
+val hubPackFile = layout.buildDirectory.file("hub/victory.zip")
+val hubAssetsDir = layout.buildDirectory.dir("generated/hubAssets")
+val hubPack by tasks.registering(Exec::class) {
+    onlyIf { godotEditor != null }
+    inputs.dir(rootProject.file("hub/victory")).withPropertyName("project")
+    outputs.file(hubPackFile)
+    doFirst { hubPackFile.get().asFile.parentFile.mkdirs() }
+    commandLine(
+        godotEditor ?: "godot", "--headless", "--path", rootProject.file("hub/victory").path,
+        "--export-pack", "Android", hubPackFile.get().asFile.path,
+    )
+}
+val hubAssets by tasks.registering(Sync::class) {
+    dependsOn(hubPack)
+    onlyIf { godotEditor != null }
+    from(provider { hubPackFile.get().asFile.takeIf { it.isFile }?.let { zipTree(it) } ?: files() })
+    from(rootProject.file("assets/creator")) { into("creator") }
+    into(hubAssetsDir)
+}
+android.sourceSets["main"].assets.srcDir(hubAssetsDir)
+// The hub's .godot folder: the default pattern skips every name starting with a dot.
+android.androidResources.ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
+tasks.named("preBuild") { dependsOn(hubAssets) }
+// The Godot library and the Kotlin 2.1 standard library it brings are newer than this app's Kotlin 1.9 compiler reads.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xskip-metadata-version-check"
+}
+// Discord sign-in (journeys/DiscordSignIn.kt): the Discord application's client id, discord.clientId in
+// local.properties or DISCORD_CLIENT_ID. Without one the hub has no sign-in screen. The redirect's scheme is
+// discord-<client id>, as Discord asks of mobile apps.
+val discordClientId = buildSecret("discord.clientId", "DISCORD_CLIENT_ID").filter { it.isDigit() }
+android.defaultConfig.buildConfigField("String", "DISCORD_CLIENT_ID", "\"$discordClientId\"")
+android.defaultConfig.buildConfigField("String", "OFFICIAL_SERVER_URL", "\"${buildSecret("journeys.officialServer", "JOURNEYS_OFFICIAL_SERVER")}\"")
+android.defaultConfig.manifestPlaceholders["discordScheme"] = "discord-" + discordClientId.ifEmpty { "0" }
+// Bouncy Castle and that Kotlin standard library both carry this OSGi manifest; the app needs neither.
+android.packaging.resources.excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
 
 tasks.withType<Test> {
     // readNativeTelemetry's bag-read throttle (NativeReader.kt) caches its
@@ -309,5 +516,8 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.79")
     // The relay WebSocket (Apache 2.0, with Okio).
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // PokeJourneys: the Godot engine for Victory Island (journeys/HubActivity.kt), MIT.
+    implementation("org.godotengine:godot:4.7.2.stable")
 }
 

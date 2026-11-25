@@ -48,6 +48,8 @@ import com.pokedaisy.app.companion.data.save.Gen3BoxMon
 import com.pokedaisy.app.companion.data.save.Gen3SaveData
 import com.pokedaisy.app.companion.data.save.Gen3SaveEditor
 import com.pokedaisy.app.companion.data.save.SPECIES_EGG
+import com.pokedaisy.app.companion.data.save.addDebugPokemon
+import com.pokedaisy.app.companion.data.save.firstEmptySlot
 import com.pokedaisy.app.companion.data.speciesNames
 import com.pokedaisy.app.companion.i18n.tk
 import com.pokedaisy.app.companion.i18n.tr
@@ -78,7 +80,9 @@ class PcBoxesState(editor: Gen3SaveEditor) {
     /** A pick-list or amount over the page, if one is open. */
     var editing by mutableStateOf<Editing?>(null)
 
-    enum class Page { BOXES, BAG }
+    internal var generatingPokemon by mutableStateOf(false)
+
+    enum class Page { BOXES, BAG, DEBUG }
 
     sealed class Editing {
         object Money : Editing()
@@ -101,6 +105,15 @@ class PcBoxesState(editor: Gen3SaveEditor) {
 
     val data: Gen3SaveData get() { revision; return editor.data }
     val changed: Boolean get() { revision; return editor.changed }
+
+    internal fun emptyDebugSlot(): BoxSlot? = data.firstEmptySlot(box)
+
+    internal fun addDebugPokemon(at: BoxSlot, record: ByteArray) {
+        editor.addDebugPokemon(at, record)
+        box = at.box
+        selected = MonRef.Pc(at)
+        revision++
+    }
 
     fun tap(at: BoxSlot) {
         val from = moving
@@ -139,12 +152,18 @@ fun PcBoxesScreen(
     icons: MonIconLoader? = null,
     /** TRADE: pick another game's save to trade with (only while nothing here is unsaved). */
     onTrade: (() -> Unit)? = null,
+    generateDebugPokemon: ((Int, Int) -> ByteArray)? = null,
 ) {
     val small = rememberGbaTextMetrics(textScale = 1f)
     // The box's cards: a step denser, so ten-letter names fit six across.
     val cell = rememberGbaTextMetrics(textScale = 0.8f)
     val data = state.data
-    val leave = { if (state.moving != null) state.moving = null else if (state.changed) state.confirmDiscard = true else onBack() }
+    val busy = saving || state.generatingPokemon
+    val leave = {
+        if (!busy) {
+            if (state.moving != null) state.moving = null else if (state.changed) state.confirmDiscard = true else onBack()
+        }
+    }
     Box(Modifier.fillMaxSize()) {
         AppBackdrop()
         Column(Modifier.fillMaxSize().padding(16.dp)) {
@@ -152,14 +171,21 @@ fun PcBoxesScreen(
             Spacer(Modifier.height(m.u * 4))
             Row(horizontalArrangement = Arrangement.spacedBy(m.u * 4)) {
                 for (p in PcBoxesState.Page.entries) {
+                    if (p == PcBoxesState.Page.DEBUG && generateDebugPokemon == null) continue
                     OptionButton(
-                        if (p == PcBoxesState.Page.BOXES) tk("BOXES") else tk("BAG"), m,
-                        onClick = { state.page = p; state.moving = null }, emphasis = state.page == p,
+                        when (p) {
+                            PcBoxesState.Page.BOXES -> tk("BOXES")
+                            PcBoxesState.Page.BAG -> tk("BAG")
+                            PcBoxesState.Page.DEBUG -> tr("DEBUG")
+                        }, m,
+                        onClick = { state.page = p; state.moving = null }, emphasis = state.page == p, enabled = !busy,
                     )
                 }
             }
             Spacer(Modifier.height(m.u * 4))
-            if (state.page == PcBoxesState.Page.BAG) BagPage(state, data, m, Modifier.weight(1f).fillMaxWidth())
+            if (state.page == PcBoxesState.Page.DEBUG && generateDebugPokemon != null)
+                Gen3DebugSavePage(state, m, Modifier.weight(1f).fillMaxWidth(), saving, generateDebugPokemon)
+            else if (state.page == PcBoxesState.Page.BAG) BagPage(state, data, m, Modifier.weight(1f).fillMaxWidth())
             else BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 val wide = maxWidth > maxHeight * 1.1f
                 if (wide) {
@@ -195,8 +221,8 @@ fun PcBoxesScreen(
                 } else {
                     if (pick != null) OptionButton(tk("MOVE"), m, onClick = { state.moving = pick }, emphasis = true, enabled = !saving)
                     if (onTrade != null && !state.changed) OptionButton(tk("TRADE"), m, onClick = onTrade, enabled = !saving)
-                    OptionButton(tk("UNDO ALL"), m, onClick = { state.undoAll() }, enabled = state.changed && !saving)
-                    OptionButton(tk("SAVE"), m, onClick = { state.confirmSave = true }, emphasis = true, enabled = state.changed && !saving)
+                    OptionButton(tk("UNDO ALL"), m, onClick = { state.undoAll() }, enabled = state.changed && !busy)
+                    OptionButton(tk("SAVE"), m, onClick = { state.confirmSave = true }, emphasis = true, enabled = state.changed && !busy)
                 }
             }
         }

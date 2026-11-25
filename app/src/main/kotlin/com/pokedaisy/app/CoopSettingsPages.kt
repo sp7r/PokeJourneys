@@ -190,7 +190,7 @@ internal class CoopSettingsPages(
 
     private fun shareLink() {
         val link = currentLink() ?: return
-        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, tr("Play Emerald with me in PokeDaisy: {0}", link))
+        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, tr("Play Emerald with me in PokeJourneys: {0}", link))
         runCatching { activity.startActivity(Intent.createChooser(send, null)) }
     }
 

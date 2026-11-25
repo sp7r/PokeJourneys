@@ -44,7 +44,8 @@ internal class SetupState {
     enum class Step { ROMS, SAVES, BUTTONS, MEDIA, COVERS }
 
     /** The steps shown: GAME MEDIA only while ScreenScraper is on. */
-    val steps: List<Step> = Step.entries.filter { it != Step.MEDIA || ScreenScraperClient.enabled }
+    // PokeJourneys: saves always stay in the app; skip the saves-folder step.
+    val steps: List<Step> = Step.entries.filter { it != Step.SAVES && (it != Step.MEDIA || ScreenScraperClient.enabled) }
     var step by mutableStateOf(Step.ROMS)
     val index get() = steps.indexOf(step)
     /** Opened by Settings' RUN SETUP: BACK on the first step returns there. */
@@ -106,7 +107,7 @@ internal fun SetupScreen(
         AppBackdrop()
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             OptionTitleWindow(
-                tr("WELCOME TO POKéDAISY"), m,
+                tr("WELCOME TO POKEJOURNEYS"), m,
                 trailing = "${s.index + 1} / ${steps.size}",
                 onBack = if (s.canGoBack) onBack else null,
             )
@@ -174,7 +175,7 @@ private fun Para(text: String, small: GbaTextMetrics, muted: Boolean = false) {
 private fun RomsStep(s: SetupState, m: GbaTextMetrics, small: GbaTextMetrics, onChoose: () -> Unit, onRemove: (String) -> Unit) {
     Heading(tr("YOUR ROMS FOLDERS"), m)
     Para(
-        tr("Pick the folders you keep your games in. PokéDaisy adds every game from them that the second screen supports, plays them right where they are (nothing is copied), and looks for new ones each time you open the app."),
+        tr("Pick the folders you keep your games in. PokeJourneys adds every game from them that the second screen supports, plays them right where they are (nothing is copied), and looks for new ones each time you open the app."),
         small,
     )
     Para(
@@ -183,7 +184,7 @@ private fun RomsStep(s: SetupState, m: GbaTextMetrics, small: GbaTextMetrics, on
     )
     if (!s.hasAccess) {
         Para(
-            tr("Android asks you to allow All files access first, so PokéDaisy can open games and saves outside its own folder. Turn it on and come back here."),
+            tr("Android asks you to allow All files access first, so PokeJourneys can open games and saves outside its own folder. Turn it on and come back here."),
             small, muted = true,
         )
     }
@@ -248,7 +249,7 @@ private fun SavesStep(
         small,
     )
     val listed = s.suggestions.map { it.dir.absolutePath }
-    OptionLine(tr("KEEP THEM IN POKéDAISY"), tr("DEFAULT"), selected = s.savesDir == null, m, labelWeight = 0.75f, divider = true) { onUse(null) }
+    OptionLine(tr("KEEP THEM IN POKEJOURNEYS"), tr("DEFAULT"), selected = s.savesDir == null, m, labelWeight = 0.75f, divider = true) { onUse(null) }
     s.suggestions.forEach { sug ->
         OptionLine(
             shortPath(sug.dir.absolutePath), if (sug.saves == 1) tr("1 SAVE") else tr("{0} SAVES", sug.saves),

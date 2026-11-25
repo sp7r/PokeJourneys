@@ -67,3 +67,25 @@ __pycache__/
 
 # ROM lists for make rom-support LIST=... (scripts/rom_agent/): local paths, never committed
 roms-to-add*.txt
+
+# --- PokeJourneys additions ---
+# .NET build output (save bridge in src/)
+bin/
+obj/
+*.user
+.vs/
+# Pokémon data files and anything extracted from a game: never committed
+*.pk[1-9]
+*.nsbmd
+*.nsbtx
+*.nsbca
+*.nsbta
+*.nsbtp
+*.narc
+*.glb
+*.gltf
+hub-work/
+reference/
+.godot/
+# Local save bridge data folder
+journeys-data/

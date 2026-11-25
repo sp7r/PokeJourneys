@@ -85,7 +85,8 @@ import com.pokedaisy.app.companion.ui.AppBackdrop
 import com.pokedaisy.app.companion.ui.AspectPicker
 import com.pokedaisy.app.companion.ui.aspectLabel
 import com.pokedaisy.app.companion.ui.portraitPlaceLabel
-import com.pokedaisy.app.companion.ui.CoffeeCup
+import com.pokedaisy.app.companion.ui.KofiMug
+import com.pokedaisy.app.companion.SupportAsk
 import com.pokedaisy.app.companion.ui.DiscordMark
 import com.pokedaisy.app.companion.Discord
 import com.pokedaisy.app.companion.ui.GbaText
@@ -133,7 +134,7 @@ import com.pokedaisy.app.companion.ui.drawPixelRoundRect
  */
 class SettingsActivity : ComponentActivity() {
 
-    private enum class Screen { HOME, SPEED, DISPLAY, HOTKEYS, CONTROLS, SHADERS, FIELD_HUD, QUICK_MENU, TOUCH, OVERLAYS, FOLDERS, ROMS_FOLDERS, SAVES_FOLDER, SAVE_SEARCH, STATES_FOLDER, BACKUPS, COVER_ART, SCREENSCRAPER, HIDDEN, ACHIEVEMENTS, CHEATS, CHEAT_ADD, LICENSES, HELP, COOP_PAIR, COOP_JOIN, COOP_PARTNERS, COOP_RELAY }
+    private enum class Screen { HOME, SPEED, DISPLAY, HOTKEYS, CONTROLS, SHADERS, FIELD_HUD, QUICK_MENU, TOUCH, OVERLAYS, FOLDERS, ROMS_FOLDERS, SAVES_FOLDER, SAVE_SEARCH, STATES_FOLDER, BACKUPS, COVER_ART, SCREENSCRAPER, HIDDEN, ACHIEVEMENTS, CHEATS, CHEAT_ADD, LICENSES, HELP, COOP_PAIR, COOP_JOIN, COOP_PARTNERS, COOP_RELAY, SERVER }
 
     private lateinit var prefs: Prefs
     private var screen by mutableStateOf(Screen.HOME)
@@ -232,13 +233,15 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.pokedaisy.app.journeys.HubPageActivity.reportTopPageVisibility(this)
         RomFolder.useBestEffortStore(this)
         prefs = Prefs(this)
         com.pokedaisy.app.companion.i18n.L10n.apply(prefs.appLanguage, null)
         RetroAchievements.init(this)
         tab = intent?.getBooleanExtra(EXTRA_TAB, false) == true
         toolsNew = intent?.getBooleanExtra(EXTRA_TOOLS_NEW, false) == true
-        intent?.getStringExtra(EXTRA_CHEATS_ROM)?.let { path ->
+        // PokeJourneys: ignore direct requests for the cheats page.
+        intent?.getStringExtra(EXTRA_CHEATS_ROM)?.takeIf { JourneyRules.CHEATS }?.let { path ->
             cheatsOnly = true
             cheatRom = File(path)
             screen = Screen.CHEATS
@@ -327,15 +330,18 @@ class SettingsActivity : ComponentActivity() {
                     // The library's header in place of HOME's SETTINGS title, as on GAMES and TOOLS.
                     OptionTitleWindow(
                         // One button beside it: the name always fits (the games' header drops it on a phone held upright).
-                        "POKéDAISY",
+                        "POKEJOURNEYS",
                         nm,
                         leading = { com.pokedaisy.app.companion.ui.PixelArt(com.pokedaisy.app.companion.ui.LOGO_ROWS, com.pokedaisy.app.companion.ui.LOGO_PALETTE, Modifier.size(nm.lineHeight)) },
                     ) {
-                        Spacer(Modifier.width(nm.u * 4))
-                        com.pokedaisy.app.companion.ui.OptionButton(
-                            null, nm, onClick = { screen = Screen.HELP },
-                            icon = Icons.AutoMirrored.Filled.HelpOutline, contentDescription = tr("Help"),
-                        )
+                        // PokeJourneys: PokeDaisy's help pages are off (JourneyRules REMOVED_SETTINGS).
+                        if (JourneyRules.settingAllowed("HELP")) {
+                            Spacer(Modifier.width(nm.u * 4))
+                            com.pokedaisy.app.companion.ui.OptionButton(
+                                null, nm, onClick = { screen = Screen.HELP },
+                                icon = Icons.AutoMirrored.Filled.HelpOutline, contentDescription = tr("Help"),
+                            )
+                        }
                     }
                     Spacer(Modifier.height(nm.u * 8))
                 } else {
@@ -368,6 +374,7 @@ class SettingsActivity : ComponentActivity() {
                         Screen.COOP_PAIR, Screen.COOP_JOIN -> tk("PAIR")
                         Screen.COOP_PARTNERS -> tk("PARTNERS")
                         Screen.COOP_RELAY -> tk("RELAY")
+                        Screen.SERVER -> tk("SERVER")
                     },
                     m = m,
                     onBack = {
@@ -405,6 +412,7 @@ class SettingsActivity : ComponentActivity() {
                     Screen.COOP_PAIR, Screen.COOP_JOIN -> coop.PairPage(m, small) { screen = Screen.HOME }
                     Screen.COOP_PARTNERS -> coop.PartnersPage(m, revision)
                     Screen.COOP_RELAY -> coop.RelayPage(m, small)
+                    Screen.SERVER -> com.pokedaisy.app.journeys.ServerSettingsPage(m, small)
                 }
             }
             if (tab && !wide) LibraryLook { nm, ns ->
@@ -663,7 +671,8 @@ class SettingsActivity : ComponentActivity() {
     @Composable
     private fun SubRowsScreen(m: GbaTextMetrics, rows: () -> List<SettingRow>) {
         @Suppress("UNUSED_EXPRESSION") revision
-        val list = rows()
+        // PokeJourneys: filter the shared speed sub-pages too.
+        val list = rows().filter { JourneyRules.settingAllowed(it.label) }
         Column(Modifier.fillMaxWidth()) {
             OptionListWindow(m, Modifier.fillMaxWidth().weight(1f, fill = false)) {
                 GroupedRows(list, m, cursor = -1, onClick = { list[it].onClick() })
@@ -728,6 +737,8 @@ class SettingsActivity : ComponentActivity() {
         fun onOff(on: Boolean) = if (on) tk("ON") else tk("OFF")
         // The same groups and order as the bottom screen's SETTINGS where they overlap.
         val rows = listOfNotNull(
+            groupTitle(tk("JOURNEYS")),
+            SettingRow(tk("SERVER"), com.pokedaisy.app.journeys.JourneyServer.label(this), opensPage = true) { screen = Screen.SERVER },
             groupTitle(tk("FF / SPEED")),
             SettingRow(tk("FF SPEED"), rateLabel(prefs.ffMaxSpeed)) {
                 selector = Selector(tk("FF SPEED"), rateLabels, rateLabel(prefs.ffMaxSpeed)) {
@@ -964,7 +975,8 @@ class SettingsActivity : ComponentActivity() {
             ) { openUrl(Discord.URL) },
             // The manual (docs/manual, served by the website), readable offline once fetched.
             SettingRow(tk("HELP"), null, opensPage = true) { screen = Screen.HELP },
-        )
+        ) // PokeJourneys: hide disabled settings before search and navigation.
+            .filter { com.pokedaisy.app.JourneyRules.settingAllowed(it.label) }
         // Search: every row whose name, value or keywords (SETTING_KEYWORDS: "rebind", "keybinds"...) match.
         val shown = filterRows(rows, searchQuery)
         // D-pad focus starts on the first setting (it used to land on the search box first), once per visit to Settings;
@@ -1201,7 +1213,7 @@ class SettingsActivity : ComponentActivity() {
                     skin.skin.system?.let { prefs.touchControlsStyle = prefs.touchControlsStyle.withSkin(it, skin.id) }
                 }
                 touchSkinUi.notice = when {
-                    added.isEmpty() -> tk("NOT A SKIN WE CAN USE") to tr("PokeDaisy reads Delta skins for GBA and Game Boy games: {0}", result.refused.joinToString("; "))
+                    added.isEmpty() -> tk("NOT A SKIN WE CAN USE") to tr("PokeJourneys reads Delta skins for GBA and Game Boy games: {0}", result.refused.joinToString("; "))
                     added.size == 1 -> tk("SKIN ADDED") to tr("{0} is on for {1} games.", added.first().skin.name, tr(added.first().skin.system?.label ?: ""))
                     else -> tk("SKINS ADDED") to tr("{0} skins added. Pick one under SKINS.", added.size)
                 }
@@ -1247,7 +1259,7 @@ class SettingsActivity : ComponentActivity() {
         Column(Modifier.fillMaxSize()) {
             Hint(
                 tr(
-                    "A frame around the game. {0} and {1} are PokéDaisy's own. {2} adds yours: a RetroArch overlay (.cfg with its PNG), a .zip of them, or a PNG with a see-through screen.",
+                    "A frame around the game. {0} and {1} are PokeJourneys's own. {2} adds yours: a RetroArch overlay (.cfg with its PNG), a .zip of them, or a PNG with a see-through screen.",
                     tr("DAISY"), tr("BEZEL"), tr("IMPORT FILE"),
                 ),
                 m, small,
@@ -1338,14 +1350,17 @@ class SettingsActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = m.u * 8, vertical = m.u * 3),
             ) {
                 GbaText(
-                    tr("POKéDAISY {0}  ·  by {1}", BuildConfig.VERSION_NAME, "Lidor Itzhari (@lidor30)"),
+                    tr("POKEJOURNEYS ONLINE {0}  ·  based on PokeDaisy by {1}", BuildConfig.VERSION_NAME, "Lidor Itzhari (@lidor30)"),
                     OptionColors.label, OptionColors.labelShadow, small, modifier = Modifier.weight(1f),
                 )
-                FooterLink(tr("Buy me a coffee"), m, small, Modifier.padding(start = m.u * 6), { CoffeeCup() }) {
-                    openUrl(COFFEE_URL)
+                FooterLink("Ko-fi", m, small, Modifier.padding(start = m.u * 6), { KofiMug() }) {
+                    openUrl(SupportAsk.Site.KOFI.url)
                 }
-                GbaText("  ·  ", OptionColors.label, OptionColors.labelShadow, small)
-                FooterLink("Discord", m, small, icon = { DiscordMark() }) { openUrl(Discord.URL) }
+                // PokeJourneys: no link to PokeDaisy's Discord server.
+                if (JourneyRules.settingAllowed("DISCORD")) {
+                    GbaText("  ·  ", OptionColors.label, OptionColors.labelShadow, small)
+                    FooterLink("Discord", m, small, icon = { DiscordMark() }) { openUrl(Discord.URL) }
+                }
                 GbaText("  ·  ", OptionColors.label, OptionColors.labelShadow, small)
                 FooterLink("GitHub", m, small, icon = { GitHubMark() }) { openUrl(REPO_URL) }
             }
@@ -1793,7 +1808,7 @@ class SettingsActivity : ComponentActivity() {
         @Suppress("UNUSED_EXPRESSION") revision
         Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             Hint(
-                tr("ScreenScraper.fr has box art, screenshots, title screens, logos, videos and each game's story. With your free account, PokéDaisy fetches them once per game and keeps them on the device. Its box art comes first for library covers, and with two screens the launcher shows the game you're on, in full, on the other one."),
+                tr("ScreenScraper.fr has box art, screenshots, title screens, logos, videos and each game's story. With your free account, PokeJourneys fetches them once per game and keeps them on the device. Its box art comes first for library covers, and with two screens the launcher shows the game you're on, in full, on the other one."),
                 m, small,
             )
             OptionListWindow(m, Modifier.fillMaxWidth()) {
@@ -1884,7 +1899,7 @@ class SettingsActivity : ComponentActivity() {
                         tk("HOTKEYS"), if (on) tk("ON") else tk("OFF"), selected = false, m, height = m.rowHeight * 1.2f,
                         labelWeight = 0.5f, divider = true,
                     ) { capture.cancel(); prefs.hotkeysEnabled = !on; revision++ }
-                    Hotkeys.Action.entries.forEachIndexed { i, action ->
+                    Hotkeys.Action.entries.filter { /* PokeJourneys: hide disabled bindings. */ JourneyRules.actionAllowed(it.name) }.forEachIndexed { i, action ->
                         KeyBindRow(
                             action.title, hotkeys.rawBindings[action], capture, m, small,
                             divider = i < Hotkeys.Action.entries.lastIndex, enabled = on, labelBadge = action.badge,
@@ -1940,23 +1955,25 @@ class SettingsActivity : ComponentActivity() {
         val roms = prefs.romsFolders
         val extra = prefs.extraSaveDirs
         val states = statesDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        return listOf(
+        // PokeJourneys: saves always stay in the app; omit folder choices and search results.
+        return listOfNotNull(
             SettingRow(
                 tk("ROMS FOLDERS"), if (roms.isEmpty()) tk("NONE") else roms.size.toString(), opensPage = true,
                 subtitle = "Where the library finds your games", labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.ROMS_FOLDERS),
             ) { screen = Screen.ROMS_FOLDERS },
             SettingRow(tk("GAME SAVES"), if (prefs.savesDirOverride == null) tk("DEFAULT") else tk("CUSTOM"), opensPage = true, subtitle = "Where new saves go") {
                 screen = Screen.SAVES_FOLDER
-            },
+            }.takeIf { false },
             SettingRow(tk("ALSO LOOK IN"), if (extra.isEmpty()) tk("NONE") else extra.size.toString(), opensPage = true, subtitle = "More folders to find a game's save in") {
                 screen = Screen.SAVE_SEARCH
-            },
+            }.takeIf { false },
             SettingRow(
                 tk("SAVE BACKUPS"), if (prefs.saveBackups) tk("ON") else tk("OFF"), opensPage = true,
                 subtitle = "A copy of the save each time a game starts",
                 labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.SAVE_BACKUPS),
             ) { screen = Screen.BACKUPS },
-            SettingRow(tk("SAVE STATES"), humanSize(states), opensPage = true) { screen = Screen.STATES_FOLDER },
+            // PokeJourneys: no player access to state files or their delete buttons.
+            SettingRow(tk("SAVE STATES"), humanSize(states), opensPage = true) { screen = Screen.STATES_FOLDER }.takeIf { JourneyRules.SAVE_STATE_SLOTS },
         )
     }
 
@@ -2097,30 +2114,33 @@ class SettingsActivity : ComponentActivity() {
         Column(Modifier.fillMaxWidth()) {
             OptionListWindow(m, Modifier.fillMaxWidth().weight(1f, fill = false)) {
                 GroupedRows(rows, m, cursor = -1, onClick = { rows[it].onClick() }, footer = {
-                    // Level with the rows' labels.
-                    Column(Modifier.padding(horizontal = m.u * 8).padding(top = m.u * 4)) {
-                        GbaText(tr("BACKUP FOLDER"), OptionColors.label, OptionColors.labelShadow, m)
-                        if (folder == null) {
+                    // PokeJourneys: saves and backups always stay in the app; hide the folder choice.
+                    if (false) {
+                        // Level with the rows' labels.
+                        Column(Modifier.padding(horizontal = m.u * 8).padding(top = m.u * 4)) {
+                            GbaText(tr("BACKUP FOLDER"), OptionColors.label, OptionColors.labelShadow, m)
+                            if (folder == null) {
+                                GbaText(
+                                    tr("Beside each save, in a {0} folder.", SaveBackups.DIR_NAME),
+                                    OptionColors.muted, OptionColors.mutedShadow, small, maxLines = Int.MAX_VALUE,
+                                )
+                            } else {
+                                GbaText(folder, OptionColors.muted, OptionColors.mutedShadow, small, maxLines = 3)
+                            }
                             GbaText(
-                                tr("Beside each save, in a {0} folder.", SaveBackups.DIR_NAME),
+                                tr("Backups made before a change stay where they are, and RESTORE BACKUP still finds them."),
                                 OptionColors.muted, OptionColors.mutedShadow, small, maxLines = Int.MAX_VALUE,
+                                modifier = Modifier.padding(top = m.u * 2),
                             )
-                        } else {
-                            GbaText(folder, OptionColors.muted, OptionColors.mutedShadow, small, maxLines = 3)
-                        }
-                        GbaText(
-                            tr("Backups made before a change stay where they are, and RESTORE BACKUP still finds them."),
-                            OptionColors.muted, OptionColors.mutedShadow, small, maxLines = Int.MAX_VALUE,
-                            modifier = Modifier.padding(top = m.u * 2),
-                        )
-                        Row(
-                            modifier = Modifier.padding(vertical = m.u * 4),
-                            horizontalArrangement = Arrangement.spacedBy(m.u * 4),
-                        ) {
-                            OptionButton(tk("CHANGE FOLDER"), small, enabled = on, onClick = { pickFolder(pick) })
-                            if (folder != null) {
-                                OptionButton(tk("USE DEFAULT"), small, enabled = on, onClick = { prefs.saveBackupsDir = null; backupsChanged() })
-                                OptionButton(tk("COPY PATH"), small, onClick = { copyPath(ctx, folder) })
+                            Row(
+                                modifier = Modifier.padding(vertical = m.u * 4),
+                                horizontalArrangement = Arrangement.spacedBy(m.u * 4),
+                            ) {
+                                OptionButton(tk("CHANGE FOLDER"), small, enabled = on, onClick = { pickFolder(pick) })
+                                if (folder != null) {
+                                    OptionButton(tk("USE DEFAULT"), small, enabled = on, onClick = { prefs.saveBackupsDir = null; backupsChanged() })
+                                    OptionButton(tk("COPY PATH"), small, onClick = { copyPath(ctx, folder) })
+                                }
                             }
                         }
                     }
@@ -2313,14 +2333,13 @@ class SettingsActivity : ComponentActivity() {
         fun cheatImportNotice(r: CheatStore.Import?): Pair<String, String> = when {
             r == null -> tk("CAN'T READ THAT FILE") to tr("Pick a RetroArch .cht or an mGBA .cheats file.")
             r.added == 0 && r.badCheats == 0 && r.duplicates == 0 ->
-                tk("NO CHEATS FOUND") to tr("That file has no cheats in a format PokeDaisy reads (RetroArch .cht, mGBA .cheats).")
+                tk("NO CHEATS FOUND") to tr("That file has no cheats in a format PokeJourneys reads (RetroArch .cht, mGBA .cheats).")
             else -> (if (r.added == 0) tk("NO CHEATS ADDED") else tr("{0} CHEATS ADDED", r.added)) to listOfNotNull(
                 tr("They start OFF: tap one to turn it on.").takeIf { r.added > 0 },
                 tr("{0} left out: mGBA can't read {1} of their code lines.", r.badCheats, r.badLines).takeIf { r.badCheats > 0 },
                 tr("{0} were already in the list.", r.duplicates).takeIf { r.duplicates > 0 },
             ).joinToString(" ")
         }
-        const val COFFEE_URL = "https://buymeacoffee.com/lidor30g"
 
         fun rateLabel(v: Float) = if (v <= 0f) tk("INFINITE") else if (v % 1f == 0f) "${v.toInt()}×" else "$v×"
 

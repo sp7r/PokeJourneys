@@ -44,6 +44,11 @@ object Gen4Text {
     fun name(b: ByteArray, off: Int, max: Int): String =
         decode(IntArray(max) { if (off + it * 2 + 1 < b.size) u16(b, off + it * 2) else 0xFFFF })
 
+    /** The hub's trainer name in the same character set used by a DS naming screen. */
+    fun encodeName(name: String): IntArray = name.take(7).mapNotNull { c ->
+        chars.entries.firstOrNull { it.value == c.toString() }?.key
+    }.toIntArray()
+
     private fun decode(codes: IntArray): String {
         val sb = StringBuilder()
         var j = 0

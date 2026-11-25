@@ -5,6 +5,7 @@ import com.pokedaisy.app.companion.data.EMERALD_LOCALIZED_CODES
 import com.pokedaisy.app.companion.data.RETAIL_PORT_CODE_TITLES
 import com.pokedaisy.app.companion.data.RETAIL_PORT_TITLES
 import com.pokedaisy.app.companion.data.TelemetrySampler
+import com.pokedaisy.app.journeys.JourneyDsCatalog
 import java.io.File
 
 /**
@@ -22,7 +23,7 @@ import java.io.File
  */
 object GameTitles {
 
-    val BY_SHA1: Map<String, String> by lazy { RETAIL + HACKS + RETAIL_PORT_TITLES + NDS_PORT_TITLES }
+    val BY_SHA1: Map<String, String> by lazy { RETAIL + HACKS + RETAIL_PORT_TITLES + NDS_PORT_TITLES + JourneyDsCatalog.variants }
 
     /** The DS language ports' own titles ([com.pokedaisy.app.companion.data.NDS_PORTS]). */
     private val NDS_PORT_TITLES: Map<String, String> by lazy {
@@ -44,7 +45,7 @@ object GameTitles {
         com.pokedaisy.app.companion.data.RenegadePlatinum.V1_3_0_SHA1,
         com.pokedaisy.app.companion.data.RenegadePlatinum.V1_3_0_CLASSIC_SHA1,
         com.pokedaisy.app.companion.data.RenegadePlatinum.V1_2_0_SHA1,
-    ) + com.pokedaisy.app.companion.data.NDS_PORTS.map { it.sha1 }
+    ) + com.pokedaisy.app.companion.data.NDS_PORTS.map { it.sha1 } + JourneyDsCatalog.retail.keys + JourneyDsCatalog.variants.keys
 
     private val RETAIL: Map<String, String> = mapOf(
         // Retail (USA, Europe), every revision: pret's pokefirered / pokeemerald / pokeruby.
@@ -108,7 +109,7 @@ object GameTitles {
         // pret/pokegold's roms.sha1.
         "d8b8a3600a465308c9953dfa04f0081c05bdcb94" to "Pokémon Gold",
         "49b163f7e57702bc939d642a18f591de55d92dae" to "Pokémon Silver",
-    )
+    ) + JourneyDsCatalog.retail
 
     /** Hacks (and the Game Boy ones): the library's HACK tag. */
     private val HACKS: Map<String, String> = mapOf(
@@ -218,7 +219,7 @@ object GameTitles {
     /** DS carts worth hashing (128 MB each, once per file): the DS games above. */
     private val NDS_CODES = setOf(
         "CPUE", "CPUF", "IPKE", "IPKD", "IPKF", "IPGE", "IPGD", "IPGF", "IRBO", "IRBF", "IRAO", "IRAF", "IREO", "IRDO", "IPKJ",
-    ) + com.pokedaisy.app.companion.data.DsPorts.codes
+    ) + com.pokedaisy.app.companion.data.DsPorts.codes + JourneyDsCatalog.playbackCodes
 
     /** Only these games' ROMs (and Game Boy carts) are worth hashing: every entry above is one of them. */
     private val CODES = setOf("BPRE", "BPGE", "BPEE", "AXVE", "AXPE") + EMERALD_LOCALIZED_CODES +
@@ -254,6 +255,16 @@ object GameTitles {
     /** What kind of game [rom] is, if [identify] has looked at this exact file. Cheap. */
     fun category(context: Context, rom: File): RomCategory? =
         cache(context)[rom.absolutePath]?.takeIf { it.matches(rom) }?.category
+
+    /** PokeJourneys: whether [identify] found [rom] to be a known retail dump: named by its SHA-1, neither a hack nor
+     * randomized. Anything else (patched, randomized, unknown) isn't an official journey. Cheap. */
+    fun isKnownRetail(context: Context, rom: File): Boolean =
+        cache(context)[rom.absolutePath]?.takeIf { it.matches(rom) }
+            ?.let { it.title != null && !it.title.endsWith(RANDOMIZED) &&
+                !it.title.endsWith(JourneyDsCatalog.VARIANT_SUFFIX) && it.category != RomCategory.HACK } == true
+
+    fun isKnownDsVariant(context: Context, rom: File): Boolean =
+        title(context, rom)?.endsWith(JourneyDsCatalog.VARIANT_SUFFIX) == true
 
     /** Which console [rom] runs on (GB / GBC / GBA / NDS, never HACK: a hack is its base game's), if [identify] has
      * looked at this exact file. Cheap. The library's quick views filter on it. */

@@ -49,7 +49,7 @@ class LaunchActivity : Activity() {
         L10n.apply(Prefs(this).appLanguage, null)
         val uri = romUri(intent)
         if (uri == null) {
-            Toast.makeText(this, tr("No ROM was passed to PokeDaisy"), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, tr("No ROM was passed to PokeJourneys"), Toast.LENGTH_LONG).show()
             close()
             return
         }
@@ -212,7 +212,7 @@ class LaunchActivity : Activity() {
         val needsAllFiles = uri.scheme == "file" &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()
         if (needsAllFiles) {
-            Toast.makeText(this, tr("PokeDaisy can't read {0} - allow All files access, then launch again", path), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, tr("PokeJourneys can't read {0} - allow All files access, then launch again", path), Toast.LENGTH_LONG).show()
             runCatching {
                 startActivity(
                     Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName"))
@@ -220,7 +220,7 @@ class LaunchActivity : Activity() {
                 )
             }
         } else {
-            Toast.makeText(this, tr("PokeDaisy can't read {0}", path), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, tr("PokeJourneys can't read {0}", path), Toast.LENGTH_LONG).show()
         }
     }
 

@@ -1,0 +1,37 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'journeys.hub.game'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'journeys.hub.game'
+        minSdk 26 // java.nio.file, used to read the hub data
+        targetSdk 34
+        versionCode 1
+        versionName '0.1'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets { main { jniLibs.srcDirs = ["$buildDir/natives"] } }
+    buildTypes { release { minifyEnabled false } }
+}
+
+configurations { natives }
+dependencies {
+    implementation project(':core')
+    implementation 'com.badlogicgames.gdx:gdx-backend-android:1.13.1'
+    implementation 'com.badlogicgames.gdx-controllers:gdx-controllers-android:2.2.3'
+    natives 'com.badlogicgames.gdx:gdx-platform:1.13.1:natives-armeabi-v7a'
+    natives 'com.badlogicgames.gdx:gdx-platform:1.13.1:natives-arm64-v8a'
+    natives 'com.badlogicgames.gdx:gdx-platform:1.13.1:natives-x86_64'
+}
+
+// libGDX's native libraries come as jars; unpack each into the ABI folder the APK expects
+tasks.register('copyAndroidNatives') {
+    doFirst {
+        configurations.natives.copy().files.each { jar ->
+            def abi = ['armeabi-v7a', 'arm64-v8a', 'x86_64'].find { jar.name.endsWith("natives-${it}.jar") }
+            if (abi) copy { from zipTree(jar); into file("$buildDir/natives/$abi"); include '*.so' }
+        }
+    }
+}
+tasks.matching { it.name.contains('merge') && it.name.contains('JniLibFolders') }.configureEach { dependsOn 'copyAndroidNatives' }

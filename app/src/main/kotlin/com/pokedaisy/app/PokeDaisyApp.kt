@@ -11,6 +11,8 @@ class PokeDaisyApp : Application() {
         val prefs = Prefs(this)
         prefs.appOpenCount = (prefs.appOpenCount + 1).coerceAtMost(1000)
         CrashReports.apply(prefs.crashReportsEnabled)
+        // PokeJourneys: crash logs for the server's admin console (journeys/ServerCrashReports.kt).
+        com.pokedaisy.app.journeys.ServerCrashReports.start(this)
         // SOUND > GAME VOLUME / MUTE GAME: every player of the game's sound reads it from here.
         GameVolume.load(prefs)
         AudioEffects.load(prefs)

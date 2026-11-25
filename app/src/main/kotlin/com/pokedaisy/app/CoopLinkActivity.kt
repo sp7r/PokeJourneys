@@ -14,7 +14,8 @@ import com.pokedaisy.app.companion.i18n.tr
 class CoopLinkActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!FeatureFlags.coop(this)) {
+        // PokeJourneys: exported invite links cannot start pairing.
+        if (!JourneyRules.COOP || !FeatureFlags.coop(this)) {
             finish()
             return
         }

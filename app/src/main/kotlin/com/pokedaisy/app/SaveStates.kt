@@ -52,6 +52,8 @@ class SaveStates(filesDir: File, romCrc: String) {
      */
     fun latestResumeSource(): File? {
         val resume = resumeFile.takeIf { it.isFile && it.length() > 0 }
+        // PokeJourneys: resume never falls back to a manual slot.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return resume
         val newestSlot = (SLOT_MIN..SLOT_MAX)
             .map { stateFile(it) }
             .filter { it.isFile && it.length() > 0 }

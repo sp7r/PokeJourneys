@@ -234,14 +234,17 @@ object TrainerCardArt {
         else -> Words()
     }
 
+    data class FrontFooter(val icon: RomArt.Image, val first: Pair<String, String>, val second: Pair<String, String>)
+
     /**
      * The card as the game shows it: 240x160, front or [back]; [colon] = the
      * play time's blinking colon. [backdrop] false leaves out the screen
      * behind the card (BG2), transparent instead - see [cardBounds]. [pic]: another 64x64 front pic and its palette in
      * place of the player's (PLAYER LOOK's hero, as the game itself then draws it).
+     * [frontFooter] replaces the badge strip with an icon and two stats for the hub's card.
      */
     fun render(art: Art, card: TrainerCardInfo, back: Boolean, colon: Boolean = true, backdrop: Boolean = true,
-               pic: Pair<ByteArray, ByteArray>? = null): RomArt.Image {
+               pic: Pair<ByteArray, ByteArray>? = null, frontFooter: FrontFooter? = null): RomArt.Image {
         val b = blobs(art.style)
         val kanto = !art.style.hoenn
         val ry = art.style == CardStyle.RECHARGED_YELLOW || art.style == CardStyle.RECHARGED_YELLOW_V1_9
@@ -317,6 +320,27 @@ object TrainerCardArt {
             ry -> rechargedYellowText(t, card, back, colon, if (art.style == CardStyle.RECHARGED_YELLOW_V1_9) RY19_STAT else STAT)
             kanto -> kantoText(t, card, back, colon)
             else -> hoennText(t, card, back, colon, art.style)
+        }
+        if (!back && frontFooter != null) {
+            val (left, _, right, bottom) = cardBounds(img).toList()
+            val top = bottom - 34
+            for (y in top until bottom - 4) {
+                val color = if (y == top) 0xFF7D9AB7.toInt() else 0xFFDDECF8.toInt()
+                img.argb.fill(color, y * img.width + left + 4, y * img.width + right - 4)
+            }
+            val icon = frontFooter.icon
+            val iconX = left + 10
+            val iconY = top + (30 - icon.height) / 2 + 1
+            for (y in 0 until icon.height) for (x in 0 until icon.width) {
+                val color = icon.argb[y * icon.width + x]
+                if (color != 0) img.argb[(iconY + y) * img.width + iconX + x] = color
+            }
+            listOf(frontFooter.first, frontFooter.second).forEachIndexed { row, (label, count) ->
+                val textY = top - 6 + row * 13
+                val value = enc(count)
+                t.print(iconX + icon.width - 4, textY, enc(label))
+                t.print(right - 20 - t.width(value), textY, value)
+            }
         }
         return img
     }

@@ -34,6 +34,8 @@
 #include <mgba/core/cheats.h>
 #include <mgba/internal/gba/gba.h>
 #include <mgba/internal/gba/cheats.h>
+#include <mgba/internal/gb/gb.h>
+#include <mgba/internal/gb/memory.h>
 #include <mgba-util/vfs.h>
 
 #include "pk_cheats.h"
@@ -77,6 +79,10 @@ static int pk_cheats_is_gba(struct mCore* core) {
 }
 
 static uint8_t* pk_rom_byte(struct mCore* core, uint32_t addr) {
+    if (core->platform(core) == mPLATFORM_GB) {
+        struct GB* gb = core->board;
+        return gb->memory.rom && addr < gb->pristineRomSize ? gb->memory.rom + addr : NULL;
+    }
     struct GBA* gba = core->board;
     uint32_t off = addr & (SIZE_CART0 - 1);
     if (!gba->memory.rom || off >= gba->memory.romSize) {
@@ -195,6 +201,13 @@ void pk_cheats_overlay(uint32_t addr, uint8_t* dst, int len) {
     pk_fixes_overlay(sOptions, sOptionCount, addr, dst, len);
     for (int i = 0; i < sBlockCount; i++) {
         const struct pk_block* k = &sBlocks[i];
+        if (k->addr < BASE_CART0) {
+            uint32_t lo = k->addr > addr ? k->addr : addr;
+            uint32_t hi = k->addr + (uint32_t) k->len;
+            if (addr + (uint32_t) len < hi) hi = addr + (uint32_t) len;
+            if (lo < hi) memcpy(dst + lo - addr, k->orig + lo - k->addr, hi - lo);
+            continue;
+        }
         for (uint32_t base = BASE_CART0; base < BASE_CART_SRAM; base += SIZE_CART0) {
             // The block as seen through this mirror, clipped to the read.
             uint32_t from = base | (k->addr & (SIZE_CART0 - 1));
@@ -363,7 +376,12 @@ static uint32_t pk_crc32(const uint8_t* p, int len) {
 // file's (its CRC32 = `expectCrc`, no cheat or other patch on it) and the block doesn't
 // overlap one already in. Returns 1 if it went in, 0 if not.
 int pk_cheats_block(struct mCore* core, uint32_t addr, const uint8_t* data, int len, uint32_t expectCrc) {
-    if (!pk_cheats_is_gba(core) || len < 1 || sBlockCount >= PK_MAX_BLOCKS || addr < BASE_CART0 || addr >= BASE_CART_SRAM) {
+    if (!core || len < 1 || sBlockCount >= PK_MAX_BLOCKS) {
+        return 0;
+    }
+    int gb = core->platform(core) == mPLATFORM_GB;
+    if ((!gb && (!pk_cheats_is_gba(core) || addr < BASE_CART0 || addr >= BASE_CART_SRAM)) ||
+        (gb && ((uint64_t) addr + (uint32_t) len > ((struct GB*) core->board)->pristineRomSize))) {
         return 0;
     }
     uint32_t off = addr & (SIZE_CART0 - 1);
@@ -388,11 +406,16 @@ int pk_cheats_block(struct mCore* core, uint32_t addr, const uint8_t* data, int 
     // mGBA's own patch for the first byte: copies a still-mapped ROM file first
     // (_pristineCow), so the rest goes into that copy, never the file.
     int8_t old = 0;
-    GBAPatch8(((struct GBA*) core->board)->cpu, addr, (int8_t) data[0], &old);
+    if (gb) {
+        GBPatch8(((struct GB*) core->board)->cpu, (uint16_t) ((addr & 0x3FFFu) | (addr >= 0x4000u ? 0x4000u : 0)),
+                 (int8_t) data[0], &old, (int) (addr >> 14));
+    } else {
+        GBAPatch8(((struct GBA*) core->board)->cpu, addr, (int8_t) data[0], &old);
+    }
     rom = pk_rom_byte(core, addr);
     memcpy(rom, data, (size_t) len);
     struct pk_block* k = &sBlocks[sBlockCount++];
-    k->addr = BASE_CART0 | off;
+    k->addr = gb ? addr : BASE_CART0 | off;
     k->len = len;
     k->orig = orig;
     return 1;
@@ -402,7 +425,7 @@ int pk_cheats_block(struct mCore* core, uint32_t addr, const uint8_t* data, int 
 void pk_cheats_unblock(struct mCore* core) {
     for (int i = sBlockCount - 1; i >= 0; i--) {
         struct pk_block* k = &sBlocks[i];
-        uint8_t* rom = pk_cheats_is_gba(core) ? pk_rom_byte(core, k->addr) : NULL;
+        uint8_t* rom = core ? pk_rom_byte(core, k->addr) : NULL;
         if (rom) {
             memcpy(rom, k->orig, (size_t) k->len);
         }

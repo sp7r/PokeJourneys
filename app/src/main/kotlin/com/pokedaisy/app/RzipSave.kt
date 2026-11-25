@@ -119,7 +119,7 @@ object RzipSave {
 
     /** Why a compressed save can't be played here, for the player. */
     fun unreadableMessage(): String =
-        tr("This save was compressed by RetroArch in a way PokeDaisy can't read yet, so it was left as it is. In RetroArch, turn off Settings > Saving > SaveRAM Compression, then load the game there and save once.")
+        tr("This save was compressed by RetroArch in a way PokeJourneys can't read yet, so it was left as it is. In RetroArch, turn off Settings > Saving > SaveRAM Compression, then load the game there and save once.")
 
     /**
      * Makes [save] a plain save before the emulator opens it, if RetroArch left it compressed: a backup of the

@@ -213,7 +213,7 @@ fun coopFindLine(r: CoopLobby.FindResult): String? = when (r) {
 
 /** The line a failed pairing shows. */
 fun coopFailLine(reason: CoopPairing.CoopPairFail): String = when (reason) {
-    CoopPairing.CoopPairFail.VERSION -> "Your partner's PokeDaisy is a different version. Update both to the same one."
+    CoopPairing.CoopPairFail.VERSION -> "Your partner's PokeJourneys is a different version. Update both to the same one."
     CoopPairing.CoopPairFail.DIFFERENT_ROM -> "Your partner plays a different Emerald ROM."
     CoopPairing.CoopPairFail.SAME_SAVE -> "That's a copy of this same save. Co-op needs two different players."
     CoopPairing.CoopPairFail.SAVE_ALREADY_PAIRED -> "This save is already paired. Unpair it in PARTNERS first."

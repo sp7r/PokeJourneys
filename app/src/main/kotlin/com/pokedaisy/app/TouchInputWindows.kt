@@ -192,7 +192,7 @@ class TouchInputWindows(private val anchor: View, private val tracker: TouchPres
         this.x = x + r.left
         this.y = y + r.top
         this.token = token
-        title = "PokeDaisy touch"
+        title = "PokeJourneys touch"
         windowAnimations = 0
         if (Build.VERSION.SDK_INT >= 30) layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         else if (Build.VERSION.SDK_INT >= 28) layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES

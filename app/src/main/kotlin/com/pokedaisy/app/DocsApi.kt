@@ -162,7 +162,7 @@ object DocsStore {
             connectTimeout = 8000
             readTimeout = 12000
             setRequestProperty("Accept", "application/json")
-            setRequestProperty("User-Agent", "PokeDaisy/${BuildConfig.VERSION_NAME}")
+            setRequestProperty("User-Agent", "PokeJourneys/${BuildConfig.VERSION_NAME}")
             etag?.let { setRequestProperty("If-None-Match", it) }
         }
         when (conn.responseCode) {
@@ -187,7 +187,7 @@ object DocsStore {
             val conn = (URL(manual.site + image.src).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8000
                 readTimeout = 15000
-                setRequestProperty("User-Agent", "PokeDaisy/${BuildConfig.VERSION_NAME}")
+                setRequestProperty("User-Agent", "PokeJourneys/${BuildConfig.VERSION_NAME}")
             }
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return@runCatching null
             val tmp = File(file.parentFile, "${file.name}.part")

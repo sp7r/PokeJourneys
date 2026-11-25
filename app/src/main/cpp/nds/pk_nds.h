@@ -132,6 +132,8 @@ void pk_nds_set_window(struct ANativeWindow* window);
 bool pk_nds_rom_code(char out[5]);
 int pk_nds_rom_revision(void);
 uint32_t pk_nds_rom_size(void);
+// The cart's ROM image as melonDS reads it (writable: nds/pk_nds_look.cpp), NULL with no DS up. Emu thread.
+uint8_t* pk_nds_rom_image(void);
 // The ARM9's data TCM (16 KB), RetroAchievements' $1000000; NULL with no DS up. Emu thread.
 const uint8_t* pk_nds_dtcm(void);
 

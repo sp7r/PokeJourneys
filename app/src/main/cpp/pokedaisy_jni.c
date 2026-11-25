@@ -1342,7 +1342,12 @@ Java_com_pokedaisy_app_MgbaCore_pkRomRead(JNIEnv* env, jobject thiz, jlong off, 
         if (gb->memory.rom && (size_t) off + (size_t) len <= gb->pristineRomSize) {
             out = (*env)->NewByteArray(env, len);
             if (out) {
-                (*env)->SetByteArrayRegion(env, out, 0, len, (const jbyte*) gb->memory.rom + off);
+                jbyte* bytes = (*env)->GetByteArrayElements(env, out, NULL);
+                if (bytes) {
+                    memcpy(bytes, gb->memory.rom + off, (size_t) len);
+                    pk_cheats_overlay((uint32_t) off, (uint8_t*) bytes, len);
+                    (*env)->ReleaseByteArrayElements(env, out, bytes, 0);
+                }
             }
         }
     }

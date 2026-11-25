@@ -1,3 +1,19 @@
+PokeJourneys Online
+
+Based on PokeDaisy by Lidor Itzhari - https://github.com/lidor30/pokedaisy
+
+The offline Battle Dome includes Pokémon Showdown via @pkmn/sim, @pkmn/randoms, @pkmn/sets, @pkmn/streams,
+and ts-chacha20, under MIT licenses. Their copyright and permission notices are included in dome/licenses.txt.
+https://github.com/smogon/pokemon-showdown — https://github.com/pkmn/ps
+
+PokeJourneys is a modified version (a fork) of PokeDaisy. It keeps PokeDaisy's license, the GNU GPL version 3, and
+the additional attribution term below. PokeJourneys' own changes and additions are Copyright (C) 2026 the Pokémon
+Journeys authors, under the same license and term.
+
+The rest of this file is PokeDaisy's NOTICE, kept as it is, followed by the components PokeJourneys adds.
+
+------------------------------------------------------------------------------
+
 PokeDaisy
 Copyright (C) 2026 Lidor Itzhari
 https://github.com/lidor30/pokedaisy
@@ -101,6 +117,15 @@ The app shows every license below in full under Settings > LICENSES.
 - ZXing core, Copyright (c) ZXing authors, Apache License 2.0
   (third_party/licenses/Apache-2.0.txt) - https://github.com/zxing/zxing - QR
   encoding for co-op invites.
+- The Gen 3 debug editor references the save flag IDs in pret's pokefirered,
+  pokeemerald, and pokeruby projects.
+- New-journey intro handoffs reference initialization routines, symbol maps, and naming structures documented by
+  pret/pokeruby, pokefirered, pokeemerald, pokeplatinum, pokediamond, and pokeheartgold.
+  GB/GBC startup and sprite locations also reference pret/pokered, pokeyellow, pokegold, and pokecrystal.
+  Gen 5's process and trainer layouts reference Project Holon's aletheia project:
+  https://github.com/Project-Holon/aletheia
+- The journey catalog includes Nintendo DS cartridge checksums documented by
+  pret/pokediamond and the My Pokémon Ranch Platinum patch project.
 - Some decoders and layouts follow the community decompilations of the games
   (pret's pokered / pokeyellow / pokegold / pokecrystal / pokefirered /
   pokeemerald / pokeruby / pokeplatinum / pokeheartgold, pokeemerald-expansion,
@@ -130,3 +155,51 @@ games, the ROM hacks and the decompilation projects for interoperability.
 The unit tests' fixtures (app/src/test/resources/fixtures) are snapshots of
 the emulated console's RAM while a game ran; like any RAM dump they hold a
 few kilobytes the game copied there from its ROM. They aren't in the app.
+
+COMPONENTS ADDED BY POKEJOURNEYS
+
+Interior height format references: BDHC research by mikelan98 and JayT, Hiro TDK's
+file specifications, and Gen 5 permissions and numerical distance lookup documented
+by Gonhex and Trifindo.
+https://projectpokemon.org/home/forums/topic/37816-gen-iv-bdhc-files-terrain-settings/
+https://hirotdk.neocities.org/FileSpecs
+https://ds-pokemon-hacking.github.io/docs/generation-v/resources/bw_b2w2-maps/
+
+- PKHeX.Core, Copyright (c) Kaphotics (kwsch) and the PKHeX contributors, GNU GPL 3.0
+  or later - https://github.com/kwsch/PKHeX. Used by the save bridge (src/Journeys.Core),
+  compiled into lib/arm64-v8a/libjourneys.so.
+- .NET runtime, Copyright (c) .NET Foundation and Contributors, MIT License -
+  https://github.com/dotnet/runtime. Compiled into libjourneys.so with the save bridge
+  (third_party/licenses/dotnet-runtime-MIT.txt).
+- apicula, Copyright (C) 2019 scurest and contributors, BSD Zero Clause License -
+  https://github.com/scurest/apicula. Converts the DS models in the player's own ROMs on first
+  run, as lib/arm64-v8a/libapicula.so, built without its model viewer
+  (tools/apicula/no-viewer.patch; third_party/licenses/apicula-0BSD.txt).
+- QuickJS (quickjs-ng 0.10.1), Copyright (c) 2017-2024 Fabrice Bellard, Charlie Gordon,
+  Copyright (c) 2023-2025 Ben Noordhuis, Saúl Ibarra Corretgé and contributors, MIT License -
+  https://github.com/quickjs-ng/quickjs. Runs the hub's build scripts on the phone to make the
+  hub data from the player's own ROMs, as lib/arm64-v8a/libqjs.so
+  (third_party/licenses/quickjs-MIT.txt).
+- SSEQ Player, by Naram Qashat (CyberBotX), adapted from the FeOS Sound System by fincs,
+  WTFPL - https://github.com/kode54/SSEQPlayer. Plays the songs in the player's own DS
+  cartridges to make the hub's music, in lib/arm64-v8a/libhubmusic.so
+  (third_party/licenses/SSEQPlayer-WTFPL.txt).
+- QOA, Copyright (c) 2023 Dominic Szablewski, MIT License - https://github.com/phoboslab/qoa.
+  Compresses the hub's music, in libhubmusic.so (third_party/licenses/qoa-MIT.txt).
+- Godot Engine 4.7.2, Copyright (c) 2014-present Godot Engine contributors, Copyright (c)
+  2007-2014 Juan Linietsky, Ariel Manzur, MIT License - https://godotengine.org. Runs
+  Victory Island, the hub (hub/victory), as lib/arm64-v8a/libgodot_android.so
+  (third_party/licenses/Godot-MIT.txt). Its bundled libraries and their licenses are listed
+  in third_party/licenses/Godot-COPYRIGHT.txt.
+- Character Customization Resources (Gen 4), by Coffee Cup / Poltergeist -
+  https://eeveeexpo.com/resources/317/ ("You can freely edit, use and share the files.").
+  The hub's character creator parts (assets/creator), in the app's assets as creator/.
+- Generation 8 Pack follower overworld sprites, a Pokémon Essentials resource compiled by
+  Golisopod User and UberDunsparce, with overworld sprites by the artists listed in
+  third_party/licenses/Gen8-Pack-credits.txt. The hub's follower Pokémon, unchanged in the
+  app's assets as followers/.
+
+Stadium badges take inspiration from Bungie's Halo 3 skill and experience measures.
+The built-in Stadium badge artwork is original to PokeJourneys. An optional player-supplied sprite sheet
+is read from local hub data.
+https://bnetarchive.haloman30.com/news/content5147.html?cid=14994&type=topnews

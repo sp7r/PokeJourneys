@@ -1,0 +1,62 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index bf344cb..29bd41a 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -7,7 +7,7 @@ edition = "2021"
+ 
+ [dependencies]
+ cgmath = "0.16.0"
+-glium = { git = "https://github.com/scurest/glium.git", branch = "vsync" }
++glium = { git = "https://github.com/scurest/glium.git", branch = "vsync", optional = true }
+ json = "0.12.4"
+ log = { version = "0.4.6", features = ["std"] }
+ png = "0.17"
+@@ -17,3 +17,8 @@ wild = "2.0.2"
+ 
+ [profile.release]
+ panic = "abort"
++
++[features]
++default = ["viewer"]
++# The model viewer; leave it out (--no-default-features) for a converter-only build, e.g. for Android.
++viewer = ["glium"]
+diff --git a/src/main.rs b/src/main.rs
+index 7e6df32..08519ce 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -4,6 +4,7 @@
+ 
+ #[macro_use]
+ extern crate log;
++#[cfg(feature = "viewer")]
+ #[macro_use]
+ extern crate glium;
+ #[macro_use]
+@@ -19,6 +20,7 @@ mod decompress;
+ mod extract;
+ mod nds;
+ mod nitro;
++#[cfg(feature = "viewer")]
+ mod viewer;
+ mod db;
+ mod info;
+@@ -46,6 +48,7 @@ fn main2() -> Result<()> {
+     let args = cli::parse_cli_args();
+     match args.subcommand {
+         "extract" => extract::main(&args)?,
++        #[cfg(feature = "viewer")]
+         "view" => viewer::main(&args)?,
+         "convert" => convert::main(&args)?,
+         "info" => info::main(&args)?,
+diff --git a/src/primitives/mod.rs b/src/primitives/mod.rs
+index 110361c..6a763eb 100644
+--- a/src/primitives/mod.rs
++++ b/src/primitives/mod.rs
+@@ -85,6 +85,7 @@ impl Default for Vertex {
+ }
+ 
+ // For glium
++#[cfg(feature = "viewer")]
+ implement_vertex!(Vertex, position, texcoord, color, normal);
+ 
+ impl Primitives {

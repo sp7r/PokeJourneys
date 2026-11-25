@@ -52,6 +52,7 @@
     <application
         android:name=".PokeDaisyApp"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -93,11 +94,12 @@
              game directly (see LaunchActivity). No intent filter on purpose -
              explicit launches don't need one, and a VIEW filter would put a
              second PokeDaisy in every "Open with" list next to the library's.
-             Its own empty affinity keeps it out of the library's task. -->
+             Its own empty affinity keeps it out of the library's task.
+             PokeJourneys: not exported, so games start only from Victory Island (JourneyRules.POKEDAISY_SCREENS). -->
         <activity
             android:name=".LaunchActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
-            android:exported="true"
+            android:exported="false"
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:taskAffinity=""
@@ -132,10 +134,13 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.updates"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+            tools:replace="android:authorities">
+            <!-- PokeJourneys: tools:replace keeps this provider over the Godot library's own FileProvider. -->
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/update_paths" />
+                android:resource="@xml/update_paths"
+                tools:replace="android:resource" />
         </provider>
 
         <activity
@@ -144,6 +149,73 @@
             android:theme="@style/Theme.PokeDaisy" />
 
         <!-- PC BOXES: a game's save read and edited from the library, with the game closed. -->
+        <activity
+            android:name=".VaultActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PokeDaisy" />
+
+        <!-- PokeJourneys: Victory Island, the Godot hub. Its own process, since Godot ends the process it quits in. -->
+        <activity
+            android:name=".journeys.HubActivity"
+            android:exported="false"
+            android:process=":hub"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|density|keyboard|navigation|screenLayout|uiMode"
+            android:resizeableActivity="false"
+            android:theme="@style/Theme.PokeDaisy" />
+
+        <!-- PokeJourneys: Discord's sign-in redirect (DiscordSignIn.kt), in the hub's process where the sign-in started. -->
+        <activity
+            android:name=".journeys.DiscordSignIn$Callback"
+            android:exported="true"
+            android:process=":hub"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.PokeDaisy.Launch">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${discordScheme}" />
+            </intent-filter>
+        </activity>
+
+        <!-- PokeJourneys: offline battles with temporary Vault teams and controls on the second screen. -->
+        <activity
+            android:name=".journeys.BattleDomeActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:theme="@style/Theme.PokeDaisy" />
+        <!-- PokeJourneys: starts the journey picked on the island and records it for the Vault when it closes. -->
+        <activity
+            android:name=".journeys.JourneyLaunchActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PokeDaisy.Launch" />
+
+        <!-- PokeJourneys: the first-run build of the hub data from the player's cartridges (HubBuildActivity.kt). -->
+        <activity
+            android:name=".journeys.HubBuildActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|density|keyboard|navigation|screenLayout|uiMode"
+            android:theme="@style/Theme.PokeDaisy" />
+
+        <!-- PokeJourneys: opens the Vault or the settings for the hub, from the main process. -->
+        <!-- PokeJourneys: a newer release has to be installed before playing online. -->
+        <activity
+            android:name=".journeys.UpdateRequiredActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.PokeDaisy" />
+
+        <activity
+            android:name=".journeys.HubPageActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity="${applicationId}.pages"
+            android:theme="@style/Theme.PokeDaisy.Launch" />
+
         <activity
             android:name=".SaveEditorActivity"
             android:exported="false"

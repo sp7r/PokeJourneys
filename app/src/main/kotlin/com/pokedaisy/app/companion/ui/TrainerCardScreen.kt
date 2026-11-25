@@ -87,8 +87,11 @@ fun TrainerCardScreen(card: TrainerCardInfo, art: TrainerCardArt.Art, modifier: 
     // PLAYER LOOK: the worn hero's front pic, as the game's own card now shows it.
     val context = LocalContext.current
     val look = PlayerLook.worn.value
-    val lookPic = produceKeyedState<Pair<ByteArray, ByteArray>?>(null, look) {
-        value = look?.let { c -> withContext(Dispatchers.IO) { runCatching { LookArt.frontPic(context.filesDir, c) }.getOrNull() } }
+    // PokeJourneys: the creator's look's own picture.
+    val creator = com.pokedaisy.app.journeys.CreatorLook.worn.value
+    val lookPic = produceKeyedState<Pair<ByteArray, ByteArray>?>(null, look, creator) {
+        value = if (creator) withContext(Dispatchers.IO) { com.pokedaisy.app.journeys.CreatorLook.frontPic(context.filesDir) }
+        else look?.let { c -> withContext(Dispatchers.IO) { runCatching { LookArt.frontPic(context.filesDir, c) }.getOrNull() } }
     }.value
     val renders = remember(art, card, back, lookPic) { arrayOfNulls<ImageBitmap>(2) }
     val image = renders[if (colon) 1 else 0] ?: run {

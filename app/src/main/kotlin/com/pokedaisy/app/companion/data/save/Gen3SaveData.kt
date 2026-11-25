@@ -74,6 +74,9 @@ class Gen3SaveData(
 
     fun mon(at: BoxSlot): Gen3BoxMon = Gen3BoxMon.read(storage, recordOff(at))
 
+    internal fun eventFlag(id: Int): Boolean =
+        (saveBlock1[format.flagsOff + id / 8].toInt() shr (id % 8)) and 1 == 1
+
     /** The Pokémon at [at] (null past the party), and its level: the party's level byte, a box record's from its EXP. */
     fun mon(at: MonRef): Pair<Gen3BoxMon, Int>? = when (at) {
         is MonRef.Party -> party.getOrNull(at.index)?.let { it.mon to it.level }
@@ -93,10 +96,14 @@ class Gen3SaveData(
             if (p.mon.species !in 1..MAX_SPECIES) return "party Pokémon ${i + 1} has species ${p.mon.species}"
             if (!p.mon.isEgg && p.level !in 1..100) return "party Pokémon ${i + 1} is level ${p.level}"
         }
-        // The game zeroes the slots past the count (ZeroMonData): anything there is another layout's data.
+        // ZeroMonData clears the slot apart from the no-mail marker. Some external editors clear it too.
         for (i in count until PARTY_SIZE) {
             val off = format.partyOff + i * PARTY_MON_SIZE
-            if ((off until off + PARTY_MON_SIZE).any { saveBlock1[it].toInt() != 0 }) return "party slot ${i + 1} isn't empty"
+            val hasData = (0 until PARTY_MON_SIZE).any { j ->
+                val value = saveBlock1[off + j]
+                value != 0.toByte() && !(j == PARTY_MAIL_OFF && value == MAIL_NONE)
+            }
+            if (hasData) return "party slot ${i + 1} isn't empty"
         }
         if (currentBox >= BOXES) return "current box ${currentBox + 1}"
         val records = (0 until BOXES * BOX_SLOTS).map { mon(BoxSlot(it / BOX_SLOTS, it % BOX_SLOTS)) }
@@ -110,6 +117,8 @@ class Gen3SaveData(
     companion object {
         const val PARTY_SIZE = 6
         const val PARTY_MON_SIZE = 100
+        private const val PARTY_MAIL_OFF = 0x55
+        private const val MAIL_NONE: Byte = -1
         const val BOXES = 14
         const val BOX_SLOTS = 30
         const val BOX_NAMES_OFF = 4 + BOXES * BOX_SLOTS * Gen3BoxMon.SIZE   // 0x8344
@@ -168,11 +177,14 @@ class Gen3SaveEditor(val file: Gen3SaveFile) {
 
     private val f get() = file.format
 
-    fun flag(id: Int): Boolean = (saveBlock1[f.flagsOff + id / 8].toInt() shr (id % 8)) and 1 == 1
+    fun flag(id: Int): Boolean = data.eventFlag(id)
 
-    private fun setFlag(id: Int) {
+    internal fun setEventFlag(id: Int, enabled: Boolean) {
+        require(id in 1 until f.eventFlagCount)
         val o = f.flagsOff + id / 8
-        saveBlock1[o] = (saveBlock1[o].toInt() or (1 shl (id % 8))).toByte()
+        val mask = 1 shl (id % 8)
+        val current = saveBlock1[o].toInt()
+        saveBlock1[o] = (if (enabled) current or mask else current and mask.inv()).toByte()
     }
 
     fun variable(id: Int): Int = u16(saveBlock1, f.varsOff + (id - 0x4000) * 2)
@@ -187,7 +199,7 @@ class Gen3SaveEditor(val file: Gen3SaveFile) {
         require(f == Gen3SaveFormat.RUBY_SAPPHIRE) { "only Ruby / Sapphire get the National Dex from a trade" }
         saveBlock2[f.nationalMagicOff] = f.nationalMagic.toByte()
         putU16(saveBlock1, f.varsOff + (f.nationalVar - 0x4000) * 2, f.nationalVarValue)
-        setFlag(f.nationalFlag)
+        setEventFlag(f.nationalFlag, true)
         saveBlock2[f.pokedexOff + 1] = 1   // mode: national
         saveBlock2[f.pokedexOff] = 0       // order: numerical
     }

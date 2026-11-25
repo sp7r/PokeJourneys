@@ -1,5 +1,6 @@
 package com.pokedaisy.app
 
+import com.pokedaisy.app.journeys.ServerUpdates
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -35,12 +36,13 @@ import com.pokedaisy.app.companion.ui.OptionTitleWindow
 import java.io.File
 
 /**
- * The in-app update, for one activity: check GitHub ([AppUpdater]), offer the
+ * The in-app update, for one activity: check the server ([AppUpdater]), offer the
  * newer release, download its APK into the cache and hand it to Android's
  * installer - asking first for "install unknown apps" if it isn't allowed yet,
  * and carrying on in [onResume] once the player comes back from that page.
  */
-class AppUpdateFlow(private val activity: ComponentActivity) {
+// PokeJourneys: [required] (journeys/UpdateRequiredActivity.kt) - no LATER, the offer can't be closed.
+class AppUpdateFlow(private val activity: ComponentActivity, val required: Boolean = false) {
     /** The release on offer; the dialog shows while non-null. */
     var release by mutableStateOf<AppUpdater.Release?>(null)
     /** 0..1 while downloading. */
@@ -67,20 +69,21 @@ class AppUpdateFlow(private val activity: ComponentActivity) {
                     error = null
                     release = found
                 } else if (manual) {
-                    Toast.makeText(activity, tr("PokéDaisy {0} is the newest version", BuildConfig.VERSION_NAME), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, tr("PokeJourneys {0} is the newest version", BuildConfig.VERSION_NAME), Toast.LENGTH_SHORT).show()
                 }
             }
         }, "pokedaisy-update-check").apply { isDaemon = true; start() }
     }
 
     fun dismiss() {
-        if (progress != null) return
+        if (progress != null || required) return
         release = null
         error = null
     }
 
     fun openReleasePage() {
         val url = release?.pageUrl ?: AppUpdater.RELEASES_PAGE
+        if (url.isBlank()) return
         runCatching { activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
     }
 
@@ -92,7 +95,8 @@ class AppUpdateFlow(private val activity: ComponentActivity) {
         Thread({
             val apk = File(updatesDir, apkName(r))
             // Already here and whole (an earlier try that didn't reach the installer): no second download.
-            val ok = (apk.isFile && (r.apkSize <= 0 || apk.length() == r.apkSize)) ||
+            val ok = (apk.isFile && (r.apkSize <= 0 || apk.length() == r.apkSize) &&
+                ServerUpdates.verifySha256(apk, r.sha256)) ||
                 AppUpdater.download(r, apk) { p -> activity.runOnUiThread { progress = p } }
             activity.runOnUiThread {
                 progress = null
@@ -100,7 +104,7 @@ class AppUpdateFlow(private val activity: ComponentActivity) {
                     !ok -> error = tr("THE DOWNLOAD FAILED - CHECK THE CONNECTION AND TRY AGAIN")
                     !isOurUpdate(apk) -> {
                         apk.delete()
-                        error = tr("THE DOWNLOAD ISN'T A POKéDAISY UPDATE - NOT INSTALLED")
+                        error = tr("THE DOWNLOAD ISN'T A POKEJOURNEYS UPDATE - NOT INSTALLED")
                     }
                     else -> install(apk)
                 }
@@ -164,7 +168,7 @@ class AppUpdateFlow(private val activity: ComponentActivity) {
             }.isSuccess
             if (opened) {
                 pendingApk = apk
-                Toast.makeText(activity, tr("Allow PokéDaisy to install apps, then come back"), Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, tr("Allow PokeJourneys to install apps, then come back"), Toast.LENGTH_LONG).show()
                 return
             }
             // A device without that page (it failed silently once, leaving UPDATE to download again and again):
@@ -217,7 +221,7 @@ fun UpdateDialog(flow: AppUpdateFlow, m: GbaTextMetrics, small: GbaTextMetrics) 
                     // On a small screen everything above the buttons scrolls, so the buttons stay on screen.
                     Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
                         GbaText(
-                            tr("PokéDaisy {0} is out - you have {1}.", r.version, BuildConfig.VERSION_NAME),
+                            tr("PokeJourneys {0} is out - you have {1}.", r.version, BuildConfig.VERSION_NAME),
                             OptionColors.label, OptionColors.labelShadow, m, maxLines = Int.MAX_VALUE,
                         )
                         if (r.notes.isNotEmpty()) {
@@ -239,7 +243,7 @@ fun UpdateDialog(flow: AppUpdateFlow, m: GbaTextMetrics, small: GbaTextMetrics) 
                         Modifier.fillMaxWidth().padding(top = m.u * 6, bottom = m.u * 2),
                         horizontalArrangement = Arrangement.spacedBy(m.u * 4),
                     ) {
-                        OptionButton(tr("LATER"), m, enabled = downloading == null, modifier = Modifier.weight(1f), onClick = { flow.dismiss() })
+                        if (!flow.required) OptionButton(tr("LATER"), m, enabled = downloading == null, modifier = Modifier.weight(1f), onClick = { flow.dismiss() })
                         OptionButton(tr("RELEASE PAGE"), m, modifier = Modifier.weight(1f), onClick = { flow.openReleasePage() })
                         OptionButton(
                             tr("UPDATE"), m, emphasis = true, enabled = downloading == null,

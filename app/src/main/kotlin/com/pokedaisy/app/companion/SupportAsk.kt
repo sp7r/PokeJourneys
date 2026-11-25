@@ -12,9 +12,7 @@ object SupportAsk {
 
     /** Where each tile goes: the same pages as the website's footer (website/src/lib/links.js); the names are the sites' own, not translated. */
     enum class Site(val label: String, val url: String, /** A tight tile's name (the RG DS). */ val shortLabel: String = label) {
-        COFFEE("BUY ME A COFFEE", "https://buymeacoffee.com/lidor30g", "COFFEE"),
-        PATREON("PATREON", "https://www.patreon.com/cw/pokedaisy"),
-        KOFI("KO-FI", "https://ko-fi.com/pokedaisy"),
+        KOFI("KO-FI", "https://ko-fi.com/sp7rr"),
     }
 
     /** Whether the window is due: [played] has reached [askAt] (Prefs: [FIRST_ASK] until a REMIND ME LATER moves it), never once [done]. */

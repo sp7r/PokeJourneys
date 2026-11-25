@@ -1,0 +1,535 @@
+{
+  "spawn": [47, 63],
+  "welcome": ["Welcome to Victory Island!", "Your journey awaits!"],
+  "intro": [
+    {"caption": "Welcome to PokeJourneys!", "tile": [80, 50], "distance": 150, "pitch": 58, "yaw": 0, "seconds": 4},
+    {"caption": "Visit shops to purchase items for your Journeys.", "tile": [76, 61], "distance": 26, "pitch": 40, "yaw": 20, "seconds": 4},
+    {"caption": "Use the PokeVault to transfer Pokémon between your games.", "tile": [64, 57], "distance": 26, "pitch": 40, "yaw": -20, "seconds": 4.5},
+    {"caption": "Leave Pokémon at the Daycare to breed them.", "tile": [58, 43], "distance": 28, "pitch": 40, "yaw": -15, "seconds": 4},
+    {"caption": "Battle other players at the Battle Stadium.", "tile": [132, 30], "distance": 30, "pitch": 38, "yaw": -25, "seconds": 4},
+    {"caption": "Visit your apartment in the Trainer Tower.", "tile": [88, 22], "distance": 32, "pitch": 30, "yaw": 15, "seconds": 4},
+    {"caption": "Speak to a ship captain to start your journey in a region.", "tile": [35, 80], "distance": 40, "pitch": 52, "yaw": -10, "seconds": 4.5},
+    {"caption": "Your Journeys await!", "tile": [80, 50], "distance": 158, "pitch": 62, "yaw": 0, "seconds": 4}
+  ],
+  "interiors": [
+    {
+      "door": "PokeMart", "room": "pokemart",
+      "npcs": [
+        {"name": "Poké Mart clerk", "tile": [3, 5], "facing": "right", "sprite": "campboy_1",
+          "blocks": [[4, 5]],
+          "role": "shop", "shop": "mart",
+          "text": ["Off on a journey? I always pack a few extra Poké Balls for the way back."]}
+      ]
+    },
+    {
+      "door": "GreenMarketShop",
+      "room": "pokevault",
+      "npcs": [
+        {
+          "name": "PokeVault clerk",
+          "tile": [9, 15],
+          "facing": "right",
+          "blocks": [[10, 15], [9, 14]],
+          "sprite": "woman2_1",
+          "role": "vault",
+          "text": ["Welcome to the PokeVault!", "Every Pokémon from all your journeys is kept safe here."],
+          "ask": "Would you like to open your Vault?",
+          "open": "Open the Vault",
+          "cancel": "Not now"
+        }
+      ]
+    },
+    {
+      "door": "Daycare", "room": "daycare",
+      "npcs": [
+        {"name": "Daycare keeper", "tile": [9, 4], "facing": "down", "sprite": "oldman1_1",
+          "blocks": [[9, 5]],
+          "text": ["Every Pokémon settles in at its own pace. A quiet corner and a snack can do wonders."]}
+      ]
+    },
+    {
+      "door": "BattleDome", "room": "trainertower",
+      "npcs": [
+        {"name": "Single Battles attendant", "tile": [11, 5], "facing": "down", "sprite": "redmama_1",
+          "role": "battle_signup", "modes": ["practice"],
+          "text": ["Welcome to the Battle Dome! I handle Single Battles against bots."]},
+        {"name": "Double Battles attendant", "tile": [15, 5], "facing": "down", "sprite": "counterm_1",
+          "role": "battle_signup", "modes": ["practice_doubles"],
+          "text": ["Welcome to the Battle Dome! I handle Double Battles against bots."]},
+        {"name": "Triple Battles attendant", "tile": [19, 5], "facing": "down", "sprite": "gswoman6_1",
+          "role": "battle_signup", "modes": ["practice_triples"],
+          "text": ["Welcome to the Battle Dome! I handle Triple Battles against bots."]}
+      ]
+    },
+    {"door": "BattleTower", "room": "home-b2-1f"},
+    {
+      "door": "WhiteMarketShop", "room": "cand-tmshop-ecruteak",
+      "npcs": [
+        {"name": "TM and HM clerk", "tile": [2, 5], "facing": "right", "sprite": "picnicgirl_1",
+          "blocks": [[3, 5]],
+          "role": "shop", "shop": "tm",
+          "text": ["I sort TMs by the moves they teach. Check the shared bag for the ones you own."]}
+      ]
+    },
+    {
+      "door": "PhotoShop", "room": "cand-tutor-pallet-town-oaks-lab",
+      "npcs": [
+        {"name": "Move Tutor", "tile": [8, 4], "facing": "down", "sprite": "middleman1_1",
+          "text": ["I've been collecting notes on moves from every region. A familiar move can have a surprising history."]}
+      ]
+    },
+    {
+      "door": "Shrine", "room": "spearpillar",
+      "npcs": [
+        {"name": "Chamber trainer", "tile": [31, 48], "facing": "down", "sprite": "gsbigfour3_1",
+          "text": ["Leave your Pokémon with me to train in the Hyperbolic Time Chamber.",
+            "I'll put it through its paces and make sure it comes back stronger."]}
+      ]
+    },
+    {
+      "door": "GameCorner", "room": "gamecorner",
+      "npcs": [
+        {"name": "Game Corner clerk", "tile": [7, 3], "facing": "down", "sprite": "girl3_1",
+          "blocks": [[7, 4]],
+          "text": ["Welcome to the Game Corner! Everyone seems to have a favorite seat. Which one would you pick?"]}
+      ]
+    },
+    {
+      "door": "BattleStadium", "room": "battlestadium",
+      "npcs": [
+        {"name": "Stadium rankings attendant", "tile": [7, 12], "facing": "down", "sprite": "sportsman_1",
+          "blocks": [[7, 13]],
+          "role": "stadium_faq",
+          "ask": "What would you like to know about Stadium rankings?",
+          "topics": [
+            ["Rating and colors", ["Your Rating starts at 1 and can rise or fall after ranked PvP battles. The highest possible Rating is 50.",
+              "Your peak Rating sets your badge color. Start in Bronze. Reach 20 for Silver, 35 for Gold, or 50 for blue Diamond.",
+              "Your badge keeps its color if your current Rating drops."]],
+            ["Earning Experience", ["Each PvP win here or bot win at the Battle Dome earns 1 Experience. Only ranked PvP battles affect Rating.",
+              "Your Experience carries across badge colors and stays with you when you lose."]],
+            ["Stars and wings", ["Your badge shows a Poké Ball until you reach 5 Experience.",
+              "Earn stars at 5, 20, 50, 100, 300, and 1,000 Experience.",
+              "At 1,000 Experience, your six-star badge grows wings. Badges of any color can earn wings."]]
+          ]},
+        {"name": "Stadium matchmaking attendant", "tile": [23, 12], "facing": "down", "sprite": "woman2_1",
+          "blocks": [[23, 13]],
+          "role": "battle_signup", "modes": ["ranked_random_singles", "ranked_random_doubles", "ranked_open_singles", "ranked_open_doubles", "casual"]},
+        {"name": "Stadium greeter (west)", "tile": [14, 6], "facing": "down", "sprite": "delivery2_1",
+          "text": ["Welcome to the Battle Stadium!",
+            "Please speak to the attendant at the desk to sign up for PvP battles."]},
+        {"name": "Stadium greeter (east)", "tile": [16, 6], "facing": "down", "sprite": "delivery2_1",
+          "text": ["Welcome to the Battle Stadium!",
+            "Please speak to the attendant at the desk to sign up for PvP battles."]}
+      ]
+    },
+    {
+      "door": "GoldMarketShop", "room": "cand-auction-contest",
+      "npcs": [
+        {"name": "Auctioneer", "tile": [16, 4], "facing": "down", "sprite": "middleman2_1",
+          "blocks": [[16, 5]],
+          "text": ["Never judge an auction lot by its wrapping. The plainest parcel can draw the biggest crowd."]}
+      ]
+    },
+    {
+      "door": "TentShop", "room": "namerater",
+      "npcs": [
+        {"name": "The Harlequin", "tile": [5, 5], "facing": "down", "sprite": "gsleader15_1",
+          "text": ["Welcome to the Mystery Gift Tent. You may call me the Harlequin.",
+            "That rustling? It's only the wrapping paper. Probably."]}
+      ]
+    },
+    {
+      "door": "PurpleMarketShop", "room": "gamelounge",
+      "npcs": [
+        {"name": "Decorations clerk", "tile": [5, 5], "facing": "down", "sprite": "seven2_1",
+          "role": "shop", "shop": "costumes",
+          "text": ["Welcome! You can buy costumes here or change into one you own."]}
+      ]
+    }
+  ],
+  "doorways": [
+    {"name": "BattleStadium", "building": "Battle Stadium", "tile": [132, 30]},
+    {"name": "BattleDome", "building": "Battle Dome", "tile": [34, 28]},
+    {"name": "PokeMart", "building": "Poke Mart", "tile": [82, 57]},
+    {"name": "BattleTower", "building": "Trainer Tower (Apartments)", "tile": [88, 22]},
+    {"name": "WhiteMarketShop", "building": "TM and HM Shop", "tile": [81, 65]},
+    {"name": "PurpleMarketShop", "building": "Cosmetics and Decorations Shop", "tile": [70, 65]},
+    {"name": "TentShop", "building": "Mystery Gift Tent", "tile": [20, 32]},
+    {"name": "PhotoShop", "building": "Move Tutor and Move Reminder", "tile": [86, 65]},
+    {"name": "GreenMarketShop", "building": "PokeVault", "tile": [64, 57]},
+    {"name": "GoldMarketShop", "building": "Auction House", "tile": [76, 58]},
+    {"name": "Shrine", "building": "Hyperbolic Time Chamber (EV Training)", "tile": [111, 46]},
+    {"name": "Daycare", "building": "Daycare", "tile": [58, 43]},
+    {"name": "GameCorner", "building": "Game Corner", "tile": [104, 69]}
+  ],
+  "collision": {
+    "open": [
+      [104, 69],
+      [104, 70],
+      [106, 70],
+      [127, 32],
+      [136, 32],
+      [114, 62, 119],
+      [124, 62, 129],
+      [85, 68],
+      [91, 68],
+      [109, 65],
+      [109, 66],
+      [109, 68],
+      [102, 73, 109],
+      [110, 73, 114],
+      [25, 60, 26],
+      [26, 77, 46],
+      [26, 81, 46],
+      [98, 31]
+    ],
+    "clear": [[125, 30, 139]],
+    "block": [
+      [118, 55, 125],
+      [130, 55, 149],
+      [116, 63, 149],
+      [101, 61, 107],
+      [101, 62, 107],
+      [101, 63, 107],
+      [101, 64, 107],
+      [101, 65, 107],
+      [101, 66, 107],
+      [101, 67, 107],
+      [101, 68, 107],
+      [101, 69, 103],
+      [105, 69, 107],
+      [142, 55, 147],
+      [142, 56, 147],
+      [142, 57, 147],
+      [142, 58, 147],
+      [142, 59, 147],
+      [142, 60, 147],
+      [142, 61, 147],
+      [142, 62, 147],
+      [83, 22, 84],
+      [92, 22, 93],
+      [83, 23, 86],
+      [90, 23, 93],
+      [92, 73, 96],
+      [128, 34, 130],
+      [134, 34, 136],
+      [128, 35, 130],
+      [134, 35, 136],
+      [128, 36, 130],
+      [134, 36, 136],
+      [128, 37, 130],
+      [134, 37, 136],
+      [128, 38, 130],
+      [134, 38, 136]
+    ],
+    "notFloor": ["poke_c_obj", "c04theater"],
+    "cliffs": ["file1Material", "criffp"],
+    "passThrough": ["c03_slamp"],
+    "canopies": ["o_parasol"],
+    "posts": ["o_parasol", "slamp", "poke_c_light", "BW_040_c4_gate", "c15_gate"]
+  },
+  "seeThrough": ["poke_c_obj_poke_c_obj"],
+  "fillers": [
+    {
+      "name": "Battle Stadium",
+      "x0": 127,
+      "y0": 18,
+      "x1": 137,
+      "y1": 27,
+      "bottom": 3,
+      "top": 6.6,
+      "color": "#1c2238"
+    }
+  ],
+  "animate": [
+    {"match": ["sea_lm1"], "scroll": [0.02, 0.012]},
+    {"match": ["ike01"], "scroll": [0.03, 0]},
+    {"match": ["c01fountain_a", "c01fountain_d", "c03_foun_01", "c03_foun_03"], "scroll": [0, -0.6]},
+    {"match": ["c03_foun_02", "yachtwave"], "flip": 0.35},
+    {"match": ["C3Ship_wa"], "slosh": [0.06, 2]},
+    {
+      "match": [
+        "hana01_p",
+        "hana01_1",
+        "flower01",
+        "flower02",
+        "flower03",
+        "poke_c_f2",
+        "poke_c_f3",
+        "poke_c_f4",
+        "c5hana",
+        "ko_flower"
+      ],
+      "flip": 0.8
+    },
+    {"match": ["ki02bx", "ki02dx", "ki03bx", "ki03dx"], "sway": [0.012, 1.1]},
+    {"match": ["c15_gate_02_01", "c15_gate_02_03", "c4_gate_01_02", "c3_hata"], "sway": [0.04, 2.2]}
+  ],
+  "noFrames": ["HG_256_ybc_lnr_06", "HG_257_ybc_slf_03"],
+  "frameSeconds": {"default": 0.25, "sea": 0.2, "hamabe": 0.2, "rock": 0.2, "hana": 0.4, "flower": 0.4},
+  "spin": [],
+  "music": {"island": "island", "doors": {
+    "PokeMart": "mart", "GreenMarketShop": "vault", "WhiteMarketShop": "tms", "PurpleMarketShop": "cosmetics",
+    "PhotoShop": "tutor", "GoldMarketShop": "auction", "TentShop": "tent", "BattleDome": "battle", "BattleStadium": "battle",
+    "GameCorner": "gamecorner", "BattleTower": "trainertower", "Shrine": "chamber", "Daycare": "daycare"}},
+  "rotors": [{"name": "Windmills", "group": "buildings", "surface": "PT_146_d2_s01", "above": 3, "seconds": 5}],
+  "npcs": [
+    {
+      "name": "Journey captain",
+      "tile": [40, 81],
+      "facing": "up",
+      "sprite": "captain_1",
+      "role": "journeys",
+      "text": ["Ahoy! This ship sails to the regions of your journeys."],
+      "ask": "Which journey shall we set sail for?",
+      "cancel": "Not now",
+      "sail": "All aboard! Setting sail for %s!",
+      "none": ["Hmm, you haven't added any journeys yet.", "Add a game in the app and I'll take you there!"]
+    },
+    {
+      "name": "Raid captain",
+      "tile": [28, 77],
+      "facing": "down",
+      "sprite": "captain_1",
+      "role": "raids",
+      "text": ["Ahoy! This ship sails out to raid battles.", "No raids are running right now. Check back soon!"]
+    },
+    {
+      "name": "Youngster",
+      "tile": [78, 62],
+      "facing": "left",
+      "sprite": "boy1_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 2,
+      "text": [
+        "I heard a really powerful Pokemon lives deep inside Cerulean Cave in Kanto.",
+        "They only let the strongest trainers in. Someday that'll be me!"
+      ]
+    },
+    {
+      "name": "Lass",
+      "tile": [88, 49],
+      "facing": "down",
+      "sprite": "girl1_1",
+      "move": "wander",
+      "range": 2,
+      "text": [
+        "Some Pokemon only evolve when they're traded.",
+        "Good thing there are so many trainers here to trade with!"
+      ]
+    },
+    {
+      "name": "Gentleman",
+      "tile": [58, 47],
+      "facing": "down",
+      "sprite": "gentleman_1",
+      "move": "pace",
+      "axis": "y",
+      "range": 2,
+      "text": [
+        "Leave two Pokemon at a Daycare and you might come back to find an Egg.",
+        "Nobody knows where the Eggs come from. Nobody!"
+      ]
+    },
+    {
+      "name": "Old woman",
+      "tile": [48, 57],
+      "facing": "down",
+      "sprite": "oldwoman1_1",
+      "move": "look",
+      "every": 4,
+      "text": [
+        "When I was young, they said a Spiritomb appears at the Hallowed Tower in Sinnoh...",
+        "...if you talk to enough people in the Underground first. Fancy that!"
+      ]
+    },
+    {
+      "name": "Beach boy",
+      "tile": [100, 77],
+      "facing": "right",
+      "sprite": "beachboy_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 3,
+      "text": ["The water's great today!", "Too bad you need Surf to get any farther out."]
+    },
+    {
+      "name": "Jogger",
+      "tile": [70, 19],
+      "facing": "right",
+      "sprite": "sportsman_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 5,
+      "every": 1.2,
+      "text": ["Running Shoes? Who needs 'em!", "...Okay, fine. They help a little."]
+    },
+    {
+      "name": "Shopper",
+      "tile": [88, 61],
+      "facing": "left",
+      "sprite": "woman2_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 3,
+      "every": 3,
+      "text": [
+        "Tip! A Pokemon holding an Everstone won't evolve.",
+        "Perfect if you like your Pokemon just the way it is."
+      ]
+    },
+    {
+      "name": "Fisherman",
+      "tile": [44, 79],
+      "facing": "right",
+      "sprite": "fishing_1",
+      "move": "still",
+      "text": [
+        "In Hoenn, Feebas only bites on six special tiles of Route 119.",
+        "Six! Out of hundreds of tiles! I fished there for a week..."
+      ]
+    },
+    {
+      "name": "Impatient boy",
+      "tile": [141, 58],
+      "facing": "right",
+      "sprite": "gsboy2_1",
+      "move": "look",
+      "every": 1.2,
+      "text": [
+        "Ugh, how long is this line?! I've been waiting FOREVER!",
+        "...The wheel keeps going around, but nobody ever gets off. Suspicious."
+      ]
+    },
+    {
+      "name": "Girl in line",
+      "tile": [140, 58],
+      "facing": "right",
+      "sprite": "girl3_1",
+      "move": "still",
+      "text": ["The boy in front of me keeps sighing really loudly.", "I just want to see the island from the top!"]
+    },
+    {
+      "name": "Hiker",
+      "tile": [104, 52],
+      "facing": "left",
+      "sprite": "bigman_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 4,
+      "every": 3,
+      "text": [
+        "They call that place up there the Hyperbolic Time Chamber.",
+        "I hear a day of training in there feels like a year!"
+      ]
+    },
+    {
+      "name": "Dome fan",
+      "tile": [40, 35],
+      "facing": "left",
+      "sprite": "man1_1",
+      "move": "pace",
+      "axis": "x",
+      "range": 2,
+      "text": [
+        "The Battle Dome has trainers you can battle any time.",
+        "Win streaks there are the talk of the island!"
+      ]
+    },
+    {
+      "name": "Bench sitter",
+      "tile": [26, 59],
+      "facing": "down",
+      "sprite": "woman1_1",
+      "move": "still",
+      "text": ["I love the view from over here."],
+      "offset": [0.5, -0.25, 0.85],
+      "blocks": [[26, 60], [27, 60]]
+    },
+    {
+      "name": "Reader",
+      "tile": [105, 23],
+      "facing": "down",
+      "sprite": "mania_1",
+      "move": "still",
+      "offset": [0.5, -0.25, 0.85],
+      "text": [
+        "Shh... I am just getting to the good part.",
+        "It is a book about a trainer who catches every Pokemon in every region.",
+        "...Sounds familiar, does it not?"
+      ],
+      "blocks": [[105, 24], [106, 24]]
+    },
+    {
+      "name": "Pokémon Spotter",
+      "tile": [116, 24],
+      "facing": "left",
+      "sprite": "bozu_1",
+      "move": "still",
+      "role": "weekly_sighting"
+    },
+    {
+      "name": "Pikachu",
+      "tile": [55, 35],
+      "sprite": "pikachu_1",
+      "text": ["Pikachu: Pika pika!"],
+      "facing": "down",
+      "move": "wander",
+      "range": 3,
+      "every": 2.5,
+      "check": false
+    },
+    {
+      "name": "Psyduck",
+      "tile": [58, 36],
+      "sprite": "koduck_1",
+      "text": ["Psyduck: Psy...?"],
+      "facing": "down",
+      "move": "wander",
+      "range": 3,
+      "every": 2.5,
+      "check": false
+    },
+    {
+      "name": "Slowpoke",
+      "tile": [56, 37],
+      "sprite": "yadon_1",
+      "every": 6,
+      "text": ["Slowpoke: ......Yawn?"],
+      "facing": "down",
+      "move": "wander",
+      "range": 3,
+      "check": false
+    },
+    {
+      "name": "Jigglypuff",
+      "tile": [59, 34],
+      "sprite": "purin_1",
+      "text": ["Jigglypuff: Jiggly~!"],
+      "facing": "down",
+      "move": "wander",
+      "range": 3,
+      "every": 2.5,
+      "check": false
+    }
+  ],
+  "signs": {
+    "85,27": "TRAINER TOWER\n(Apartments)",
+    "108,50": "HYPERBOLIC TIME CHAMBER\n(EV Training)",
+    "61,57": "POKEVAULT\n(Pokemon Storage/Transfers)",
+    "73,57": "AUCTION HOUSE\n(Community Selling/Trading)",
+    "67,65": "COSMETICS AND DECORATIONS SHOP",
+    "84,65": "<-- TM & HM SHOP\n        MOVE TUTOR & REMINDER -->",
+    "22,36": "MYSTERY GIFT TENT",
+    "36,37": "BATTLE DOME\n(PvE)",
+    "134,43": "BATTLE STADIUM\n(PvP - Casual/Ranked)",
+    "55,52": "DAYCARE\n(Breeding/Eggs)",
+    "101,70": "GAME CORNER"
+  },
+  "botHangouts": {
+    "spawn": [40, 60, 54, 67],
+    "docks": [26, 78, 46, 80],
+    "lineup": { "from": [84, 72], "to": [110, 72], "spacing": 2, "facing": "down" }
+  }
+}

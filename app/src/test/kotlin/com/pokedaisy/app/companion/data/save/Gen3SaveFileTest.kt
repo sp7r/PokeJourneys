@@ -236,6 +236,58 @@ class Gen3SaveFileTest {
     }
 
     @Test
+    fun debugEditsRoundTripFlagsAndNewPokemon() {
+        val f = Gen3SaveFormat.FIRERED_LEAFGREEN
+        val save = parse(twoSlots(f), f)
+        val editor = Gen3SaveEditor(save)
+        editor.setEventFlag(0x820, true)
+        editor.setEventFlag(0x821, true)
+        editor.setEventFlag(0x820, false)
+        editor.setEventFlag(0x82C, true)
+        val slot = requireNotNull(editor.data.firstEmptySlot(0))
+        assertEquals(BoxSlot(0, 3), slot)
+        val record = SyntheticSave.mon(personality = 4, otId = 42, species = 4, exp = 180)
+        editor.addDebugPokemon(slot, record)
+        assertTrue(runCatching { editor.addDebugPokemon(slot, record) }.isFailure)
+        assertTrue(runCatching { editor.setEventFlag(f.eventFlagCount, true) }.isFailure)
+
+        val restored = Gen3SaveEditor(parse(editor.build(), f))
+        assertFalse(restored.flag(0x820))
+        assertTrue(restored.flag(0x821))
+        assertTrue(restored.flag(0x82C))
+        assertTrue(restored.caught(4))
+        assertArrayEquals(record, restored.record(slot))
+        assertEquals(2, restored.data.partyCount)
+    }
+
+    @Test
+    fun fireRedAcceptsTheNoMailMarkerInUnusedPartySlots() {
+        val f = Gen3SaveFormat.FIRERED_LEAFGREEN
+        val (s2, s1, st) = SyntheticSave.blocks(f)
+        s1[0x34] = 1
+        SyntheticSave.mon(personality = 13, otId = 7, species = 4, exp = 180).copyInto(s1, 0x38)
+        s1[0x38 + 0x54] = 6
+        s1.fill(0, 0x38 + 100, 0x38 + 600)
+        for (i in 1..5) s1[0x38 + i * 100 + 0x55] = 0xFF.toByte()
+
+        val bytes = SyntheticSave.file(f, SyntheticSave.Slot(2, 0, s2, s1, st), null)
+        val save = parse(bytes, f)
+        val data = Gen3SaveData(save)
+        assertNull(data.mismatch())
+        assertEquals(4, data.party.single().mon.species)
+        assertEquals(6, data.party.single().level)
+        val editor = Gen3SaveEditor(save)
+        editor.setMoney(4_000)
+        val edited = parse(editor.build(), f)
+        assertEquals(4_000L, Gen3SaveData(edited).money)
+        assertArrayEquals(s1.copyOfRange(0x38, 0x38 + 600), edited.saveBlock1.copyOfRange(0x38, 0x38 + 600))
+
+        // Occupied data past the party count is still a layout mismatch.
+        s1[0x38 + 100 + 0x54] = 1
+        assertNotNull(Gen3SaveData(f, s2, s1, st).mismatch())
+    }
+
+    @Test
     fun anotherGamesLayoutIsNoticed() {
         // An Emerald save read as FireRed: the party sits elsewhere, so the check refuses it.
         val bytes = twoSlots(Gen3SaveFormat.EMERALD)

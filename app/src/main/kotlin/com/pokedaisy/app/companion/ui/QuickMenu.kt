@@ -360,7 +360,7 @@ fun QuickMenu(state: QuickMenuState, snapshot: SnapshotView, actions: QuickActio
         label = "quick-menu-fan",
     )
     if (!state.open && fan == 0f) return
-    val items = QuickAction.entries.filter { it in shown && actions.offered(it) }
+    val items = QuickAction.entries.filter { /* PokeJourneys: omit disabled actions, including stored selections. */ com.pokedaisy.app.JourneyRules.actionAllowed(it.name) && it in shown && actions.offered(it) }
     val repelSteps = actions.repelSteps()
     val dark = if (QuickAction.FLASH in shown) actions.flashDark() else null
     state.items = items
@@ -745,7 +745,7 @@ fun quickMenuRows(
         },
         SettingRow(tk("LABELS"), onOff(labels), subtitle = "Each action's name under its icon") { setLabels(!labels) },
         groupTitle(tk("SHOW")),
-    ) + QuickAction.entries.map { a ->
+    ) + QuickAction.entries.filter { /* PokeJourneys: hide disabled action settings. */ com.pokedaisy.app.JourneyRules.actionAllowed(it.name) }.map { a ->
         SettingRow(a.label, onOff(a in shown), labelBadge = if (a == QuickAction.FLASH) NewFeatures.badge(NewFeatures.QUICK_FLASH) else null) {
             setShown(if (a in shown) shown - a else shown + a)
         }

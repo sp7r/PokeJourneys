@@ -1,20 +1,19 @@
 package com.pokedaisy.app
 
+import com.pokedaisy.app.journeys.ServerUpdates
 import org.json.JSONArray
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Updates from the app's GitHub releases: the newest published release (not a
- * draft or a pre-release - those are for testing) that carries an `.apk` and
- * whose tag is a higher version than this build's versionName. Only talks to api.github.com and GitHub's download
- * host; no account, no key.
+ * Updates from the official PokeJourneys server: the newest published release
+ * whose version is higher than this build's versionName; no account, no key.
  */
 object AppUpdater {
 
     const val REPO = "lidor30/pokedaisy"
-    const val RELEASES_PAGE = "https://github.com/$REPO/releases"
+    val RELEASES_PAGE get() = ServerUpdates.pageUrl()
 
     class Release(
         val version: String,
@@ -22,19 +21,11 @@ object AppUpdater {
         val apkUrl: String,
         val apkSize: Long,
         val pageUrl: String,
+        val sha256: String? = null,
     )
 
     /** The newest release that is newer than [current], or null (none, or offline). Blocking. */
-    fun check(current: String): Release? = runCatching {
-        val conn = (URL("https://api.github.com/repos/$REPO/releases?per_page=20").openConnection() as HttpURLConnection).apply {
-            connectTimeout = 8000
-            readTimeout = 8000
-            setRequestProperty("Accept", "application/vnd.github+json")
-            setRequestProperty("User-Agent", "PokeDaisy/$current")
-        }
-        val body = conn.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
-        newest(JSONArray(body))
-    }.getOrNull()?.takeIf { isNewer(it.version, current) }
+    fun check(current: String): Release? = ServerUpdates.check(current)
 
     /** The highest-versioned published, non-pre-release release with an APK in [releases] (GitHub's JSON). */
     fun newest(releases: JSONArray): Release? {
@@ -94,7 +85,7 @@ object AppUpdater {
     }
 
     /** Downloads [release]'s APK to [dest] (swapped in only once complete and the
-     * size GitHub reported). [onProgress] gets 0..1. Blocking. */
+     * size the server reported, with its SHA-256 when supplied). [onProgress] gets 0..1. Blocking. */
     fun download(release: Release, dest: File, onProgress: (Float) -> Unit): Boolean = runCatching {
         dest.parentFile?.mkdirs()
         val tmp = File(dest.parentFile, "${dest.name}.part")
@@ -117,7 +108,8 @@ object AppUpdater {
                 }
             }
         }
-        val ok = read > 0 && (release.apkSize <= 0 || read == release.apkSize) && tmp.renameTo(dest)
+        val ok = read > 0 && (release.apkSize <= 0 || read == release.apkSize) &&
+            ServerUpdates.verifySha256(tmp, release.sha256) && tmp.renameTo(dest)
         if (!ok) tmp.delete()
         ok
     }.getOrDefault(false)

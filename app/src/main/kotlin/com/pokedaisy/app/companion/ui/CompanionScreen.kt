@@ -137,6 +137,7 @@ fun CompanionScreen(
     gamePick: com.pokedaisy.app.companion.GamePickActions? = null,
     /** The match notice's SHARE (the player's yes): sends exactly what it lists. Null = no ask. */
     shareBestEffort: ((com.pokedaisy.app.companion.data.BestEffortReport) -> Unit)? = null,
+    onReturnToHub: (() -> Unit)? = null,
 ) {
     // Everything below is keyed on the snapshot's game: the per-game look
     // (backdrops, party slots, bag) reads the plain `activeGame` global, which
@@ -157,6 +158,7 @@ fun CompanionScreen(
     var popupReturn by remember { mutableStateOf<String?>(null) }
     // WHICH GAME IS THIS? over the tabs (WRONG GAME?, PICK AGAIN, SETTINGS > GAME, PICK A GAME).
     var pickerOpen by remember { mutableStateOf(false) }
+    var returnOpen by remember { mutableStateOf(false) }
     // RUN picked here: the battle pane keeps the controls until the battle ends (or the escape fails and the menu is back),
     // instead of INFO / SUGGESTIONS showing for the moment "Got away safely!" takes (the user's report).
     var ranAway by remember { mutableStateOf(false) }
@@ -275,6 +277,8 @@ fun CompanionScreen(
         // The launch's saved copy names the ones it had, which wait on LOADING for the live data.
         val cachedTabs = snapshot.cachedTabs.orEmpty()
         val available = COMPANION_TABS.filter { id ->
+            // PokeJourneys: no manual states in the tab bar or MORE.
+            if (!com.pokedaisy.app.JourneyRules.actionAllowed(id)) return@filter false
             when (id) {
                 "DEX" -> dex != null || id in cachedTabs
                 "GUIDE" -> guide != null || id in cachedTabs
@@ -485,11 +489,18 @@ fun CompanionScreen(
             val margin = if (LocalShortCompanion.current) 8.dp else 12.dp
             val dock by androidx.compose.animation.core.animateFloatAsState(if (gen5Full) 1f else 0f, tween(220), label = "gen5-dock")
             // Nothing over the tab area: the controls spill over the top margin too.
-            val nothingAbove = topStrip == null && !(statusBar != null && CompanionStatusBar.shown) && !(loaded && !snapshot.connected)
+            val nothingAbove = topStrip == null && onReturnToHub == null &&
+                !(statusBar != null && CompanionStatusBar.shown) && !(loaded && !snapshot.connected)
             Column(modifier = Modifier.fillMaxSize().padding(top = topInset).padding(margin)) {
                 if (topStrip != null) {
                     Box { topStrip() }
                     Spacer(Modifier.height(8.dp))
+                }
+                if (onReturnToHub != null) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                        com.pokedaisy.app.journeys.ReturnToHubButton { returnOpen = true }
+                    }
+                    Spacer(Modifier.height(4.dp))
                 }
                 // SETTINGS > STATUS BAR on the companion: the game's strip over the tabs.
                 if (statusBar != null && CompanionStatusBar.shown) {
@@ -709,7 +720,7 @@ fun CompanionScreen(
                                 initialPage = initialSettingsPage,
                                 ui = settingsUi,
                                 statusBarShown = statusBar != null && CompanionStatusBar.shown,
-                                playsAs = snapshot.gamePicker?.takeIf { gamePick != null }?.let { p ->
+                                playsAs = snapshot.gamePicker?.takeIf { gamePick != null && com.pokedaisy.app.JourneyRules.PLAYS_AS /* PokeJourneys */ }?.let { p ->
                                     p.options.firstOrNull { it.id == p.current }?.title?.let(::shortGameTitle) ?: tk("NOT SET")
                                 },
                                 onPlaysAs = { pickerOpen = true },
@@ -912,6 +923,15 @@ fun CompanionScreen(
                 snapshot.gamePicker?.takeIf { pickerOpen }?.let { picker ->
                     GamePickerOverlay(picker, gamePick, askForSupport, onDismiss = { pickerOpen = false })
                 }
+            }
+            if (returnOpen && onReturnToHub != null) {
+                com.pokedaisy.app.journeys.ReturnToHubConfirm(
+                    onConfirm = {
+                        returnOpen = false
+                        onReturnToHub()
+                    },
+                    onDismiss = { returnOpen = false },
+                )
             }
         }
     } } } }
@@ -1190,7 +1210,7 @@ private fun UnsupportedView(
                 Spacer(Modifier.height(m.u * 6))
                 GbaText(
                     if (pickGame == null) tr("SETTINGS (the gear below) still works.")
-                    else tr("You said it's none of the games PokéDaisy knows. If it's a version of one, pick it."),
+                    else tr("You said it's none of the games PokeJourneys knows. If it's a version of one, pick it."),
                     OptionColors.label, OptionColors.labelShadow, if (pickGame == null) m else small, maxLines = 3,
                 )
                 Spacer(Modifier.height(m.u * 6))

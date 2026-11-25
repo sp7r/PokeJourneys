@@ -9,7 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** L2 / R2: TOUCH SCREEN / DS LAYOUT in a DS game on one screen, SPEED CYCLE / FF HOLD everywhere else. */
+/** PokeJourneys: DS screen controls stay available while speed hotkeys are disabled. */
 class HotkeyDsTriggersTest {
 
     @get:Rule
@@ -26,11 +26,11 @@ class HotkeyDsTriggersTest {
     @After fun reset() { Hotkeys.dsActive = { false } }
 
     @Test
-    fun outsideADsGameTheTriggersStaySpeedAndFf() {
-        assertEquals(listOf(Hotkeys.Event(Action.SPEED_CYCLE, true)), press(l2))
+    fun outsideADsGameTheSpeedTriggersAreDisabled() {
+        assertEquals(emptyList<Hotkeys.Event>(), press(l2))
         release(l2)
-        assertEquals(listOf(Hotkeys.Event(Action.FF_HOLD, true)), press(r2))
-        assertEquals(listOf(Hotkeys.Event(Action.FF_HOLD, false)), release(r2))
+        assertEquals(emptyList<Hotkeys.Event>(), press(r2))
+        assertEquals(emptyList<Hotkeys.Event>(), release(r2))
     }
 
     @Test
@@ -42,16 +42,16 @@ class HotkeyDsTriggersTest {
     }
 
     @Test
-    fun aLayoutWithNoFloatingScreenLeavesL2ToSpeed() {
+    fun aLayoutWithNoFloatingScreenLeavesL2Unused() {
         Hotkeys.dsActive = { it == Action.DS_LAYOUT }
-        assertEquals(listOf(Hotkeys.Event(Action.SPEED_CYCLE, true)), press(l2))
+        assertEquals(emptyList<Hotkeys.Event>(), press(l2))
     }
 
     @Test
-    fun anFfHoldLetGoAfterTheScreenChangedStillEnds() {
-        assertEquals(listOf(Hotkeys.Event(Action.FF_HOLD, true)), press(r2))
+    fun aDisabledFfHoldDoesNotFireWhenTheScreenChanges() {
+        assertEquals(emptyList<Hotkeys.Event>(), press(r2))
         Hotkeys.dsActive = { true }
-        assertTrue(Hotkeys.Event(Action.FF_HOLD, false) in release(r2))
+        assertTrue(release(r2).isEmpty())
     }
 
     @Test

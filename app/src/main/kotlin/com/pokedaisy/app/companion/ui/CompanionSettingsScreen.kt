@@ -156,7 +156,7 @@ fun CompanionSettingsScreen(
                         listOf(groupTitle(tk("GAME")), SettingRow(tk("PLAYS AS"), game, subtitle = "Which game this ROM is read as", opensPage = true) { onPlaysAs() })
                     }.orEmpty() + homeRows(settings, barCount(settings, availableTabs), { tick++ }, { page = it }, { selector = it },
                         { c -> confirm = Confirm(c.title, c.message, c.confirmLabel, c.onConfirm).also { it.cancelLabel = c.cancelLabel; it.onCancel = c.onCancel } })
-                    Page.TABS -> COMPANION_TABS.map { id ->
+                    Page.TABS -> COMPANION_TABS.filter { /* PokeJourneys: no STATES tab selector. */ com.pokedaisy.app.JourneyRules.actionAllowed(it) }.map { id ->
                         val shown = id in settings.companionTabs
                         // A tab this game doesn't have (DEX, GUIDE) keeps its setting for the games that do.
                         if (id !in availableTabs) return@map SettingRow(companionTabLabel(id), tk("N/A")) {}
@@ -200,7 +200,7 @@ fun CompanionSettingsScreen(
                         SettingRow(tk("HOTKEYS"), if (settings.hotkeysEnabled) tk("ON") else tk("OFF")) {
                             settings.setHotkeysEnabled(!settings.hotkeysEnabled); tick++
                         },
-                    ) + Hotkeys.Action.entries.map { action ->
+                    ) + Hotkeys.Action.entries.filter { /* PokeJourneys: hide disabled bindings. */ com.pokedaisy.app.JourneyRules.actionAllowed(it.name) }.map { action ->
                         val title = action.title
                         SettingRow(title, bindingValue(capture, title, settings.hotkeyBindings()[action]), enabled = settings.hotkeysEnabled, labelBadge = action.badge) {
                             capture?.toggle(title) {
@@ -267,7 +267,8 @@ fun CompanionSettingsScreen(
                     } + SettingRow(tk("CANCEL"), null) { page = Page.HOME }
                     Page.HELP -> emptyList()
                 }
-            }
+            } // PokeJourneys: hide disabled settings before search and navigation.
+                .filter { com.pokedaisy.app.JourneyRules.settingAllowed(it.label) }
             // A page of its own each time: the rows sit in slots by position, so the row the D-pad had focused on HOME
             // (HUD) kept the focus in the next page's row at the same place - near the bottom of SETTINGS > HUD - while the
             // white cursor showed its top row: DOWN went nowhere, UP walked up from the bottom.
@@ -472,7 +473,9 @@ private fun homeRows(
     // MAKEOVER: the game's look from other games (the user's call: its own group, first and standing out, only in a
     // game it works in).
     val looks = s.playerLookSupported
-    val makeover = if (!looks && !s.dayNightSupported && !s.followerSupported) emptyList() else listOfNotNull(
+    // PokeJourneys: with the makeovers off, the group is PLAYER LOOK alone.
+    val others = com.pokedaisy.app.JourneyRules.MAKEOVERS && (s.dayNightSupported || s.followerSupported)
+    val makeover = if (!looks && !others) emptyList() else listOfNotNull(
         featuredGroupTitle(tk("MAKEOVER"), if (looks) "Other games' looks in this one" else "A fresh look for this game"),
         // Another game's hero for the player (PlayerLook.kt: their sprites from the player's own ROM of that game,
         // patched into this one in memory). The heroes' names are the games' own, so they aren't translated.

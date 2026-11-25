@@ -1469,15 +1469,19 @@ class PokeDaisyActivity : Activity() {
         override val shinyOddsChoices get() = com.pokedaisy.app.companion.data.ShinyOdds.choices(BuildConfig.DEBUG)
         override val shinyOddsSupported get() = shinyTarget != null
         override val playerLookSupported get() = lookRunner.supported.value
-        override val playerLooks get() = lookRunner.offered.value.map { it.name } + lookRunner.offeredMons.value.map { "MON:$it" }
-        override val playerLook get() = lookRunner.picked.value?.name ?: lookRunner.pickedMon.value?.let { "MON:$it" }
+        override val playerLooks get() = listOfNotNull(com.pokedaisy.app.journeys.CreatorLook.PICK.takeIf { lookRunner.creatorOffered.value }) +
+            lookRunner.offered.value.map { it.name } + lookRunner.offeredMons.value.map { "MON:$it" }
+        override val playerLook get() = com.pokedaisy.app.journeys.CreatorLook.PICK.takeIf { lookRunner.creatorPicked.value }
+            ?: lookRunner.picked.value?.name ?: lookRunner.pickedMon.value?.let { "MON:$it" }
         override fun playerLookLabel(name: String) = com.pokedaisy.app.companion.data.MonArt.monOf(name)?.let { lookRunner.monNames[it] ?: "#$it" }
-            ?: com.pokedaisy.app.companion.data.LookChar.byName(name)?.label ?: name
+            ?: com.pokedaisy.app.companion.data.LookChar.byName(name)?.label
+            ?: com.pokedaisy.app.journeys.CreatorLook.LABEL.takeIf { name == com.pokedaisy.app.journeys.CreatorLook.PICK } ?: name
         override val playerLookOwn get() = lookRunner.own.value?.name
         override fun setPlayerLook(look: String?) {
             if (coopRefuses()) return
             Prefs(this@PokeDaisyActivity).setPlayerLookFor(romKey, look)
             lookRunner.apply()
+            romKey.toLongOrNull(16)?.let { com.pokedaisy.app.journeys.IntroSkip.arm(this@PokeDaisyActivity, it, romKey) }
         }
         override val textLooks get() = lookRunner.textOffered.value.map { it.name }
         override val textLook get() = lookRunner.textPicked.value?.name
@@ -2063,13 +2067,13 @@ class PokeDaisyActivity : Activity() {
         // A DS game's touch screen is on the stage held sideways (DS LAYOUT), so the panel is the companion alone.
         sidePanel = SidePanel(root, view, touchControls, Prefs(this), panelBack, panelKeys, playClick, under = fieldHud, onWindow = ::onCompanionWindow, companion = {
             val snap by telemetry.snapshot.collectAsState()
-            CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = panelBack, keys = panelKeys, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort)
+            CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = panelBack, keys = panelKeys, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort, onReturnToHub = returnToHubAction)
         })
         portraitPanel = PortraitPanel(root, view, touchControls, Prefs(this), portraitBack, playClick) {
             dsOrCompanion {
                 val snap by telemetry.snapshot.collectAsState()
                 CompanionFocusHost(bottomFocus.value, bottomKeys) {
-                    CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = portraitBack, keys = bottomKeys, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort)
+                    CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = portraitBack, keys = bottomKeys, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort, onReturnToHub = returnToHubAction)
                 }
             }
         }
@@ -2420,7 +2424,19 @@ class PokeDaisyActivity : Activity() {
         }
         // PLAYER LOOK: this ROM's scan and patches, in the background; the engine gets the pick once they're in.
         lookPatch = null
-        lookRunner.load(r, crc, if (gba) gameCode else "", if (gba) SavesLocation.saveFor(this, Prefs(this), romFile) else null)
+        // PokeJourneys: a new game in the creator's look skips the professor's speech.
+        val startIdentity = intent?.getStringExtra(com.pokedaisy.app.journeys.JourneyStart.EXTRA_IDENTITY)
+        val autoStartJourney = startIdentity != null &&
+            !SavesLocation.saveFor(this, Prefs(this), romFile).exists() &&
+            !SaveStates(getExternalFilesDir(null) ?: filesDir, crc).resumeFile.exists()
+        intent?.removeExtra(com.pokedaisy.app.journeys.JourneyStart.EXTRA_IDENTITY)
+        crc.toLongOrNull(16)?.let {
+            com.pokedaisy.app.journeys.IntroSkip.arm(this, it, crc, startIdentity, autoStartJourney)
+        }
+        com.pokedaisy.app.journeys.IntroSkipDs.arm(this, startIdentity, crc, autoStartJourney)
+        com.pokedaisy.app.journeys.IntroSkipGen5.arm(this, startIdentity, crc, autoStartJourney)
+        com.pokedaisy.app.journeys.IntroSkipGb.arm(this, startIdentity, crc, autoStartJourney)
+        lookRunner.load(r, crc, if (gba) gameCode else "", if (gba) SavesLocation.saveFor(this, Prefs(this), romFile) else null, autoStartJourney)
         setUpCoopPresence(r, gba, gameCode)
     }
 
@@ -3267,13 +3283,13 @@ class PokeDaisyActivity : Activity() {
                     DualScreenPresentation.companionView(
                         ctx, telemetry, stateSlots, companionSettings, battleInput, companionBack, playClick, RetroAchievements,
                         initialTab = companionStartTab, initialSettingsRow = companionStartRow, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort,
-                        keys = bottomKeys, focus = { bottomFocus.value },
+                        keys = bottomKeys, focus = { bottomFocus.value }, onReturnToHub = returnToHubAction,
                     )
                 }, Prefs(this).dsBottomCompanion) { on -> Prefs(this).dsBottomCompanion = on }.also { dsBottom = it }
                 else DualScreenPresentation.companionView(
                     ctx, telemetry, stateSlots, companionSettings, battleInput, companionBack, playClick, RetroAchievements,
                     initialTab = companionStartTab, initialSettingsRow = companionStartRow, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort,
-                    keys = bottomKeys, focus = { bottomFocus.value },
+                    keys = bottomKeys, focus = { bottomFocus.value }, onReturnToHub = returnToHubAction,
                 )
             }.also { p ->
                 p.onBarsShowing = { SecondScreenHolder.coverApp(this, target) }
@@ -3488,7 +3504,7 @@ class PokeDaisyActivity : Activity() {
             DualScreenPresentation.companionView(
                 this, telemetry, stateSlots, companionSettings, battleInput, companionBack, playClick, RetroAchievements,
                 initialTab = companionStartTab, initialSettingsRow = companionStartRow, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort,
-                keys = bottomKeys.takeIf { !romIsNds }, focus = { bottomFocus.value },
+                keys = bottomKeys.takeIf { !romIsNds }, focus = { bottomFocus.value }, onReturnToHub = returnToHubAction,
             )
         }
         val view = if (romIsNds) {
@@ -5160,6 +5176,9 @@ class PokeDaisyActivity : Activity() {
         showHud(com.pokedaisy.app.companion.i18n.tr("Game restarted"))
     }
 
+    private val returnToHubAction: (() -> Unit)?
+        get() = if (intent?.getStringExtra(LibraryActivity.EXTRA_LAUNCHED_FROM) == "hub") ::exitGame else null
+
     /**
      * Leaves the game. Opened by a frontend, the whole task goes, so the
      * frontend comes back rather than a library left underneath from earlier.
@@ -5197,7 +5216,7 @@ class PokeDaisyActivity : Activity() {
         return ComposeView(this).apply {
             setContent {
                 val snap by telemetry.snapshot.collectAsState()
-                CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = mirrorBack, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort)
+                CompanionScreen(snap, stateSlots, companionSettings, battleInput, back = mirrorBack, clickSound = playClick, achievements = RetroAchievements, statusBar = companionStatusBar, itemUse = itemUse, fly = flyAction, askForSupport = askForSupport, gamePick = gamePick, shareBestEffort = shareBestEffort, onReturnToHub = returnToHubAction)
             }
         }
     }

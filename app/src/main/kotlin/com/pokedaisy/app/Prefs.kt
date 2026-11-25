@@ -149,7 +149,8 @@ class Prefs(context: Context) {
 
     /** TRADE EVOLUTIONS: a Pokémon that evolves by trading can evolve from its summary (TradeEvolution.kt). */
     var tradeEvolutions: Boolean
-        get() = p.getBoolean("trade_evolutions", false)
+        // PokeJourneys: no trade-evolution action from saved preferences.
+        get() = JourneyRules.CHEATS && p.getBoolean("trade_evolutions", false)
         set(v) = p.edit().putBoolean("trade_evolutions", v).apply()
 
     /** REUSABLE TMS: a TM stays in the bag after it teaches a move, as an HM does (ReusableTms.kt). */
@@ -176,21 +177,24 @@ class Prefs(context: Context) {
 
     /** FOLLOWER: the party's lead Pokémon walks behind the player (every game it works in; off to start with). */
     var follower: Boolean
-        get() = p.getBoolean("follower", false)
+        // PokeJourneys: no follower from saved preferences.
+        get() = JourneyRules.MAKEOVERS && p.getBoolean("follower", false)
         set(v) = p.edit().putBoolean("follower", v).apply()
 
     /** DAY AND NIGHT: the overworld tinted by the device's clock (every GBA game; off to start with). */
     var dayNight: Boolean
-        get() = p.getBoolean("day_night", false)
+        // PokeJourneys: no day and night tint from saved preferences.
+        get() = JourneyRules.MAKEOVERS && p.getBoolean("day_night", false)
         set(v) = p.edit().putBoolean("day_night", v).apply()
 
     /** TEXT LOOK per ROM: the style worn (a LookEngine name, "FIRERED" / "EMERALD"), null = the game's own. */
-    fun textLookFor(romKey: String): String? = p.getString("text_look_$romKey", null)
+    fun textLookFor(romKey: String): String? = if (JourneyRules.MAKEOVERS) p.getString("text_look_$romKey", null) else null // PokeJourneys
     fun setTextLookFor(romKey: String, style: String?) = p.edit().putString("text_look_$romKey", style).apply()
 
     /** RIVAL LOOK: the rival of the other gender wears the other hero of the player's look's game (every game). */
     var rivalLook: Boolean
-        get() = p.getBoolean("rival_look", true)
+        // PokeJourneys: the rival stays the game's own.
+        get() = JourneyRules.MAKEOVERS && p.getBoolean("rival_look", true)
         set(v) = p.edit().putBoolean("rival_look", v).apply()
 
     /** Remembered speed-cycle index per ROM (keyed by CRC32). */
@@ -333,7 +337,8 @@ class Prefs(context: Context) {
      * Off by default - it's the one thing the game itself never tells you.
      * The party summary's own STATS page shows regardless. */
     var showFoeIvs: Boolean
-        get() = p.getBoolean("show_foe_ivs", false)
+        // PokeJourneys: never from saved preferences.
+        get() = JourneyRules.FOE_IVS && p.getBoolean("show_foe_ivs", false)
         set(v) = p.edit().putBoolean("show_foe_ivs", v).apply()
 
     /** Whether battle INFO opens with FOE DETAILS (the foe's side widened, GitHub #34) -
@@ -825,7 +830,8 @@ class Prefs(context: Context) {
      * out: ui-preview's data module has no UI). 0-7 were the old game-named themes (FireRed, LeafGreen, ...), which only
      * changed the top screen's backdrop: whoever picked one is on the default now (the user's call, 2026-11-01). */
     var appTheme: Int
-        get() = p.getInt("app_theme", 8).let { if (it in 0..7) 8 else it }
+        // PokeJourneys: one look, whatever was picked before.
+        get() = if (!JourneyRules.THEMES) 8 else p.getInt("app_theme", 8).let { if (it in 0..7) 8 else it }
         set(v) = p.edit().putInt("app_theme", v).apply()
 
     /** The theme worn before a limited-time one was picked: back to it once that one's dates are over. */
@@ -841,7 +847,8 @@ class Prefs(context: Context) {
     /** SETTINGS > DARK MODE: 0 off (the default: the OPTION screen's white windows), 1 on, 2 AUTO (the device's
      * own light / dark setting). See DarkMode (companion/ui/theme/DarkMode.kt). */
     var darkMode: Int
-        get() = p.getInt("dark_mode", 0)
+        // PokeJourneys: one look, whatever was picked before.
+        get() = if (!JourneyRules.THEMES) 0 else p.getInt("dark_mode", 0)
         set(v) = p.edit().putInt("dark_mode", v).apply()
 
     /** User-supplied SteamGridDB API key (Settings > Cover Art) — see

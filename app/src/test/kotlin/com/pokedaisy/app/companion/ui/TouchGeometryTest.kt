@@ -97,7 +97,8 @@ class TouchGeometryTest {
         val p = TouchGeometry.place(style.withLayout(false, layout), w, h, dp, false)
         val gw = h * 1.5f; val l = (w - gw) / 2
         val old = everyControlClear(p, l, l + gw)
-        assertTrue("the old rule squeezed it: $old", h - old.first - old.second < 100)
+        // PokeJourneys: the fast-forward and rewind buttons are hidden (JourneyRules), so the old rule squeezes less.
+        if (com.pokedaisy.app.JourneyRules.FAST_FORWARD) assertTrue("the old rule squeezed it: $old", h - old.first - old.second < 100)
         val (top, bottom) = TouchGeometry.hudClear(p, l, l + gw)
         assertEquals("down to the bottom of R", p.item(TouchButton.R)!!.bottom.toInt(), top)
         assertEquals("up to the top of SELECT / START", (h - p.item(TouchButton.SELECT)!!.top).toInt(), bottom)

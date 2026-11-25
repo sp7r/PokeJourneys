@@ -65,7 +65,9 @@ class Hotkeys private constructor(
     data class Event(val action: Action, val pressed: Boolean)
 
     /** action -> list of chords; each chord is the set of keycodes that must all be held. */
-    private val chords: Map<Action, List<Set<Int>>> = rawBindings.mapValues { (_, strs) ->
+    private val chords: Map<Action, List<Set<Int>>> = rawBindings
+        // PokeJourneys: disabled bindings do not consume controller keys.
+        .filterKeys { JourneyRules.actionAllowed(it.name) }.mapValues { (_, strs) ->
         strs.mapNotNull { s ->
             val ks = s.split('+').mapNotNull { resolveKey(it.trim()) }
             if (ks.isEmpty()) null else ks.toSet()

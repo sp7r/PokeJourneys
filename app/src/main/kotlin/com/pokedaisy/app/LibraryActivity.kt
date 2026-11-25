@@ -310,9 +310,10 @@ class LibraryActivity : ComponentActivity() {
         importDir = File(getExternalFilesDir(null), "import").apply { mkdirs() }
 
         // If launched via VIEW (open a .gba with the app), import + play it.
-        if (intent?.action == Intent.ACTION_VIEW) {
+        // PokeJourneys: not with PokeDaisy's screens off (JourneyRules); games start from the island.
+        if (JourneyRules.POKEDAISY_SCREENS && intent?.action == Intent.ACTION_VIEW) {
             intent.data?.let { startImport(it, play = true) }
-        } else if (LaunchActivity.romUri(intent) != null) {
+        } else if (JourneyRules.POKEDAISY_SCREENS && LaunchActivity.romUri(intent) != null) {
             // A frontend that only knows the app (its launcher intent) plus a ROM:
             // straight to the game, as if it had started LaunchActivity itself.
             startActivity(
@@ -345,6 +346,9 @@ class LibraryActivity : ComponentActivity() {
         com.pokedaisy.app.companion.WhatsNew.due(BuildConfig.VERSION_NAME, prefs.whatsNewSeen, updated)?.let { whatsNew = it }
         if (!updated) prefs.whatsNewSeen = BuildConfig.VERSION_NAME
 
+        // PokeJourneys: with PokeDaisy's screens off (JourneyRules), the library never shows; only setup does.
+        if (!JourneyRules.POKEDAISY_SCREENS && setup == null) return com.pokedaisy.app.journeys.HubActivity.replaceLibrary(this, prefs)
+
         setContent {
             AppTheme { com.pokedaisy.app.companion.ui.CompactTextOnSmallWindows {
                 // The library's windows (INFO, RENAME, the pick-lists...) register their BACK here, as on the companion.
@@ -359,12 +363,15 @@ class LibraryActivity : ComponentActivity() {
             } }
         }
 
+        // PokeJourneys: a plain app start opens Victory Island over the library (leaving the island comes back here).
+        if (savedInstanceState == null && setup == null && intent?.action == Intent.ACTION_MAIN) com.pokedaisy.app.journeys.HubActivity.open(this, prefs)
+
         // Once ever, from the third open on and two days after the install: may we send crash reports?
         if (savedInstanceState == null && setup == null && CrashReports.shouldAsk(this, prefs)) crashAsk = true
 
         // Every app open looks for a newer GitHub release. Not in debug builds: a
         // release APK can't install over a debug-signed one (Settings > VERSION still checks).
-        if (savedInstanceState == null && !BuildConfig.DEBUG) updates.check()
+        if (savedInstanceState == null && !BuildConfig.DEBUG && /* PokeJourneys */ JourneyRules.UPDATES) updates.check()
     }
 
     override fun onStart() {
@@ -383,8 +390,16 @@ class LibraryActivity : ComponentActivity() {
         setup?.capture?.cancel()
     }
 
+    /** PokeJourneys: the game [launch] started, recorded for the Vault when the library comes back ([onResume]). */
+    private var launchedRom: File? = null
+
     override fun onResume() {
         super.onResume()
+        // PokeJourneys: back from a game, record its Pokémon for the Vault (off the UI thread; a game without a save is skipped).
+        launchedRom?.let { rom ->
+            launchedRom = null
+            kotlin.concurrent.thread { com.pokedaisy.app.journeys.JourneyIds.record(this, prefs, rom) }
+        }
         isResumed = true
         // Brought back on the bottom screen (its icon tapped there while open): over to the top one again.
         if (Screens.reopenOnMainDisplay(this)) return
@@ -457,6 +472,9 @@ class LibraryActivity : ComponentActivity() {
     private fun libraryTools(): List<com.pokedaisy.app.companion.ui.LibraryTool> {
         val nf = com.pokedaisy.app.companion.NewFeatures
         return listOf(
+            com.pokedaisy.app.companion.ui.LibraryTool("VAULT", "VAULT", "Your Pokémon across every journey", null) {
+                startActivity(Intent(this, VaultActivity::class.java))
+            },
             com.pokedaisy.app.companion.ui.LibraryTool("PATCH", "PATCH A ROM", "Turn a .bps patch into a game", nf.badge(nf.ROM_PATCH)) {
                 pickPatch.launch(arrayOf("*/*"))
             },
@@ -469,7 +487,9 @@ class LibraryActivity : ComponentActivity() {
             com.pokedaisy.app.companion.ui.LibraryTool("TRADE", "TRADE SAVES", "Move Pokémon between your games' saves", nf.badge(nf.SAVE_TRADE)) {
                 startActivity(Intent(this, SaveEditorActivity::class.java).putExtra(SaveEditorActivity.EXTRA_TRADE, true))
             },
-        )
+        ).filter { /* PokeJourneys: hide the LINK PLAY tool card. */ JourneyRules.LINK_PLAY || it.id != "LINK" }
+            .filter { /* PokeJourneys: no save editor or save trading. */ JourneyRules.SAVE_TOOLS || it.id !in JourneyRules.SAVE_TOOL_CARDS }
+            .filter { /* PokeJourneys: no ROM patching. */ JourneyRules.ROM_PATCH || it.id != "PATCH" }
     }
 
     /** The library ([sortLibrary]'s order) split into its quick views. */
@@ -555,7 +575,7 @@ class LibraryActivity : ComponentActivity() {
             // The lists scroll to the screen's edges (their margin is padding inside them), so a card
             // slides off the screen rather than being cut at an inner box's edge.
             Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                OptionTitleWindow(if (narrowHeader && !toolsOpen) "" else "POKéDAISY", m, Modifier.padding(start = SCREEN_MARGIN, end = SCREEN_MARGIN, top = SCREEN_MARGIN), leading = {
+                OptionTitleWindow(if (narrowHeader && !toolsOpen) "" else "POKEJOURNEYS", m, Modifier.padding(start = SCREEN_MARGIN, end = SCREEN_MARGIN, top = SCREEN_MARGIN), leading = {
                     PixelArt(LOGO_ROWS, LOGO_PALETTE, Modifier.size(m.lineHeight))
                 }) {
                     // TOOLS has no games to sort, show, add or refresh: HELP alone.
@@ -720,7 +740,8 @@ class LibraryActivity : ComponentActivity() {
         Box(Modifier.fillMaxSize()) {
             if (addMenu) {
                 OptionSelector(
-                    tr("ADD GAMES"), AddChoice.entries.toList(), AddChoice.FILE, { tr(it.label) }, m,
+                    tr("ADD GAMES"), AddChoice.entries.filter { /* PokeJourneys */ JourneyRules.ROM_PATCH || it != AddChoice.PATCH },
+                    AddChoice.FILE, { tr(it.label) }, m,
                     onPick = ::pickAdd,
                     onDismiss = { addMenu = false },
                     badge = { if (it == AddChoice.PATCH) com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.ROM_PATCH) else null },
@@ -828,7 +849,7 @@ class LibraryActivity : ComponentActivity() {
                 OptionConfirm(
                     title = tr("CRASH REPORTS?"),
                     message = tr(
-                        "When PokéDaisy crashes, it can send a report so the bug gets fixed sooner: the device model, Android version and where the app crashed. Never your ROMs, saves or anything personal. You can change this any time in Settings.",
+                        "When PokeJourneys crashes, it can send a report so the bug gets fixed sooner: the device model, Android version and where the app crashed. Never your ROMs, saves or anything personal. You can change this any time in Settings.",
                     ),
                     confirmLabel = tr("SEND REPORTS"),
                     cancelLabel = tk("NO THANKS"),
@@ -1183,7 +1204,7 @@ class LibraryActivity : ComponentActivity() {
             }
             // Two to four GBA games on one link cable (LinkActivity): trades, battles, record mixing between them.
             if (rom.extension.lowercase() !in setOf("gb", "gbc", "nds")) {
-                add(RomMenuItem(tr("LINK PLAY"), Icons.Filled.Link, opens = true) {
+                /* PokeJourneys: hide in-game link entry. */ if (JourneyRules.LINK_PLAY) add(RomMenuItem(tr("LINK PLAY"), Icons.Filled.Link, opens = true) {
                     startActivity(Intent(this@LibraryActivity, LinkActivity::class.java).putExtra(LinkActivity.EXTRA_ROM, rom.absolutePath))
                 })
             }
@@ -1195,21 +1216,24 @@ class LibraryActivity : ComponentActivity() {
                     startActivity(Intent(this@LibraryActivity, SaveEditorActivity::class.java).putExtra(SaveEditorActivity.EXTRA_ROM, rom.absolutePath))
                 })
             }
-            // This game's saves in a folder of its own (another emulator's), or back to the usual search.
-            add(RomMenuItem(tr("SAVE FOLDER"), Icons.Filled.Folder, opens = true) {
-                if (!StorageAccess.hasAllFilesAccess(this@LibraryActivity)) {
-                    StorageAccess.requestAllFilesAccess(this@LibraryActivity)
-                    Toast.makeText(this@LibraryActivity, tr("Grant \"All files access\", then tap the button again"), Toast.LENGTH_LONG).show()
-                } else {
-                    saveFolderTarget = rom
-                    pickGameSaveFolder.launch(null)
+            // PokeJourneys: saves always stay in the app; hide folder choices.
+            if (false) {
+                // This game's saves in a folder of its own (another emulator's), or back to the usual search.
+                add(RomMenuItem(tr("SAVE FOLDER"), Icons.Filled.Folder, opens = true) {
+                    if (!StorageAccess.hasAllFilesAccess(this@LibraryActivity)) {
+                        StorageAccess.requestAllFilesAccess(this@LibraryActivity)
+                        Toast.makeText(this@LibraryActivity, tr("Grant \"All files access\", then tap the button again"), Toast.LENGTH_LONG).show()
+                    } else {
+                        saveFolderTarget = rom
+                        pickGameSaveFolder.launch(null)
+                    }
+                })
+                if (prefs.romSaveDir(rom) != null) {
+                    add(RomMenuItem(tr("DEFAULT SAVE FOLDER"), Icons.Filled.FolderOff) { setGameSaveFolder(rom, null) })
                 }
-            })
-            if (prefs.romSaveDir(rom) != null) {
-                add(RomMenuItem(tr("DEFAULT SAVE FOLDER"), Icons.Filled.FolderOff) { setGameSaveFolder(rom, null) })
             }
             // The game's cheats, on Settings' CHEATS page.
-            add(RomMenuItem(tr("CHEATS"), Icons.Filled.Code, opens = true) {
+            /* PokeJourneys: hide library cheat entry. */ if (JourneyRules.CHEATS) add(RomMenuItem(tr("CHEATS"), Icons.Filled.Code, opens = true) {
                 startActivity(Intent(this@LibraryActivity, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_CHEATS_ROM, rom.absolutePath))
             })
             // A shortcut straight into the game, on Android's home screen (GitHub #182).
@@ -1223,7 +1247,7 @@ class LibraryActivity : ComponentActivity() {
             if (!RomFolder.isLinked(prefs, rom)) {
                 add(RomMenuItem(tr("DELETE"), Icons.Filled.Delete, danger = true, opens = true, onClick = onDelete))
             }
-        }
+        }.filter { item -> /* PokeJourneys: no save tools. */ JourneyRules.SAVE_TOOLS || JourneyRules.SAVE_TOOL_ITEMS.none { tr(it) == item.label } }
     }
 
     @Composable
@@ -1593,6 +1617,7 @@ class LibraryActivity : ComponentActivity() {
         secondScreen.dismiss()
         launcher.menu = null
         prefs.lastRomPath = rom.absolutePath
+        launchedRom = rom
         prefs.pushRecentRom(rom.absolutePath)
         // Opened on the bottom screen, the game still goes to the top one (Screens.mainDisplayLaunch).
         val onMain = Screens.mainDisplayLaunch(this)
@@ -1834,6 +1859,11 @@ class LibraryActivity : ComponentActivity() {
                 // A BPS patch picked as a ROM file (or opened with the app): PATCH A ROM takes it from here.
                 if (BpsPatch.looksLikeBps(tmp.inputStream().use { s -> ByteArray(4).also { s.read(it) } })) {
                     tmp.delete()
+                    // PokeJourneys: no ROM patching; a patch file isn't a game.
+                    if (!JourneyRules.ROM_PATCH) {
+                        runOnUiThread { Toast.makeText(this, tr("PokeJourneys doesn't apply ROM patches"), Toast.LENGTH_LONG).show() }
+                        return@Thread
+                    }
                     runOnUiThread { patcher.start(uri, name) }
                     return@Thread
                 }
@@ -2248,7 +2278,7 @@ class LibraryActivity : ComponentActivity() {
                 onPick = ::launcherPick,
             )
             Column(Modifier.weight(1f).fillMaxHeight()) {
-                OptionTitleWindow("POKéDAISY", m, Modifier.padding(start = SCREEN_MARGIN, end = SCREEN_MARGIN, top = SCREEN_MARGIN), leading = {
+                OptionTitleWindow("POKEJOURNEYS", m, Modifier.padding(start = SCREEN_MARGIN, end = SCREEN_MARGIN, top = SCREEN_MARGIN), leading = {
                     PixelArt(LOGO_ROWS, LOGO_PALETTE, Modifier.size(m.lineHeight))
                 }) {
                     val buttons = launcherHeader()
@@ -2532,6 +2562,7 @@ class LibraryActivity : ComponentActivity() {
         if (ScreenScraperClient.enabled) prefs.screenScraperAsked = true
         ssIntro = false
         setup = null
+        if (!JourneyRules.POKEDAISY_SCREENS) return com.pokedaisy.app.journeys.HubActivity.replaceLibrary(this, prefs)
         bump()
         syncLauncher()
     }

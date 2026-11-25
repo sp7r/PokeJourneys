@@ -141,7 +141,7 @@ class EmulatorEngine(
 
     fun setReusableTms(sites: List<com.pokedaisy.app.companion.data.ReusableTms.Site>, on: Boolean) {
         tmSites = sites
-        reusableTms = on
+        /* PokeJourneys: ignore disabled gameplay patches. */ reusableTms = JourneyRules.CHEATS && on
         tmPatchDirty = true
     }
 
@@ -152,7 +152,7 @@ class EmulatorEngine(
 
     fun setInstantText(patch: com.pokedaisy.app.companion.data.InstantText.Patch?, on: Boolean) {
         textPatch = patch
-        instantText = on
+        /* PokeJourneys: ignore disabled gameplay patches. */ instantText = JourneyRules.FAST_FORWARD && on
         tmPatchDirty = true
     }
 
@@ -342,12 +342,16 @@ class EmulatorEngine(
         set(v) { battleInput.gen1 = v }
 
     fun setFastForwardHeld(on: Boolean) {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         if (ffHeld == on) return
         ffHeld = on
         announceSpeed()
     }
 
     fun toggleFastForward() {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         ffToggled = !ffToggled
         onFastForwardToggledChanged?.invoke(ffToggled)
         announceSpeed()
@@ -356,6 +360,8 @@ class EmulatorEngine(
     /** Explicit set (vs. [toggleFastForward]'s flip) — for a UI switch that needs
      * to show/drive an exact on/off state, like the companion Settings tab. */
     fun setFastForwardToggled(on: Boolean) {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         if (ffToggled == on) return
         ffToggled = on
         onFastForwardToggledChanged?.invoke(ffToggled)
@@ -364,7 +370,8 @@ class EmulatorEngine(
 
     /** Restore a persisted on/off state without flashing the HUD or re-firing
      * [onFastForwardToggledChanged] (same pattern as [restoreSpeedIndex]). */
-    fun restoreFastForwardToggled(on: Boolean) { ffToggled = on }
+    // PokeJourneys: stored fast-forward never turns on.
+    fun restoreFastForwardToggled(on: Boolean) { ffToggled = JourneyRules.FAST_FORWARD && on }
 
     val fastForwardToggled: Boolean get() = ffToggled
 
@@ -383,10 +390,13 @@ class EmulatorEngine(
     fun softReset() { softResetFrames = SOFT_RESET_FRAMES }
 
     fun setRewindHeld(on: Boolean) {
-        rewindHeld = on && rewindAllowed(CoopGuards.statesBlocked)
+        // PokeJourneys: no held rewind action.
+        rewindHeld = JourneyRules.FAST_FORWARD && on && rewindAllowed(CoopGuards.statesBlocked)
     }
 
     fun setSlowmoHeld(on: Boolean) {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         if (slowmoHeld == on) return
         slowmoHeld = on
         announceSpeed()
@@ -394,6 +404,8 @@ class EmulatorEngine(
 
     /** SPEED CYCLE: 1x, 1.5x ... 4x and round; from a slow step (GAME SPEED's 0.5x / 0.25x), back to 1x. */
     fun cycleSpeed() {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         speedIdx = if (speedIdx >= CYCLE_STEPS) 0 else (speedIdx + 1) % CYCLE_STEPS
         announceSpeed()
     }
@@ -402,7 +414,8 @@ class EmulatorEngine(
     val speedIndex: Int get() = speedIdx
 
     /** Restore a persisted speed index without flashing the HUD. */
-    fun restoreSpeedIndex(i: Int) { speedIdx = i.coerceIn(0, SPEED_STEPS.size - 1) }
+    // PokeJourneys: stored game speed always restores to normal.
+    fun restoreSpeedIndex(i: Int) { speedIdx = if (JourneyRules.FAST_FORWARD) i.coerceIn(0, SPEED_STEPS.size - 1) else 0 }
 
     /** The game speeds the companion's GAME SPEED offers ([speedIndex] picks one), slowest first. */
     val gameSpeeds: List<Float> get() = SPEED_STEPS.sorted()
@@ -412,6 +425,8 @@ class EmulatorEngine(
 
     /** GAME SPEED: run at [speed] (one of [gameSpeeds]) until another is picked; the HUD says so. */
     fun setGameSpeed(speed: Float) {
+        // PokeJourneys: refuse player speed changes.
+        if (!JourneyRules.FAST_FORWARD) return
         val i = SPEED_STEPS.indexOfFirst { it == speed }.takeIf { it >= 0 } ?: return
         speedIdx = i
         announceSpeed()
@@ -613,7 +628,9 @@ class EmulatorEngine(
     }
 
     /** The speed the player asked for (FF, slow-mo, the speed steps); Float.POSITIVE_INFINITY = "run uncapped". */
+    // PokeJourneys: audio also ignores stored speed preferences.
     private fun requestedSpeed(): Float = when {
+        !JourneyRules.FAST_FORWARD -> 1f
         ffHeld || ffToggled -> if (ffMaxSpeed > 0f) ffMaxSpeed else Float.POSITIVE_INFINITY
         slowmoHeld -> 0.5f
         else -> sceneSpeed()
@@ -621,6 +638,8 @@ class EmulatorEngine(
 
     /** What the emulator actually runs at: [requestedSpeed], unless SMART is holding it at 1x for now. */
     private fun effectiveSpeed(): Float {
+        // PokeJourneys: preferences and hidden-frame acceleration cannot change the pace.
+        if (!JourneyRules.FAST_FORWARD) return 1f
         // Rewinding steps back at the display's pace (2 game frames a frame), whatever FF says.
         if (rewindHeld && rewindEntries > 0) return 1f
         // An automated switch drives the game's party menu behind the held frame: nothing to watch
@@ -790,15 +809,31 @@ class EmulatorEngine(
      * with no scene (no EXPAND row: the European Yellows, Red / Blue) leaves it to [gbField]'s own RAM checks. */
     private val gbOnField get() = wideScene == WideCamera.SCENE_FIELD || wideScene == -1
 
-    fun requestSaveState(slot: Int) { if (CoopGuards.battleActive()) return; pendingSave = slot.coerceIn(SaveStates.SLOT_MIN, SaveStates.SLOT_MAX) }
+    fun requestSaveState(slot: Int) {
+        // PokeJourneys: manual states are unavailable; resume uses a separate path.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return
+        if (CoopGuards.battleActive()) return; pendingSave = slot.coerceIn(SaveStates.SLOT_MIN, SaveStates.SLOT_MAX) }
     /** False while co-op blocks LOAD STATE (slot loads and UNDO LOAD; the launch's resume is never blocked). */
-    fun loadAllowed(): Boolean = !CoopGuards.statesBlocked
+    // PokeJourneys: refuse manual loads while preserving startup resume.
+    fun loadAllowed(): Boolean = JourneyRules.SAVE_STATE_SLOTS && !CoopGuards.statesBlocked
 
-    fun requestLoadState(slot: Int) { pendingLoad = slot.coerceIn(SaveStates.SLOT_MIN, SaveStates.SLOT_MAX) }
-    fun requestUndoSave() { if (!CoopGuards.battleActive()) pendingUndoSave = true }   // no state of a co-op battle is ever written
-    fun requestUndoLoad() { pendingUndoLoad = true }
+    fun requestLoadState(slot: Int) {
+        // PokeJourneys: manual states are unavailable; resume uses a separate path.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return
+        pendingLoad = slot.coerceIn(SaveStates.SLOT_MIN, SaveStates.SLOT_MAX) }
+    fun requestUndoSave() {
+        // PokeJourneys: manual states are unavailable; resume uses a separate path.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return
+        if (!CoopGuards.battleActive()) pendingUndoSave = true }   // no state of a co-op battle is ever written
+    fun requestUndoLoad() {
+        // PokeJourneys: manual states are unavailable; resume uses a separate path.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return
+        pendingUndoLoad = true }
 
     fun cycleSlot(delta: Int) {
+        // PokeJourneys: manual states are unavailable; resume uses a separate path.
+        if (!JourneyRules.SAVE_STATE_SLOTS) return
+
         val n = (currentSlot + delta).mod(SaveStates.SLOT_MAX - SaveStates.SLOT_MIN + 1)
         currentSlot = n
         onSlotChanged?.invoke(n)
@@ -1104,7 +1139,8 @@ class EmulatorEngine(
                 battleInput.tick()
                 if (nds) ndsTaps.tick()
                 // No ring while a co-op battle runs: it would fill with the other game's frames.
-                val rewindWanted = if (CoopGuards.statesBlocked) 0 else rewindEntries
+                // PokeJourneys: no rewind buffer or rollback from stored preferences.
+                val rewindWanted = if (!JourneyRules.FAST_FORWARD || CoopGuards.statesBlocked) 0 else rewindEntries
                 if (rewindWanted != rewindApplied) {
                     MgbaCore.pkSetRewind(rewindWanted)
                     rewindApplied = rewindWanted
@@ -1146,6 +1182,10 @@ class EmulatorEngine(
                 // TURBO A / B: pressed 2 frames, released 2, in game frames - so FF mashes faster too.
                 val reset = if (softResetFrames > 0) { softResetFrames--; SOFT_RESET_KEYS } else 0
                 var keys = input.mask or reset or input.tapMask() or (if ((frame++ / 2) % 2 == 0L) input.turboMask else 0)
+                if (gba) keys = com.pokedaisy.app.journeys.IntroSkip.bootKeys(keys)
+                if (nds) keys = com.pokedaisy.app.journeys.IntroSkipDs.bootKeys(keys)
+                if (nds) keys = com.pokedaisy.app.journeys.IntroSkipGen5.bootKeys(keys)
+                if (!gba && !nds) keys = com.pokedaisy.app.journeys.IntroSkipGb.bootKeys(keys)
                 // AUTO-RUN: B flipped while walking on the player's own field (holding it walks) - never in a script, a
                 // battle, a menu screen (B leaves it) or on a bike (the Acro Bike's wheelie is B). Nor with A held: the
                 // expansion's DexNav creeps on A (Seaglass & co.), but checks B's run first, so a held B scared the
@@ -1333,21 +1373,21 @@ class EmulatorEngine(
                 // pending hack's), every frame on a game they know - a few bytes, and SETTINGS learns from it whether
                 // BIKE / SURF SPEED can work here.
                 if (fieldGame != fieldApplied || wildFlag != wildApplied) {
-                    MgbaCore.pkFieldConfigure(if (gba) fieldGame else WideScreen.OFF, wildFlag.toInt(), wildEncounters < 100)
+                    MgbaCore.pkFieldConfigure(if (gba) fieldGame else WideScreen.OFF, wildFlag.toInt(), /* PokeJourneys: ignore disabled gameplay patches. */ JourneyRules.CHEATS && wildEncounters < 100)
                     fieldApplied = fieldGame
                     wildApplied = wildFlag
                     fieldMovesKnown = false
                 }
                 // WILD ENCOUNTERS on a Game Boy game: held every frame while OFF, put back once on the field when ON.
                 gbField?.let { gf ->
-                    val hold = wildEncounters == 0
+                    /* PokeJourneys: ignore disabled gameplay patches. */ val hold = JourneyRules.CHEATS && wildEncounters == 0
                     runCatching {
                         if (hold) { gf.holdWild(gameCalls); gbWildHeld = true }
                         else if (gbWildHeld != false && gbOnField && gf.releaseWild(gameCalls)) gbWildHeld = false
                     }.onFailure { Log.e("pokedaisy", "Game Boy wild encounters failed", it) }
                 } ?: run { gbWildHeld = null }
                 // A DS game holds its own switch in its field read (pk_nds_field.cpp: the map's rates at 0).
-                val wildKeep = if (wildFlag != 0L || nds) wildEncounters else 100
+                val wildKeep = /* PokeJourneys: ignore disabled gameplay patches. */ if (JourneyRules.CHEATS && (wildFlag != 0L || nds)) wildEncounters else 100
                 if (nds) {
                     MgbaCore.pkNdsKeepStartMenu(dsKeepStartMenu)
                     MgbaCore.pkNdsCpuBoost(ndsCpuBoost)
@@ -1358,7 +1398,7 @@ class EmulatorEngine(
                     else -> 0
                 }
                 // SHINY ODDS: a new wild foe, between the frame it's made and the battle drawing it.
-                if (gba && shinyOdds < com.pokedaisy.app.companion.data.ShinyOdds.NORMAL) shinyRoller?.let { r ->
+                /* PokeJourneys: ignore disabled gameplay patches. */ if (JourneyRules.CHEATS && gba && shinyOdds < com.pokedaisy.app.companion.data.ShinyOdds.NORMAL) shinyRoller?.let { r ->
                     runCatching {
                         val n = r.tick(shinyOdds, InProcessReader::readCoreMemory, MgbaCore::pkWriteBytes)
                         if (n > 0) Log.i("pokedaisy", "shiny odds: foe made shiny (1 in $shinyOdds)")
@@ -1821,7 +1861,8 @@ class EmulatorEngine(
     private fun applyCheats() {
         cheatsDirty = false
         // A DS game: Action Replay DS codes, into melonDS's own engine (cheats.DsCheats).
-        val text = if (gba || nds) cheatText else ""
+        // PokeJourneys: no stored cheat codes reach either core.
+        val text = if (JourneyRules.CHEATS && (gba || nds)) cheatText else ""
         val n = if (nds) {
             val w = com.pokedaisy.app.cheats.DsCheats.fromText(text)
             MgbaCore.pkNdsCheats(w.words, w.lengths)
@@ -1864,17 +1905,20 @@ class EmulatorEngine(
         // The player's sprite still holds the last look's record (a Pokémon's 32x32 shape, a frame table in the tail):
         // set up from the ROM as it is now, whatever comes next.
         if (gba && patch == null) { lookRefreshPending = true; lookRefreshTries = 0 }
-        if (!gba || patch == null) return
+        // PokeJourneys: a DS game's look onto melonDS's cart (journeys/CreatorLookDs.kt).
+        if (nds) { com.pokedaisy.app.journeys.CreatorLookDs.apply(patch); return }
+        if (patch == null) return
         if (patch.blocks.isNotEmpty()) {
             val data = java.io.ByteArrayOutputStream()
             patch.blocks.forEach { data.write(it.data) }
             val n = MgbaCore.pkRomBlocks(
-                IntArray(patch.blocks.size) { 0x08000000 + patch.blocks[it].off },
+                IntArray(patch.blocks.size) { (if (gba) 0x08000000 else 0) + patch.blocks[it].off },
                 IntArray(patch.blocks.size) { patch.blocks[it].data.size },
                 IntArray(patch.blocks.size) { patch.blocks[it].crc },
                 data.toByteArray(),
             )
             Log.i("pokedaisy", "player look: ${if (n < 0) "the ROM didn't match, left as it is" else "$n block(s) in"}")
+            if (!gba) com.pokedaisy.app.journeys.IntroSkipGb.patchReady(n >= 0)
             if (n < 0) return
         }
         settleLook()
@@ -1899,6 +1943,11 @@ class EmulatorEngine(
         // Never during a co-op battle: both reach pkRomUnpatch / pkRomUnblock, which uninstall co-op (they stay dirty until it ends).
         if (tmPatchDirty && !CoopGuards.battleActive()) { applyTmPatch(); coopLock?.requestReinstall() }
         if (lookDirty && !CoopGuards.battleActive()) { applyLook(); coopLock?.requestReinstall() }
+        // PokeJourneys: a new game skips the professor's speech (journeys/IntroSkip.kt).
+        if (runFieldJobs && gba && com.pokedaisy.app.journeys.IntroSkip.isArmed && MgbaCore.pkCallSafe()) com.pokedaisy.app.journeys.IntroSkip.frame(gameCalls)
+        if (runFieldJobs && nds) com.pokedaisy.app.journeys.IntroSkipDs.frame(gameCalls)
+        if (runFieldJobs && nds) com.pokedaisy.app.journeys.IntroSkipGen5.frame(gameCalls)
+        if (runFieldJobs && !gba && !nds) com.pokedaisy.app.journeys.IntroSkipGb.frame(gameCalls)
         // The jobs queued by now (one a job queues runs on a later frame); a delayed one waits its frames.
         // Not while co-op holds the game: they call game code (PC, USE, FLY) with no frames advancing; they stay queued.
         if (runFieldJobs) repeat(fieldItemJobs.size) {

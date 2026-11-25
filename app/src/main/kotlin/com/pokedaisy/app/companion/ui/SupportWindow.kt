@@ -44,7 +44,7 @@ fun SupportWindow(
     val u = m.u
     OptionOverlay(onLater, Modifier.widthIn(max = 760.dp)) {
         Column {
-            OptionTitleWindow("ENJOYING POKéDAISY?", m, leading = { PixelArt(LOGO_ROWS, LOGO_PALETTE, Modifier.size(m.lineHeight)) })
+            OptionTitleWindow("ENJOYING POKEJOURNEYS?", m, leading = { PixelArt(LOGO_ROWS, LOGO_PALETTE, Modifier.size(m.lineHeight)) })
             Spacer(Modifier.height(u * 4))
             OptionListWindow(m, Modifier.fillMaxWidth().goldFrame(u)) {
                 BoxWithConstraints(Modifier.padding(u * 4)) {
@@ -64,8 +64,8 @@ fun SupportWindow(
                             }
                             Spacer(Modifier.height(u * 5))
                             GbaText(
-                                if (short) tr("Free, no ads, made by one person. A small tip helps PokéDaisy grow.")
-                                else tr("PokéDaisy is free, has no ads and is made by one person in their spare time. If it has made your games better and you'd like to see it grow, with more games and more features, a small tip goes a long way."),
+                                if (short) tr("Free, no ads, made by one person. A small tip helps PokeJourneys grow.")
+                                else tr("PokeJourneys is free, has no ads and is made by one person in their spare time. If it has made your games better and you'd like to see it grow, with more games and more features, a small tip goes a long way."),
                                 OptionColors.label, OptionColors.labelShadow, small, maxLines = Int.MAX_VALUE,
                                 modifier = Modifier.padding(horizontal = u * 4),
                             )
@@ -119,8 +119,6 @@ private fun SiteTile(
     val cell = with(LocalDensity.current) { m.fontPixel.toDp() }
     val mark: @Composable (Modifier) -> Unit = { mod ->
         when (site) {
-            SupportAsk.Site.COFFEE -> CoffeeCup(mod)
-            SupportAsk.Site.PATREON -> PatreonMark(mod)
             SupportAsk.Site.KOFI -> KofiMug(mod)
         }
     }

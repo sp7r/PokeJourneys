@@ -2,6 +2,7 @@ package com.pokedaisy.app
 
 import android.content.Context
 import com.pokedaisy.app.companion.data.TelemetrySampler
+import com.pokedaisy.app.journeys.JourneyDsCatalog
 import java.io.File
 
 /**
@@ -33,8 +34,9 @@ object RomFolder {
         val partial: Boolean = false, val matched: Boolean = false, val tryable: Boolean = false,
         /** Written before TRYABLE existed ("0"): checked again once. */
         val legacy: Boolean = false,
+        val playable: Boolean = false,
     ) {
-        val listed get() = supported || partial || tryable
+        val listed get() = supported || partial || tryable || playable
     }
 
     private fun entryOf(size: Long, modified: Long, f: File): Entry =
@@ -43,7 +45,7 @@ object RomFolder {
             CompanionSupport.Verdict.MATCHED -> Entry(size, modified, true, matched = true)
             CompanionSupport.Verdict.PARTIAL -> Entry(size, modified, false, partial = true)
             CompanionSupport.Verdict.TRYABLE -> Entry(size, modified, false, tryable = true)
-            CompanionSupport.Verdict.UNSUPPORTED -> Entry(size, modified, false)
+            CompanionSupport.Verdict.UNSUPPORTED -> Entry(size, modified, false, playable = JourneyDsCatalog.canPlayWithoutCompanion(f))
         }
 
     /** The library: imported ROMs (`files/roms/`), then the linked folders' supported
@@ -232,7 +234,8 @@ object RomFolder {
         (TelemetrySampler.SUPPORTED_HACK_SHA1S.sorted() + TelemetrySampler.SUPPORTED_GB_SHA1S.sorted() +
             com.pokedaisy.app.companion.data.RETAIL_DUMPS.map { it.sha1 } +
             TelemetrySampler.NDS_GAMES.map { (code, rev) -> "$code:$rev" }.sorted() +
-            com.pokedaisy.app.companion.data.OriginHeartGold.V4_0_3_EN_RC8_SHA1).hashCode(),
+            com.pokedaisy.app.companion.data.OriginHeartGold.V4_0_3_EN_RC8_SHA1 +
+            JourneyDsCatalog.retail.keys.sorted() + JourneyDsCatalog.variants.keys.sorted()).hashCode(),
     )
 
     private fun load(context: Context): Map<String, Entry> {
@@ -248,7 +251,8 @@ object RomFolder {
                 val size = p[1].toLongOrNull() ?: return@mapNotNull null
                 val modified = p[2].toLongOrNull() ?: return@mapNotNull null
                 if (stale && p[3] != "1") return@mapNotNull null
-                p[0] to Entry(size, modified, p[3] == "1" || p[3] == "M", partial = p[3] == "P", matched = p[3] == "M", tryable = p[3] == "T", legacy = p[3] == "0")
+                p[0] to Entry(size, modified, p[3] == "1" || p[3] == "M", partial = p[3] == "P", matched = p[3] == "M",
+                    tryable = p[3] == "T", legacy = p[3] == "0", playable = p[3] == "J")
             }.toMap()
         }.getOrDefault(emptyMap())
     }
@@ -258,7 +262,7 @@ object RomFolder {
         val tmp = File(f.parentFile, "${f.name}.tmp")
         runCatching {
             tmp.writeText(SUPPORTED + "\n" + entries.entries.joinToString("") { (path, e) ->
-                "$path\t${e.size}\t${e.modified}\t${if (e.matched) "M" else if (e.supported) "1" else if (e.partial) "P" else if (e.tryable) "T" else "U"}\n"
+                "$path\t${e.size}\t${e.modified}\t${if (e.matched) "M" else if (e.supported) "1" else if (e.partial) "P" else if (e.tryable) "T" else if (e.playable) "J" else "U"}\n"
             })
             tmp.renameTo(f)
         }

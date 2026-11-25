@@ -323,7 +323,7 @@ internal enum class MapLabelStyle(val width: Int, val height: Int) {
     val cursorColor: Color get() = if (this == GEN1) Color(0xFF181818) else Color.White
 
     /** The player's 16x16 head on the map (regionmap/player_*.png, from the ROM by RomArt). */
-    fun headAsset(gender: Int, game: GameKind? = null): String? = when (this) {
+    fun headAsset(gender: Int, game: GameKind? = null): String? = if (com.pokedaisy.app.journeys.CreatorLook.worn.value) com.pokedaisy.app.journeys.CreatorLook.HEAD else when (this) {
         // PLAYER LOOK: another game's hero worn, whose head the game's own map shows now.
         FIRERED, EMERALD -> com.pokedaisy.app.companion.data.PlayerLook.worn.value?.headArt ?: ownHeadAsset(gender, game)
         else -> ownHeadAsset(gender, game)

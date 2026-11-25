@@ -309,6 +309,7 @@ internal object ToolIcons {
         "LINK" -> link
         "EDIT" -> edit
         "TRADE" -> trade
+        "VAULT" -> TabIcons.forTab("BOXES")
         else -> null
     }
 

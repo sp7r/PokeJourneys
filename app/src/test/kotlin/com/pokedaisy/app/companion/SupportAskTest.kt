@@ -28,7 +28,8 @@ class SupportAskTest {
 
     @Test fun `the sites are the website's own pages`() {
         assertEquals(
-            listOf("https://buymeacoffee.com/lidor30g", "https://www.patreon.com/cw/pokedaisy", "https://ko-fi.com/pokedaisy"),
+            // PokeJourneys: donations go to its own Ko-fi page.
+            listOf("https://ko-fi.com/sp7rr"),
             SupportAsk.Site.entries.map { it.url },
         )
     }

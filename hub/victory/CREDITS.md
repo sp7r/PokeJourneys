@@ -1,0 +1,24 @@
+# Victory Island credits
+
+- Creator backdrop export references: [pret/pokefirered](https://github.com/pret/pokefirered/blob/master/src/battle_bg.c), [pret/pokeemerald](https://github.com/pret/pokeemerald/blob/master/src/battle_bg.c), and [pret/pokeplatinum](https://github.com/pret/pokeplatinum/tree/main/res/graphics/battle) document battle terrain tables and sprite resource order. The already credited HeartGold project supplies corresponding archive references. `tools/hub/victory/backdrops.js` reuses the local GBA and DS decoders and writes only to external data.
+- Black 2 backdrop reference: [fuddlesworth/pokebw2 battle background tables](https://github.com/fuddlesworth/pokebw2/tree/main/res/battle/backgrounds) identify seasonal field and platform models. The already credited installed apicula converter and Godot render the owner's models into external native-resolution previews; no model, texture or rendered game art is distributed here.
+
+Based on PokeDaisy by Lidor Itzhari - https://github.com/lidor30/pokedaisy
+
+- [Godot Engine](https://godotengine.org), 4.7.2, by Juan Linietsky, Ariel Manzur and contributors, MIT License. The engine and its bundled dependencies are installed separately; see its `COPYRIGHT.txt`.
+- The owner's Frontier Terraces Godot export supplies the camera, player movement, overworld sprite animation, island scene and doorway positions. The existing `hub/godot` project supplies the runtime OBJ loader, message box, interaction and automated capture/check patterns. These project scripts are adapted here.
+- The owner's PokeJourneys Online icon, logo and splash art (`branding/`), also in `assets/branding/`.
+- Pixel Operator font (`fonts/PixelOperator.ttf`, the text box font), by Jayvee Enaguas, CC0 1.0, copied from PokeDaisy's `app/src/main/assets/fonts`.
+- [apicula](https://github.com/scurest/apicula), by scurest: `tools/hub/victory/frames.js` reads animation frames and `interiors.js` converts the owner's room and furniture models with an installed copy. It is not distributed here; all converted assets stay in the external data folder.
+- The Mystery Gift Tent's `gsleader15_1` sprite, the Hyperbolic Time Chamber's `gsbigfour3_1` sprite, and the Pokémon Spotter's `cameraman_1` sprite are exported from the owner's HeartGold cartridge into external hub data.
+- [pret/pokeplatinum](https://github.com/pret/pokeplatinum): format references for Platinum's zone headers, map matrices, land sections, area texture selection, prop placements and warp events. The interior exporter reads these from the owner's cartridge; no cartridge data or decompiled game code is distributed here.
+- [Pokemon DS Map Studio](https://github.com/Trifindo/Pokemon-DS-Map-Studio), 2.2, by Trifindo, GPL-3.0. The exporter invokes its installed Java libraries for map/tileset reading and OBJ export, reusing `tools/hub/dsms/ExportObj.java`. No jars or editor source are distributed here.
+- DS Map Studio's installed JOGL (`jogamp-fat.jar`) and graphicslib3D dependencies are used only by the external export tool and remain outside the repository.
+- The owner's DS Map Studio map, textures and hero sheet are external data. Pokemon game art belongs to its respective owners, including Nintendo, Creatures and GAME FREAK. No game art is distributed in this project.
+- Character creator parts (read from the repo's `assets/creator/`): Character Customization Resources (Gen 4), by Coffee Cup / Poltergeist, https://eeveeexpo.com/resources/317/ ("You can freely edit, use and share the files.").
+
+- [pret/pokeheartgold](https://github.com/pret/pokeheartgold): HeartGold header layout, cartridge archive names and Goldenrod room identity references. The exporter reads all models, placements and textures from the owner's cartridge.
+- [fuddlesworth/pokebw2](https://github.com/fuddlesworth/pokebw2): Black 2 map identities, matrices, area references and event structure documentation. No game code or assets are included.
+- [DS Pok�mon Hacking map containers](https://ds-pokemon-hacking.github.io/docs/generation-v/resources/bw_b2w2-maps/) and [area data](https://ds-pokemon-hacking.github.io/docs/generation-v/resources/b2w2-area_data/), by Gonhex, Trifindo and contributors: Black 2 WB/GC/RD containers, permission flags, unit conventions and furniture/texture references. Height decoding uses the already credited installed DS Map Studio library.
+
+- [pret/pokefirered](https://github.com/pret/pokefirered): format and layout references for FireRed text windows, normal/Copy1 fonts, character encoding and naming keyboard. The local GBA decoder developed for the interface comparisons is reused by `tools/hub/victory/gba2d.js`. Every graphic, palette and glyph is read from the supplied BPRE Rev 1 cartridge into external data; no cartridge data or decompiled game code ships here.

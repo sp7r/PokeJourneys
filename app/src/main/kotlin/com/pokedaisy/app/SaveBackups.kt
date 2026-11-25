@@ -34,7 +34,8 @@ object SaveBackups {
         val keep: Int = KEEP,
     ) {
         companion object {
-            fun from(prefs: Prefs) = Settings(prefs.saveBackups, prefs.saveBackupsDir?.let(::File), prefs.saveBackupsKeep)
+            // PokeJourneys: saves and their backups always stay in the app.
+            fun from(prefs: Prefs) = Settings(prefs.saveBackups, null, prefs.saveBackupsKeep)
         }
     }
 

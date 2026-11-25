@@ -126,7 +126,8 @@ enum class TouchButton(val label: String, val gba: Int, val extra: Boolean = fal
     }
 
     companion object {
-        val extras get() = entries.filter { it.extra }
+        // PokeJourneys: hide disabled extras in touch-control settings.
+        val extras get() = entries.filter { it.extra && com.pokedaisy.app.JourneyRules.actionAllowed(it.name) }
     }
 }
 
@@ -248,6 +249,8 @@ data class TouchControlsStyle(
     /** The buttons on screen for a game: [unavailable] are extras switched on that do nothing in it now (ZOOM without
      * EXPAND, REWIND with REWIND off), left off rather than drawn dead. */
     fun shown(gameBoy: Boolean, ds: Boolean = false, unavailable: Set<TouchButton> = emptySet()): List<TouchButton> = TouchButton.entries.filter { b ->
+        // PokeJourneys: omit disabled extras from play and previews.
+        com.pokedaisy.app.JourneyRules.actionAllowed(b.name) &&
         when {
             b.extra -> b in extras && b !in unavailable
             gameBoy && (b == TouchButton.L || b == TouchButton.R) -> false

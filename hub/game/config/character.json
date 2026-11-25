@@ -1,0 +1,17 @@
+{
+    "layers":  [
+                   "sprites/overworld {motion}/bases mf/m base light.png",
+                   "sprites/overworld {motion}/bottoms/shorts/shorts red.png",
+                   "sprites/overworld {motion}/tops/vest/vest blue.png",
+                   "sprites/overworld {motion}/hair/boy 2/boy 2 brown.png"
+               ],
+    "walkFrameSeconds":  0.16,
+    "runFrameSeconds":  0.10,
+    "spriteSize":  32,
+    "tints":  [
+                  "ffffffff",
+                  "ffffffff",
+                  "ffffffff",
+                  "ffffffff"
+              ]
+}

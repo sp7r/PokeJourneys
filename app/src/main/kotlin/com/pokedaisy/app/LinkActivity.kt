@@ -104,6 +104,8 @@ class LinkActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // PokeJourneys: refuse direct entry as well as hiding launchers.
+        if (!JourneyRules.LINK_PLAY) { finish(); return }
         prefs = Prefs(this)
         com.pokedaisy.app.companion.i18n.L10n.apply(prefs.appLanguage, null)
         input.setControls(GbaControls.load(getExternalFilesDir(null) ?: filesDir))

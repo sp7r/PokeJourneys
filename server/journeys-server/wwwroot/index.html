@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>PokeJourneys · Admin</title>
+  <link rel="stylesheet" href="./admin.css">
+  <script type="module" src="./admin.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Administration">
+      <a class="brand" href="#overview"><span class="brand-mark" aria-hidden="true">P</span><span>PokeJourneys<small>SERVER CONSOLE</small></span></a>
+      <p class="nav-label">MANAGE</p>
+      <nav aria-label="Main navigation">
+        <a href="#overview" data-nav="overview"><span aria-hidden="true">◫</span>Overview</a>
+        <a href="#players" data-nav="players"><span aria-hidden="true">♙</span>Players</a>
+        <a href="#events" data-nav="events"><span aria-hidden="true">◇</span>Events and raids</a>
+        <a href="#shop" data-nav="shop"><span aria-hidden="true">▤</span>Shop</a>
+        <a href="#chat" data-nav="chat"><span aria-hidden="true">&#9993;</span>Chat</a>
+        <a href="#reports" data-nav="reports"><span aria-hidden="true">&#9873;</span>Reports</a>
+        <a href="#crashes" data-nav="crashes"><span aria-hidden="true">&#9888;</span>Crashes</a>
+        <a href="#releases" data-nav="releases"><span aria-hidden="true">&#8595;</span>Releases</a>
+        <a href="#audit" data-nav="audit"><span aria-hidden="true">≡</span>Audit log</a>
+        <a href="#bots" data-nav="bots"><span aria-hidden="true">⚙</span>Bot players</a>
+      </nav>
+      <div class="sidebar-note"><span class="status-dot" aria-hidden="true"></span> Server administration<small>All changes are recorded in the audit log.</small></div>
+    </aside>
+    <main id="content" tabindex="-1">
+      <header class="page-header">
+        <div><p class="eyebrow">POKEJOURNEYS ONLINE</p><h1 id="page-title">Overview</h1><p id="page-description" class="muted">A snapshot of your server.</p></div>
+        <div class="header-actions"><button id="refresh" type="button">Refresh</button><button id="change-key" class="subtle" type="button">Admin key</button></div>
+      </header>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <div id="error" class="notice error" role="alert" hidden></div>
+      <div id="view" aria-busy="true"><p class="loading">Loading console…</p></div>
+      <noscript><p class="notice error">Enable JavaScript to use this console.</p></noscript>
+      <footer>Server times are displayed in your local time zone. Changes require a reason.</footer>
+    </main>
+  </div>
+
+  <dialog id="key-dialog" aria-labelledby="key-title" aria-describedby="key-help">
+    <form id="key-form">
+      <p class="eyebrow">SERVER ACCESS</p><h2 id="key-title">Enter your admin key</h2>
+      <p id="key-help" class="muted">Use the key from the server's data folder. It is kept in sessionStorage for this tab.</p>
+      <p id="key-error" class="field-error" role="alert" hidden></p>
+      <label for="admin-key">Admin key</label>
+      <input id="admin-key" name="key" type="password" required autocomplete="off" spellcheck="false" autofocus>
+      <div class="dialog-actions"><button type="submit" class="primary">Connect</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="reason-dialog" aria-labelledby="reason-title" aria-describedby="reason-help">
+    <form id="reason-form">
+      <p class="eyebrow">RECORD A CHANGE</p><h2 id="reason-title">Reason for change</h2>
+      <p id="reason-help" class="muted"></p>
+      <label for="change-reason">Reason <span class="muted">(required)</span></label>
+      <textarea id="change-reason" name="reason" rows="3" required autofocus></textarea>
+      <div class="dialog-actions"><button id="cancel-reason" type="button">Cancel</button><button type="submit" class="primary">Confirm change</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

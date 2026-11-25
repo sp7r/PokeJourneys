@@ -488,7 +488,8 @@ void pk_nds_read(uint32_t addr, uint8_t* dst, int len)
 bool pk_nds_write(uint32_t addr, const uint8_t* src, int len)
 {
     if (!ds || (addr & 0xFF000000u) != 0x02000000u || len <= 0) return false;
-    for (int i = 0; i < len; i++) ds->nds->MainRAM[(addr + (u32) i) & ds->nds->MainRAMMask] = src[i];
+    // Use the bus writer so a temporary startup-code change also invalidates the ARM9 JIT cache.
+    for (int i = 0; i < len; i++) ds->nds->ARM9Write8(addr + (u32) i, src[i]);
     return true;
 }
 
@@ -717,6 +718,12 @@ int pk_nds_rom_revision(void)
 {
     auto* cart = ds ? ds->nds->NDSCartSlot.GetCart() : nullptr;
     return cart ? cart->GetHeader().ROMVersion : -1;
+}
+
+uint8_t* pk_nds_rom_image(void)
+{
+    auto* cart = ds ? ds->nds->NDSCartSlot.GetCart() : nullptr;
+    return cart ? const_cast<uint8_t*>(cart->GetROM()) : nullptr;
 }
 
 uint32_t pk_nds_rom_size(void)

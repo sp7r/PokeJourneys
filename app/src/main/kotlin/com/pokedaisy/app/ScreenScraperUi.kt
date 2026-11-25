@@ -227,7 +227,7 @@ internal fun ScreenScraperSetupStep(
 ) {
     GbaText(tr("GAME MEDIA (OPTIONAL)"), OptionColors.label, OptionColors.labelShadow, m, Modifier.padding(top = m.u * 2, bottom = m.u * 2))
     GbaText(
-        tr("ScreenScraper.fr has box art, screenshots, title screens, logos, videos and each game's story. Sign in with your free account and PokéDaisy fetches them for every game: covers in the library, and with two screens, everything about the game you're on on the other screen."),
+        tr("ScreenScraper.fr has box art, screenshots, title screens, logos, videos and each game's story. Sign in with your free account and PokeJourneys fetches them for every game: covers in the library, and with two screens, everything about the game you're on on the other screen."),
         OptionColors.label, OptionColors.labelShadow, small, maxLines = Int.MAX_VALUE, modifier = Modifier.padding(bottom = small.u * 4),
     )
     GbaText(

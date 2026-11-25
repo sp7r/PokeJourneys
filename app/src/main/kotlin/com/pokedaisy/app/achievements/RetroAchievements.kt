@@ -158,7 +158,7 @@ object RetroAchievements : CompanionAchievements {
         // is never worth taking the app down for.
         val ok = runCatching { RaNative.raInit() }.getOrElse { Log.e(TAG, "rc_client unavailable", it); false }
         if (!ok) return
-        userAgent = "PokeDaisy/${BuildConfig.VERSION_NAME} (Android ${Build.VERSION.RELEASE}) ${RaNative.raUserAgentClause()}"
+        userAgent = "PokeJourneys/${BuildConfig.VERSION_NAME} (Android ${Build.VERSION.RELEASE}) ${RaNative.raUserAgentClause()}"
         ready = true
         tokenLogin()
     }

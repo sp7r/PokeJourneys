@@ -1,0 +1,194 @@
+{
+ "note": "Island textures with no exact ROM match, and the ROM texture the phone uses in their place. Picked by tools/hub/victory review (thumbnail distance, same name preferred). Names only; the art comes from the player's ROMs.",
+ "textures": {
+  "terrain/asset_00013.png": {
+   "rom": "hg:grass0212",
+   "score": 10.1,
+   "why": "closest by look"
+  },
+  "terrain/asset_00015.png": {
+   "rom": "hg:blueglayp",
+   "score": 18.8,
+   "why": "closest by look"
+  },
+  "terrain/blueglayp_lm64.png": {
+   "rom": "hg:blueglayp",
+   "score": 21,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "terrain/blueglay_lm52.png": {
+   "rom": "pt:dun11_rale_e",
+   "score": 8.9,
+   "why": "closest by look"
+  },
+  "terrain/CarpetLeft0.png": {
+   "rom": "b2:in24_carpet",
+   "score": 21.6,
+   "why": "closest by look"
+  },
+  "terrain/CarpetLeft1.png": {
+   "rom": "b2:in24_carpet",
+   "score": 23.4,
+   "why": "closest by look"
+  },
+  "terrain/CarpetMiddle0.png": {
+   "rom": "b2:in24_carpet",
+   "score": 8.5,
+   "why": "closest by look"
+  },
+  "terrain/CarpetMiddle1.png": {
+   "rom": "bw:in24_carpet",
+   "score": 13.3,
+   "why": "closest by look"
+  },
+  "terrain/CarpetRight0.png": {
+   "rom": "bw:in24_carpet",
+   "score": 21.3,
+   "why": "closest by look"
+  },
+  "terrain/CarpetRight1.png": {
+   "rom": "bw:in24_carpet",
+   "score": 23.1,
+   "why": "closest by look"
+  },
+  "terrain/criffp_lm42.png": {
+   "rom": "pt:criffp",
+   "score": 8.3,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "terrain/criff_lm44.png": {
+   "rom": "pt:criff",
+   "score": 4.4,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "terrain/DomeStone0.png": {
+   "rom": "bw:in31_f_light2",
+   "score": 7.9,
+   "why": "closest by look"
+  },
+  "terrain/file1Material.png": {
+   "rom": "pt:c07_criffp3",
+   "score": 15.2,
+   "why": "closest by look"
+  },
+  "terrain/file2Material.png": {
+   "rom": "pt:criffp",
+   "score": 11.3,
+   "why": "closest by look"
+  },
+  "terrain/gake1_1.png": {
+   "rom": "b2:gake1_16",
+   "score": 3.8,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "terrain/hamabe_lm31.png": {
+   "rom": "hg:hamabe_1",
+   "score": null,
+   "why": "first frame of the game's own beach wave set, so the waves animate"
+  },
+  "terrain/ike01.png": {
+   "rom": "b2:ike0119",
+   "score": 5,
+   "why": "closest by look"
+  },
+  "terrain/newstep_lm1.png": {
+   "rom": "pt:newstep8",
+   "score": 7.4,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "terrain/ngrass_lm2.png": {
+   "rom": "hg:grass_slope1",
+   "score": 14,
+   "why": "closest by look"
+  },
+  "terrain/shore01.png": {
+   "rom": "bw:shore0169",
+   "score": 3.6,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "buildings/ShadeArch.png": {
+   "rom": "bw:f_kage",
+   "score": 10.8,
+   "why": "closest by look"
+  },
+  "buildings/ShadeDome.png": {
+   "rom": "b2:in38_kage01",
+   "score": 5.7,
+   "why": "closest by look"
+  },
+  "buildings/ShadeShrine.png": {
+   "rom": "b2:labo04_kage_2",
+   "score": 20.3,
+   "why": "closest by look"
+  },
+  "buildings/ShadeSoft.png": {
+   "rom": "b2:in10m_kage1",
+   "score": 8.2,
+   "why": "closest by look"
+  },
+  "buildings/ShadeStadium.png": {
+   "rom": "b2:kage_out142",
+   "score": 2.4,
+   "why": "closest by look"
+  },
+  "buildings/ShrineGlowA.png": {
+   "rom": "b2:out66_komo21",
+   "score": 26.5,
+   "why": "closest by look"
+  },
+  "buildings/ShrineGlowB.png": {
+   "rom": "pt:water04",
+   "score": 9.4,
+   "why": "closest by look"
+  },
+  "decorations/asset_00001.png": {
+   "rom": "b2:in76en_kage1",
+   "score": 7,
+   "why": "closest by look"
+  },
+  "decorations/asset_00002.png": {
+   "rom": "b2:re_kage",
+   "score": 4.6,
+   "why": "closest by look"
+  },
+  "decorations/cyclestop_lm3.png": {
+   "rom": "pt:cyclestop20",
+   "score": 59.9,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "decorations/hana01_p.png": {
+   "rom": "b2:hana01_1",
+   "score": null,
+   "why": "first frame of the game's own flower set, so the flowers sway"
+  },
+  "decorations/harbor_ornaments.png": {
+   "rom": null,
+   "why": "no ROM texture is close (an atlas of small pieces); the tiles that use it need a ROM replacement"
+  },
+  "decorations/h_kage.png": {
+   "rom": "b2:shadow22",
+   "score": 9,
+   "why": "closest by look"
+  },
+  "decorations/imped_lm53.png": {
+   "rom": "pt:imped20",
+   "score": 5,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "decorations/kage_out.png": {
+   "rom": "b2:rby_in76_kage",
+   "score": 12,
+   "why": "closest by look"
+  },
+  "decorations/saku01a.png": {
+   "rom": "b2:saku01a14",
+   "score": 15.3,
+   "why": "same texture before its lighting or palette edit"
+  },
+  "decorations/VenueSpotHousing.png": {
+   "rom": "bw:maq_rm10",
+   "score": 30.1,
+   "why": "closest by look"
+  }
+ }
+}

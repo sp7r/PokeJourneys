@@ -57,6 +57,10 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
     /** The running ROM's scan, kept for the Pokémon's patches (built when one is picked, [monPatch]). */
     @Volatile private var keptScan: PlayerLook.Scan? = null
     @Volatile private var keptKnown: Map<LookChar, Map<LookPart, ByteArray>> = emptyMap()
+    /** PokeJourneys: the creator's look ([com.pokedaisy.app.journeys.CreatorLook]) by gender, and whether it's offered / worn. */
+    @Volatile private var creatorPatches: Map<Boolean, PlayerLook.Patch> = emptyMap()
+    val creatorOffered = mutableStateOf(false)
+    val creatorPicked = com.pokedaisy.app.journeys.CreatorLook.worn
     private val monPatches = java.util.concurrent.ConcurrentHashMap<Pair<Boolean, Int>, PlayerLook.Patch>()
     private val building = java.util.concurrent.ConcurrentHashMap.newKeySet<Pair<Boolean, Int>>()
 
@@ -71,7 +75,7 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
     private var generation = 0
 
     /** A ROM loaded: forget the last one's patches and start this one's pass (off the UI thread). */
-    fun load(rom: File, key: String, code: String, save: File?) {
+    fun load(rom: File, key: String, code: String, save: File?, freshJourney: Boolean = false) {
         val gen = ++generation
         romKey = key
         engine = PlayerLook.engineFor(code)
@@ -79,6 +83,9 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
         textPatches = emptyMap()
         keptScan = null
         monPatches.clear()
+        creatorPatches = emptyMap()
+        creatorOffered.value = false
+        creatorPicked.value = false
         textOffered.value = emptyList()
         textPicked.value = null
         offered.value = emptyList()
@@ -87,7 +94,12 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
         own.value = null
         supported.value = engine != null
         female = save?.let { runCatching { genderInSave(it.readBytes()) }.getOrNull() }
+        ds = false
+        gb = false
         val engine = engine ?: run {
+            // PokeJourneys: a DS game takes the creator's look ([com.pokedaisy.app.journeys.CreatorLookDs]).
+            if (code.isEmpty() && com.pokedaisy.app.journeys.CreatorLookDs.codeOf(rom) != null) loadDs(rom, gen)
+            if (RomIdentity.isGameBoy(rom)) loadGb(rom, gen, freshJourney)
             // No look for this game, but FOLLOWER may still be on: its Pokémon (this ROM's, if it has following
             // Pokémon, and the library's) are kept all the same.
             Thread({
@@ -138,6 +150,10 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
                     val off = PlayerLook.Patch(emptyList(), PlayerLook.settleBoth(scan, me, null, null, known), scan.data(me, LookPart.OW_PAL))
                     for (r in rivals) built[Triple(f, null, r)] = off
                 }
+                val creator = listOf(false, true).mapNotNull { f ->
+                    runCatching { com.pokedaisy.app.journeys.CreatorLook.build(context, scan, LookChar.of(engine, f), known) }
+                        .onFailure { Log.w("pokedaisy", "player look: creator look failed", it) }.getOrNull()?.let { f to it }
+                }.toMap()
                 val host = TextLook.styleOf(engine)
                 val texts = if (host == null) emptyMap() else TextLook.STYLES.filter { it != host }.mapNotNull { st ->
                     TextArt.load(filesDir, st)?.let { art -> TextLook.build(scan, host, st, art).takeIf { it.isNotEmpty() }?.let { st to it } }
@@ -150,6 +166,8 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
                     textPatches = texts
                     keptScan = scan
                     keptKnown = known
+                    creatorPatches = creator
+                    creatorOffered.value = creator.isNotEmpty()
                     offeredMons.value = party.filter { it in MonArt.available(filesDir) }
                     apply()
                 }
@@ -159,9 +177,57 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
         }, "player-look").apply { isDaemon = true; start() }
     }
 
+    /** PokeJourneys: the DS game loaded takes only the creator's look, by gender ([creatorPatches]). */
+    @Volatile private var ds = false
+    @Volatile private var gb = false
+
+    private fun loadGb(rom: File, gen: Int, fresh: Boolean) {
+        gb = true
+        Thread({
+            val patch = runCatching { com.pokedaisy.app.journeys.CreatorLookGb.build(context, rom, fresh) }
+                .onFailure { Log.w("pokedaisy", "player look (GB): creator look failed", it) }.getOrNull()
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                if (gen != generation) return@post
+                creatorPatches = patch?.let { mapOf(false to it) }.orEmpty()
+                creatorOffered.value = patch != null
+                supported.value = patch != null
+                apply()
+                if (patch == null) com.pokedaisy.app.journeys.IntroSkipGb.cancel()
+            }
+        }, "player-look-gb").apply { isDaemon = true; start() }
+    }
+
+    private fun loadDs(rom: File, gen: Int) {
+        ds = true
+        female = null
+        Thread({
+            try {
+                val built = listOf(false, true).mapNotNull { f -> com.pokedaisy.app.journeys.CreatorLookDs.build(context, rom, f)?.let { f to it } }.toMap()
+                Log.i("pokedaisy", "player look (DS): creator look for ${built.keys}")
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    if (gen != generation) return@post
+                    creatorPatches = built
+                    creatorOffered.value = built.isNotEmpty()
+                    supported.value = built.isNotEmpty()
+                    apply()
+                }
+            } catch (t: Throwable) {
+                Log.w("pokedaisy", "player look (DS): creator look failed", t)
+            }
+        }, "player-look-ds").apply { isDaemon = true; start() }
+    }
+
+    /** [apply] for a DS game: the creator's look for the game's gender, or nothing. */
+    private fun applyDs(key: String) {
+        val f = female
+        val creator = f?.let { creatorPatches[it] }?.takeIf { Prefs(context).playerLookFor(key) == com.pokedaisy.app.journeys.CreatorLook.PICK }
+        creatorPicked.value = creator != null || (f == null && Prefs(context).playerLookFor(key) == com.pokedaisy.app.journeys.CreatorLook.PICK)
+        onPatch(creator)
+    }
+
     /** The game's own gender read (SaveBlock2's playerGender; -1 = not yet): a new game picks one in the intro. */
     fun onGender(gender: Int) {
-        if (gender !in 0..1 || engine == null) return
+        if (gender !in 0..1 || (engine == null && !ds)) return
         val f = gender == 1
         if (female == f) return
         female = f
@@ -172,6 +238,13 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
      * patch now wanted. */
     fun apply() {
         val key = romKey ?: return
+        if (gb) {
+            val patch = creatorPatches[false]?.takeIf { Prefs(context).playerLookFor(key) == com.pokedaisy.app.journeys.CreatorLook.PICK }
+            creatorPicked.value = patch != null
+            onPatch(patch)
+            return
+        }
+        if (ds) { applyDs(key); return }
         if (patches.isEmpty()) return
         val prefs = Prefs(context)
         textOffered.value = textPatches.keys.toList()
@@ -200,6 +273,16 @@ class PlayerLookRunner(private val context: Context, private val onPatch: (Playe
             picked.value = null
             val patch = monPatch(f, me, n) ?: return
             onPatch(if (textBlocks.isEmpty()) patch else PlayerLook.Patch(patch.blocks + textBlocks, patch.palettes, patch.playerPal))
+            return
+        }
+        // PokeJourneys: the creator's look.
+        val creator = creatorPatches[f]?.takeIf { saved == com.pokedaisy.app.journeys.CreatorLook.PICK }
+        creatorPicked.value = creator != null
+        if (creator != null) {
+            pickedMon.value = null
+            worn.value = null
+            picked.value = null
+            onPatch(if (textBlocks.isEmpty()) creator else PlayerLook.Patch(creator.blocks + textBlocks, creator.palettes, creator.playerPal))
             return
         }
         pickedMon.value = null

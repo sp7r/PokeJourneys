@@ -80,11 +80,12 @@ class HotkeyHoldBackTest {
         assertEquals(MgbaCore.Key.START, input.tapMask())
     }
 
-    @Test fun selectR1SavesWithoutSelect() {
+    @Test fun disabledStateChordReachesTheGame() {
         key(select, true)
         key(r1, true)
-        assertEquals(listOf(Action.SAVE_STATE), fired)
-        assertEquals(0, input.mask)
+        // PokeJourneys: disabled state bindings leave game input alone.
+        assertTrue(fired.isEmpty())
+        assertEquals(MgbaCore.Key.SELECT or MgbaCore.Key.R, input.mask)
         key(r1, false)
         key(select, false)
         assertEquals(0, input.tapMask())

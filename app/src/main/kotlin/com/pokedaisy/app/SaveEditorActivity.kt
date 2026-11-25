@@ -39,6 +39,8 @@ import com.pokedaisy.app.companion.ui.TradeScreen
 import com.pokedaisy.app.companion.ui.TradeState
 import com.pokedaisy.app.companion.ui.rememberGbaTextMetrics
 import com.pokedaisy.app.companion.ui.theme.AppTheme
+import com.pokedaisy.app.journeys.JourneyIds
+import com.pokedaisy.app.journeys.generateDebugPokemon
 import java.io.File
 
 /**
@@ -79,9 +81,11 @@ class SaveEditorActivity : ComponentActivity() {
     private var editPick by mutableStateOf<List<Pair<File, String>>?>(null)
     /** Icons per ROM path, once loaded (absent = none for that ROM). */
     private val icons = mutableStateMapOf<String, MonIconLoader>()
+    private val debugFromVault get() = intent?.getBooleanExtra(EXTRA_DEBUG_VAULT, false) == true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (debugFromVault && !BuildConfig.DEBUG) { finish(); return }
         prefs = Prefs(this)
         com.pokedaisy.app.companion.i18n.L10n.apply(prefs.appLanguage, null)
         val path = intent?.getStringExtra(EXTRA_ROM)
@@ -216,7 +220,12 @@ class SaveEditorActivity : ComponentActivity() {
             val result = runCatching {
                 SaveFileEdits.commit(this, prefs, rom, ready.opened.bytes, ready.state.editor.build())
             }.getOrElse { SaveFileEdits.Result.Failed(it.message ?: it.toString()) }
-            runOnUiThread { saved(result) }
+            val refreshVault = debugFromVault && result is SaveFileEdits.Result.Written
+            if (refreshVault) JourneyIds.record(applicationContext, prefs, rom)
+            runOnUiThread {
+                if (refreshVault) setResult(RESULT_OK)
+                saved(result)
+            }
         }.start()
     }
 
@@ -287,6 +296,7 @@ class SaveEditorActivity : ComponentActivity() {
                 // BACK closes what's open first: a pick-list or amount, a confirm, then a pending MOVE, then asks before dropping edits.
                 BackHandler {
                     when {
+                        saving || s.generatingPokemon -> Unit
                         s.editing != null -> s.editing = null
                         s.confirmSave -> s.confirmSave = false
                         s.confirmDiscard -> s.confirmDiscard = false
@@ -297,7 +307,11 @@ class SaveEditorActivity : ComponentActivity() {
                 }
                 PcBoxesScreen(
                     s, gameName, m, onBack = { finish() }, onSave = { save(p) }, saving = saving,
-                    icons = icons[rom.absolutePath], onTrade = { pickPartner() },
+                    icons = icons[rom.absolutePath], onTrade = (::pickPartner).takeUnless { debugFromVault },
+                    generateDebugPokemon = if (debugFromVault) { species, level ->
+                        val save = SavesLocation.saveFor(this, prefs, p.opened.rom)
+                        generateDebugPokemon(applicationContext, save, p.opened.gameCode, species, level)
+                    } else null,
                 )
             }
             is Page.Trade -> {
@@ -366,5 +380,6 @@ class SaveEditorActivity : ComponentActivity() {
         const val EXTRA_TRADE = "trade"
         /** TOOLS > SAVE EDITOR: no [EXTRA_ROM], the game picked first. */
         const val EXTRA_PICK = "pick"
+        internal const val EXTRA_DEBUG_VAULT = "debugVault"
     }
 }

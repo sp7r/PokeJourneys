@@ -9,3 +9,5 @@ mGBA's bundled libraries do: `third_party/mgba`, `third_party/rcheevos`). `app/b
   (SHADERS > SMOOTHING; xBRZ's own part is GPL 3.0, like the app).
 - `PokeAPI-BSD-3-Clause.txt`: PokeAPI's data (the National Dex species list).
 - `XZ-Java-0BSD.txt`: XZ for Java (.7z archives).
+- `SSEQPlayer-WTFPL.txt`: SSEQ Player, which plays the DS songs the hub's music is made from (`libhubmusic.so`).
+- `qoa-MIT.txt`: the QOA encoder the hub's music is compressed with (`libhubmusic.so`).

@@ -1,0 +1,7 @@
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+rootProject.name = 'hub-game'
+include 'core', 'desktop'
+// the Android launcher needs the Android SDK (ANDROID_HOME or hub/game/local.properties); left out without one
+if (System.getenv('ANDROID_HOME') || System.getenv('ANDROID_SDK_ROOT') || file('local.properties').exists()) include 'android'

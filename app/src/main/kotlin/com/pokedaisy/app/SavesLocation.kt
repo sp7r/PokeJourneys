@@ -11,25 +11,16 @@ import java.io.File
  */
 object SavesLocation {
 
-    /** The effective saves folder: [Prefs.savesDirOverride] if the user picked
-     * one (see Settings > Folders), else this app's own private files/saves/. */
+    /** PokeJourneys: saves always stay in the app's own saves folder. */
     fun dir(context: Context, prefs: Prefs = Prefs(context)): File {
-        val override = prefs.savesDirOverride
-        val dir = if (!override.isNullOrBlank()) File(override) else File(context.getExternalFilesDir(null), "saves")
+        val dir = File(context.getExternalFilesDir(null), "saves")
         dir.mkdirs()
         return dir
     }
 
-    /**
-     * [rom]'s save file. Its own folder if the player set one (the library menu's SAVE FOLDER,
-     * [Prefs.romSaveDir]); else the first of the saves folder and the ALSO LOOK IN folders
-     * ([Prefs.extraSaveDirs], Settings > FOLDERS) that holds a save for it - so a save another
-     * emulator keeps (RetroArch's per-core folders) is played and written where it is; else a
-     * new save in the saves folder. Only the folders themselves are looked in, never below. A DS game looks beside its
-     * ROM first, and starts a new save there ([dirsFor]).
-     */
+    /** PokeJourneys: saves always stay in the app, including DS saves. */
     fun saveFor(context: Context, prefs: Prefs, rom: File): File =
-        saveIn(prefs.romSaveDir(rom)?.let { File(it).apply { mkdirs() } }, dirsFor(rom, RomIdentity.isNds(rom), searchDirs(context, prefs)), rom)
+        resolve(dir(context, prefs), rom)
 
     /** [dirs] for [rom]: a DS game's own folder first - melonDS keeps a game's save beside it (`<rom name>.sav`), so
      * that's the save the player has, and where a new one goes - while it can be written there (or already holds the

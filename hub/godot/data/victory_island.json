@@ -1,0 +1,2132 @@
+{
+  "name": "Victory Island",
+  "data": "victory_island",
+  "spawn": {
+    "x": 112,
+    "y": 140,
+    "facing": "down"
+  },
+  "buildings": [
+    {
+      "id": "poke_c_dome2_1",
+      "model": "poke_c_dome2",
+      "kind": "building",
+      "x": 140.6,
+      "y": 34.89,
+      "level": 2,
+      "rot": 0,
+      "door": [
+        140,
+        41
+      ],
+      "name": "PWT Stadium"
+    },
+    {
+      "id": "c04tcourt_01_2",
+      "model": "c04tcourt_01",
+      "kind": "building",
+      "x": 58,
+      "y": 54.38,
+      "level": 2,
+      "rot": 0,
+      "door": [
+        58,
+        61
+      ],
+      "name": "Battle Dome"
+    },
+    {
+      "id": "c7_house_01_3",
+      "model": "c7_house_01",
+      "kind": "building",
+      "x": 37.66,
+      "y": 75.38,
+      "level": 3,
+      "rot": 0,
+      "door": [
+        38,
+        77
+      ],
+      "name": "old man house",
+      "access": "waterfall"
+    },
+    {
+      "id": "c2_museum_01_4",
+      "model": "c2_museum_01",
+      "kind": "building",
+      "x": 128,
+      "y": 62.5,
+      "level": 2,
+      "rot": 0,
+      "door": [
+        128,
+        65
+      ],
+      "name": "Trainer Hall"
+    },
+    {
+      "id": "c5_lhouse_01_5",
+      "model": "c5_lhouse_01",
+      "kind": "building",
+      "x": 164,
+      "y": 125.5,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        164,
+        129
+      ],
+      "name": "Lighthouse"
+    },
+    {
+      "id": "c5_market_01_6",
+      "model": "c5_market_01",
+      "kind": "building",
+      "x": 135.5,
+      "y": 143.63,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        135,
+        147
+      ],
+      "name": "Auction House"
+    },
+    {
+      "id": "c04theater_01_7",
+      "model": "c04theater_01",
+      "kind": "building",
+      "x": 99,
+      "y": 156.5,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        99,
+        165
+      ],
+      "name": "Costume Shop"
+    },
+    {
+      "id": "t2_build01_8",
+      "model": "t2_build01",
+      "kind": "building",
+      "x": 125.28,
+      "y": 154.36,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        125,
+        156
+      ],
+      "name": "Apartments"
+    },
+    {
+      "id": "c04_fwheel_01_9",
+      "model": "c04_fwheel_01",
+      "kind": "building",
+      "x": 80,
+      "y": 162.2,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        80,
+        165
+      ],
+      "name": "Ferris Wheel"
+    },
+    {
+      "id": "pc_01_10",
+      "model": "pc_01",
+      "kind": "building",
+      "x": 113.97,
+      "y": 163.63,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        114,
+        165
+      ],
+      "name": "Game Shop"
+    },
+    {
+      "id": "c12_house_01_11",
+      "model": "c12_house_01",
+      "kind": "building",
+      "x": 131.36,
+      "y": 163.86,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        132,
+        165
+      ],
+      "name": "Poke Mart"
+    },
+    {
+      "id": "c5_build_01_12",
+      "model": "c5_build_01",
+      "kind": "building",
+      "x": 142.41,
+      "y": 163.23,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        142,
+        165
+      ],
+      "name": "Game Corner"
+    },
+    {
+      "id": "c5_house_02_13",
+      "model": "c5_house_02",
+      "kind": "building",
+      "x": 123.5,
+      "y": 163.89,
+      "level": 1,
+      "rot": 0,
+      "door": [
+        123,
+        165
+      ],
+      "name": "TM Shop"
+    },
+    {
+      "id": "c13_ship_01",
+      "model": "c13_ship_01",
+      "kind": "ship",
+      "x": 176,
+      "y": 152,
+      "level": 0,
+      "rot": 0,
+      "name": "Event Ferry"
+    },
+    {
+      "id": "c03_ship_02",
+      "model": "c03_ship_02",
+      "kind": "ship",
+      "x": 164,
+      "y": 178,
+      "level": 0,
+      "rot": 0,
+      "name": "Journeys Ferry"
+    }
+  ],
+  "props": [
+    {
+      "id": "poke_c_light_2",
+      "model": "poke_c_light",
+      "x": 132.69,
+      "y": 44.52,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_light_3",
+      "model": "poke_c_light",
+      "x": 146.02,
+      "y": 44.52,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "board_a_4",
+      "model": "board_a",
+      "x": 54.97,
+      "y": 64.75,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_bench_5",
+      "model": "poke_c_bench",
+      "x": 129.59,
+      "y": 54.43,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_light_6",
+      "model": "poke_c_light",
+      "x": 126.02,
+      "y": 53.85,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_7",
+      "model": "c04_plant_01",
+      "x": 52,
+      "y": 70,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_light_8",
+      "model": "poke_c_light",
+      "x": 148.69,
+      "y": 55.19,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_10",
+      "model": "c04_plant_01",
+      "x": 144.33,
+      "y": 59.17,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_obj_12",
+      "model": "poke_c_obj",
+      "x": 137.58,
+      "y": 68.11,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c5_statue_01_13",
+      "model": "c5_statue_01",
+      "x": 96.78,
+      "y": 92.79,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_light_14",
+      "model": "poke_c_light",
+      "x": 135.35,
+      "y": 71.19,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_15",
+      "model": "c03_slamp_02",
+      "x": 78,
+      "y": 108.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_16",
+      "model": "c04_plant_01",
+      "x": 84,
+      "y": 110,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c01fountain_01_17",
+      "model": "c01fountain_01",
+      "x": 96,
+      "y": 114,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_poke01_18",
+      "model": "c04_poke01",
+      "x": 53.9,
+      "y": 118,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_19",
+      "model": "c03_slamp_02",
+      "x": 108,
+      "y": 118.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_20",
+      "model": "c04_plant_01",
+      "x": 114,
+      "y": 118,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_21",
+      "model": "c03_slamp_02",
+      "x": 126,
+      "y": 122.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c01arch_01_22",
+      "model": "c01arch_01",
+      "x": 69.25,
+      "y": 121.69,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_23",
+      "model": "c03_slamp_02",
+      "x": 76,
+      "y": 124.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_24",
+      "model": "c03_slamp_02",
+      "x": 108,
+      "y": 124.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_25",
+      "model": "c03_slamp_02",
+      "x": 118,
+      "y": 124.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_26",
+      "model": "c04_plant_01",
+      "x": 54,
+      "y": 126,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_27",
+      "model": "c03_slamp_02",
+      "x": 154,
+      "y": 126.79,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c01fountain_01_28",
+      "model": "c01fountain_01",
+      "x": 70,
+      "y": 128,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c01arch_01_29",
+      "model": "c01arch_01",
+      "x": 61.69,
+      "y": 128.75,
+      "level": 1,
+      "rot": 90,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_30",
+      "model": "c03_slamp_02",
+      "x": 102,
+      "y": 130.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_31",
+      "model": "c03_slamp_02",
+      "x": 124,
+      "y": 130.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "board_a_32",
+      "model": "board_a",
+      "x": 158.97,
+      "y": 130.75,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_bench_33",
+      "model": "poke_c_bench",
+      "x": 131.89,
+      "y": 134.9,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c01arch_01_34",
+      "model": "c01arch_01",
+      "x": 69.25,
+      "y": 135.69,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_35",
+      "model": "c03_slamp_02",
+      "x": 102,
+      "y": 138.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_36",
+      "model": "c03_slamp_02",
+      "x": 124,
+      "y": 138.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_37",
+      "model": "c04_plant_01",
+      "x": 154,
+      "y": 138,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_parasol_01_38",
+      "model": "o_parasol_01",
+      "x": 44,
+      "y": 140,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_39",
+      "model": "c03_slamp_02",
+      "x": 84,
+      "y": 140.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "wbt_fountain_40",
+      "model": "wbt_fountain",
+      "x": 112.85,
+      "y": 135.86,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "poke_c_bench_41",
+      "model": "poke_c_bench",
+      "x": 77.89,
+      "y": 142.9,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_42",
+      "model": "c03_slamp_02",
+      "x": 148,
+      "y": 142.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_chair_01_43",
+      "model": "o_chair_01",
+      "x": 43,
+      "y": 144.81,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c04_plant_01_44",
+      "model": "c04_plant_01",
+      "x": 98,
+      "y": 144,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_45",
+      "model": "c03_slamp_02",
+      "x": 108,
+      "y": 144.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_46",
+      "model": "c03_slamp_02",
+      "x": 118,
+      "y": 144.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_parasol_02_47",
+      "model": "o_parasol_02",
+      "x": 51.84,
+      "y": 148.31,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_48",
+      "model": "c03_slamp_02",
+      "x": 122,
+      "y": 148.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_chair_01_51",
+      "model": "o_chair_01",
+      "x": 53,
+      "y": 152.81,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_parasol_01_52",
+      "model": "o_parasol_01",
+      "x": 62,
+      "y": 154,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_chair_01_53",
+      "model": "o_chair_01",
+      "x": 59,
+      "y": 158.81,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "o_chair_01_54",
+      "model": "o_chair_01",
+      "x": 63,
+      "y": 158.81,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_61",
+      "model": "c03_slamp_02",
+      "x": 154,
+      "y": 164.79,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "c03_slamp_02_66",
+      "model": "c03_slamp_02",
+      "x": 72,
+      "y": 168.79,
+      "level": 0,
+      "rot": 0,
+      "block": true,
+      "tile": true
+    },
+    {
+      "id": "sign_poke_c_dome2_1",
+      "model": "board_a",
+      "x": 138.5,
+      "y": 42.75,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "for": "poke_c_dome2_1"
+    },
+    {
+      "id": "sign_c04tcourt_01_2",
+      "model": "board_a",
+      "x": 56.5,
+      "y": 62.75,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "for": "c04tcourt_01_2"
+    },
+    {
+      "id": "sign_c7_house_01_3",
+      "model": "board_a",
+      "x": 36.5,
+      "y": 78.75,
+      "level": 3,
+      "rot": 0,
+      "block": true,
+      "for": "c7_house_01_3"
+    },
+    {
+      "id": "sign_c2_museum_01_4",
+      "model": "board_a",
+      "x": 126.5,
+      "y": 66.75,
+      "level": 2,
+      "rot": 0,
+      "block": true,
+      "for": "c2_museum_01_4"
+    },
+    {
+      "id": "sign_c5_lhouse_01_5",
+      "model": "board_a",
+      "x": 162.5,
+      "y": 130.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c5_lhouse_01_5"
+    },
+    {
+      "id": "sign_c5_market_01_6",
+      "model": "board_a",
+      "x": 133.5,
+      "y": 148.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c5_market_01_6"
+    },
+    {
+      "id": "sign_c04theater_01_7",
+      "model": "board_a",
+      "x": 97.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c04theater_01_7"
+    },
+    {
+      "id": "sign_t2_build01_8",
+      "model": "board_a",
+      "x": 123.5,
+      "y": 157.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "t2_build01_8"
+    },
+    {
+      "id": "sign_c04_fwheel_01_9",
+      "model": "board_a",
+      "x": 78.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c04_fwheel_01_9"
+    },
+    {
+      "id": "sign_pc_01_10",
+      "model": "board_a",
+      "x": 112.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "pc_01_10"
+    },
+    {
+      "id": "sign_c12_house_01_11",
+      "model": "board_a",
+      "x": 130.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c12_house_01_11"
+    },
+    {
+      "id": "sign_c5_build_01_12",
+      "model": "board_a",
+      "x": 140.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c5_build_01_12"
+    },
+    {
+      "id": "sign_c5_house_02_13",
+      "model": "board_a",
+      "x": 121.5,
+      "y": 166.75,
+      "level": 1,
+      "rot": 0,
+      "block": true,
+      "for": "c5_house_02_13"
+    }
+  ],
+  "signs": [
+    {
+      "x": 138,
+      "y": 42,
+      "text": [
+        "PWT Stadium"
+      ],
+      "for": "poke_c_dome2_1"
+    },
+    {
+      "x": 56,
+      "y": 62,
+      "text": [
+        "Battle Dome"
+      ],
+      "for": "c04tcourt_01_2"
+    },
+    {
+      "x": 36,
+      "y": 78,
+      "text": [
+        "old man house"
+      ],
+      "for": "c7_house_01_3"
+    },
+    {
+      "x": 126,
+      "y": 66,
+      "text": [
+        "Trainer Hall"
+      ],
+      "for": "c2_museum_01_4"
+    },
+    {
+      "x": 162,
+      "y": 130,
+      "text": [
+        "Lighthouse"
+      ],
+      "for": "c5_lhouse_01_5"
+    },
+    {
+      "x": 133,
+      "y": 148,
+      "text": [
+        "Auction House"
+      ],
+      "for": "c5_market_01_6"
+    },
+    {
+      "x": 97,
+      "y": 166,
+      "text": [
+        "Costume Shop"
+      ],
+      "for": "c04theater_01_7"
+    },
+    {
+      "x": 123,
+      "y": 157,
+      "text": [
+        "Apartments"
+      ],
+      "for": "t2_build01_8"
+    },
+    {
+      "x": 78,
+      "y": 166,
+      "text": [
+        "Ferris Wheel"
+      ],
+      "for": "c04_fwheel_01_9"
+    },
+    {
+      "x": 112,
+      "y": 166,
+      "text": [
+        "Game Shop"
+      ],
+      "for": "pc_01_10"
+    },
+    {
+      "x": 130,
+      "y": 166,
+      "text": [
+        "Poke Mart"
+      ],
+      "for": "c12_house_01_11"
+    },
+    {
+      "x": 140,
+      "y": 166,
+      "text": [
+        "Game Corner"
+      ],
+      "for": "c5_build_01_12"
+    },
+    {
+      "x": 121,
+      "y": 166,
+      "text": [
+        "TM Shop"
+      ],
+      "for": "c5_house_02_13"
+    }
+  ],
+  "npcs": [
+    {
+      "id": "journeys_shipmaster",
+      "name": "Journeys Portmaster",
+      "sprite": "SPRITE_SEAMAN_2",
+      "x": 162,
+      "y": 170,
+      "facing": "right",
+      "movement": 0,
+      "role": "journeys",
+      "text": [
+        "Ahoy! The Journeys ferry sails to every game you have imported.",
+        "Pick a journey with me once the ferry is ready."
+      ]
+    },
+    {
+      "id": "event_shipmaster",
+      "name": "Event Portmaster",
+      "sprite": "SPRITE_SEAMAN_2",
+      "x": 168,
+      "y": 154,
+      "facing": "right",
+      "movement": 0,
+      "role": "event",
+      "text": [
+        "The Event Ferry runs to special islands.",
+        "No events are scheduled right now."
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "name": "Central Fountain",
+      "x": 113,
+      "y": 135,
+      "radius": 8
+    },
+    {
+      "name": "PWT Stadium",
+      "x": 141,
+      "y": 42,
+      "radius": 15
+    },
+    {
+      "name": "Battle Dome",
+      "x": 57,
+      "y": 56,
+      "radius": 9
+    },
+    {
+      "name": "Trainer Hall",
+      "x": 124,
+      "y": 85,
+      "radius": 7
+    },
+    {
+      "name": "Auction House",
+      "x": 135,
+      "y": 143,
+      "radius": 5
+    },
+    {
+      "name": "Ferris Wheel",
+      "x": 87,
+      "y": 157,
+      "radius": 6
+    },
+    {
+      "name": "Costume Shop",
+      "x": 102,
+      "y": 159,
+      "radius": 5
+    },
+    {
+      "name": "Game Shop",
+      "x": 114,
+      "y": 163,
+      "radius": 5
+    },
+    {
+      "name": "TM Shop",
+      "x": 129,
+      "y": 163,
+      "radius": 5
+    },
+    {
+      "name": "Game Corner",
+      "x": 139,
+      "y": 162,
+      "radius": 5
+    },
+    {
+      "name": "Lighthouse",
+      "x": 164,
+      "y": 124,
+      "radius": 5
+    },
+    {
+      "name": "Statue Island",
+      "x": 97,
+      "y": 93,
+      "radius": 6
+    },
+    {
+      "name": "Garden",
+      "x": 67,
+      "y": 127,
+      "radius": 11
+    },
+    {
+      "name": "Daycare",
+      "x": 27,
+      "y": 105,
+      "radius": 8
+    },
+    {
+      "name": "Beach",
+      "x": 52.67,
+      "y": 147.33,
+      "radius": 12
+    },
+    {
+      "name": "Event Ferry",
+      "x": 175,
+      "y": 150,
+      "radius": 9
+    },
+    {
+      "name": "Journeys Ferry",
+      "x": 166,
+      "y": 177,
+      "radius": 9
+    },
+    {
+      "name": "Breezeway",
+      "x": 141,
+      "y": 82,
+      "radius": 6
+    },
+    {
+      "name": "Old Man House",
+      "x": 38.5,
+      "y": 78.5,
+      "radius": 6
+    }
+  ],
+  "waters": [
+    [
+      42,
+      42,
+      6
+    ],
+    [
+      43,
+      42,
+      6
+    ],
+    [
+      44,
+      42,
+      6
+    ],
+    [
+      45,
+      42,
+      6
+    ],
+    [
+      46,
+      42,
+      6
+    ],
+    [
+      42,
+      43,
+      6
+    ],
+    [
+      43,
+      43,
+      6
+    ],
+    [
+      44,
+      43,
+      6
+    ],
+    [
+      45,
+      43,
+      6
+    ],
+    [
+      46,
+      43,
+      6
+    ],
+    [
+      42,
+      44,
+      6
+    ],
+    [
+      43,
+      44,
+      6
+    ],
+    [
+      44,
+      44,
+      6
+    ],
+    [
+      45,
+      44,
+      6
+    ],
+    [
+      46,
+      44,
+      6
+    ],
+    [
+      42,
+      45,
+      6
+    ],
+    [
+      43,
+      45,
+      6
+    ],
+    [
+      44,
+      45,
+      6
+    ],
+    [
+      45,
+      45,
+      6
+    ],
+    [
+      46,
+      45,
+      6
+    ],
+    [
+      42,
+      46,
+      6
+    ],
+    [
+      43,
+      46,
+      6
+    ],
+    [
+      44,
+      46,
+      6
+    ],
+    [
+      45,
+      46,
+      6
+    ],
+    [
+      46,
+      46,
+      6
+    ],
+    [
+      42,
+      47,
+      6
+    ],
+    [
+      43,
+      47,
+      6
+    ],
+    [
+      44,
+      47,
+      6
+    ],
+    [
+      45,
+      47,
+      6
+    ],
+    [
+      46,
+      47,
+      6
+    ],
+    [
+      42,
+      48,
+      6
+    ],
+    [
+      43,
+      48,
+      6
+    ],
+    [
+      44,
+      48,
+      6
+    ],
+    [
+      45,
+      48,
+      6
+    ],
+    [
+      46,
+      48,
+      6
+    ],
+    [
+      42,
+      49,
+      6
+    ],
+    [
+      43,
+      49,
+      6
+    ],
+    [
+      44,
+      49,
+      6
+    ],
+    [
+      45,
+      49,
+      6
+    ],
+    [
+      46,
+      49,
+      6
+    ],
+    [
+      42,
+      50,
+      6
+    ],
+    [
+      43,
+      50,
+      6
+    ],
+    [
+      44,
+      50,
+      6
+    ],
+    [
+      45,
+      50,
+      6
+    ],
+    [
+      46,
+      50,
+      6
+    ],
+    [
+      42,
+      51,
+      6
+    ],
+    [
+      43,
+      51,
+      6
+    ],
+    [
+      44,
+      51,
+      6
+    ],
+    [
+      45,
+      51,
+      6
+    ],
+    [
+      46,
+      51,
+      6
+    ],
+    [
+      42,
+      52,
+      6
+    ],
+    [
+      43,
+      52,
+      6
+    ],
+    [
+      44,
+      52,
+      6
+    ],
+    [
+      45,
+      52,
+      6
+    ],
+    [
+      46,
+      52,
+      6
+    ],
+    [
+      42,
+      53,
+      6
+    ],
+    [
+      43,
+      53,
+      6
+    ],
+    [
+      44,
+      53,
+      6
+    ],
+    [
+      45,
+      53,
+      6
+    ],
+    [
+      46,
+      53,
+      6
+    ],
+    [
+      42,
+      54,
+      6
+    ],
+    [
+      43,
+      54,
+      6
+    ],
+    [
+      44,
+      54,
+      6
+    ],
+    [
+      45,
+      54,
+      6
+    ],
+    [
+      46,
+      54,
+      6
+    ],
+    [
+      42,
+      55,
+      6
+    ],
+    [
+      43,
+      55,
+      6
+    ],
+    [
+      44,
+      55,
+      6
+    ],
+    [
+      45,
+      55,
+      6
+    ],
+    [
+      46,
+      55,
+      6
+    ],
+    [
+      42,
+      56,
+      6
+    ],
+    [
+      43,
+      56,
+      6
+    ],
+    [
+      44,
+      56,
+      6
+    ],
+    [
+      45,
+      56,
+      6
+    ],
+    [
+      46,
+      56,
+      6
+    ],
+    [
+      42,
+      57,
+      6
+    ],
+    [
+      43,
+      57,
+      6
+    ],
+    [
+      44,
+      57,
+      6
+    ],
+    [
+      45,
+      57,
+      6
+    ],
+    [
+      46,
+      57,
+      6
+    ],
+    [
+      42,
+      58,
+      6
+    ],
+    [
+      43,
+      58,
+      6
+    ],
+    [
+      44,
+      58,
+      6
+    ],
+    [
+      45,
+      58,
+      6
+    ],
+    [
+      46,
+      58,
+      6
+    ],
+    [
+      42,
+      59,
+      6
+    ],
+    [
+      43,
+      59,
+      6
+    ],
+    [
+      44,
+      59,
+      6
+    ],
+    [
+      45,
+      59,
+      6
+    ],
+    [
+      46,
+      59,
+      6
+    ],
+    [
+      42,
+      60,
+      6
+    ],
+    [
+      43,
+      60,
+      6
+    ],
+    [
+      44,
+      60,
+      6
+    ],
+    [
+      45,
+      60,
+      6
+    ],
+    [
+      46,
+      60,
+      6
+    ],
+    [
+      42,
+      61,
+      6
+    ],
+    [
+      43,
+      61,
+      6
+    ],
+    [
+      44,
+      61,
+      6
+    ],
+    [
+      45,
+      61,
+      6
+    ],
+    [
+      46,
+      61,
+      6
+    ],
+    [
+      42,
+      62,
+      6
+    ],
+    [
+      43,
+      62,
+      6
+    ],
+    [
+      44,
+      62,
+      6
+    ],
+    [
+      45,
+      62,
+      6
+    ],
+    [
+      46,
+      62,
+      6
+    ],
+    [
+      42,
+      63,
+      6
+    ],
+    [
+      43,
+      63,
+      6
+    ],
+    [
+      44,
+      63,
+      6
+    ],
+    [
+      45,
+      63,
+      6
+    ],
+    [
+      46,
+      63,
+      6
+    ],
+    [
+      42,
+      64,
+      6
+    ],
+    [
+      43,
+      64,
+      6
+    ],
+    [
+      44,
+      64,
+      6
+    ],
+    [
+      45,
+      64,
+      6
+    ],
+    [
+      46,
+      64,
+      6
+    ],
+    [
+      42,
+      65,
+      6
+    ],
+    [
+      43,
+      65,
+      6
+    ],
+    [
+      44,
+      65,
+      6
+    ],
+    [
+      45,
+      65,
+      6
+    ],
+    [
+      46,
+      65,
+      6
+    ],
+    [
+      42,
+      66,
+      6
+    ],
+    [
+      43,
+      66,
+      6
+    ],
+    [
+      44,
+      66,
+      6
+    ],
+    [
+      45,
+      66,
+      6
+    ],
+    [
+      46,
+      66,
+      6
+    ],
+    [
+      42,
+      67,
+      6
+    ],
+    [
+      43,
+      67,
+      6
+    ],
+    [
+      44,
+      67,
+      6
+    ],
+    [
+      45,
+      67,
+      6
+    ],
+    [
+      46,
+      67,
+      6
+    ],
+    [
+      42,
+      68,
+      6
+    ],
+    [
+      43,
+      68,
+      6
+    ],
+    [
+      44,
+      68,
+      6
+    ],
+    [
+      45,
+      68,
+      6
+    ],
+    [
+      46,
+      68,
+      6
+    ],
+    [
+      42,
+      69,
+      6
+    ],
+    [
+      43,
+      69,
+      6
+    ],
+    [
+      44,
+      69,
+      6
+    ],
+    [
+      45,
+      69,
+      6
+    ],
+    [
+      46,
+      69,
+      6
+    ],
+    [
+      42,
+      70,
+      3
+    ],
+    [
+      43,
+      70,
+      3
+    ],
+    [
+      44,
+      70,
+      3
+    ],
+    [
+      45,
+      70,
+      3
+    ],
+    [
+      46,
+      70,
+      3
+    ],
+    [
+      42,
+      71,
+      3
+    ],
+    [
+      43,
+      71,
+      3
+    ],
+    [
+      44,
+      71,
+      3
+    ],
+    [
+      45,
+      71,
+      3
+    ],
+    [
+      46,
+      71,
+      3
+    ],
+    [
+      42,
+      72,
+      3
+    ],
+    [
+      43,
+      72,
+      3
+    ],
+    [
+      44,
+      72,
+      3
+    ],
+    [
+      45,
+      72,
+      3
+    ],
+    [
+      46,
+      72,
+      3
+    ],
+    [
+      42,
+      73,
+      3
+    ],
+    [
+      43,
+      73,
+      3
+    ],
+    [
+      44,
+      73,
+      3
+    ],
+    [
+      45,
+      73,
+      3
+    ],
+    [
+      46,
+      73,
+      3
+    ],
+    [
+      42,
+      74,
+      3
+    ],
+    [
+      43,
+      74,
+      3
+    ],
+    [
+      44,
+      74,
+      3
+    ],
+    [
+      45,
+      74,
+      3
+    ],
+    [
+      46,
+      74,
+      3
+    ],
+    [
+      42,
+      75,
+      3
+    ],
+    [
+      43,
+      75,
+      3
+    ],
+    [
+      44,
+      75,
+      3
+    ],
+    [
+      45,
+      75,
+      3
+    ],
+    [
+      46,
+      75,
+      3
+    ],
+    [
+      42,
+      76,
+      3
+    ],
+    [
+      43,
+      76,
+      3
+    ],
+    [
+      44,
+      76,
+      3
+    ],
+    [
+      45,
+      76,
+      3
+    ],
+    [
+      46,
+      76,
+      3
+    ],
+    [
+      42,
+      77,
+      3
+    ],
+    [
+      43,
+      77,
+      3
+    ],
+    [
+      44,
+      77,
+      3
+    ],
+    [
+      45,
+      77,
+      3
+    ],
+    [
+      46,
+      77,
+      3
+    ],
+    [
+      42,
+      78,
+      3
+    ],
+    [
+      43,
+      78,
+      3
+    ],
+    [
+      44,
+      78,
+      3
+    ],
+    [
+      45,
+      78,
+      3
+    ],
+    [
+      46,
+      78,
+      3
+    ],
+    [
+      42,
+      79,
+      3
+    ],
+    [
+      43,
+      79,
+      3
+    ],
+    [
+      44,
+      79,
+      3
+    ],
+    [
+      45,
+      79,
+      3
+    ],
+    [
+      46,
+      79,
+      3
+    ]
+  ],
+  "waterfalls": [
+    {
+      "x": 42,
+      "z": 69,
+      "face": "south",
+      "top": 6,
+      "bottom": 3
+    },
+    {
+      "x": 43,
+      "z": 69,
+      "face": "south",
+      "top": 6,
+      "bottom": 3
+    },
+    {
+      "x": 44,
+      "z": 69,
+      "face": "south",
+      "top": 6,
+      "bottom": 3
+    },
+    {
+      "x": 45,
+      "z": 69,
+      "face": "south",
+      "top": 6,
+      "bottom": 3
+    },
+    {
+      "x": 46,
+      "z": 69,
+      "face": "south",
+      "top": 6,
+      "bottom": 3
+    },
+    {
+      "x": 42,
+      "z": 79,
+      "face": "south",
+      "top": 3,
+      "bottom": 0
+    },
+    {
+      "x": 43,
+      "z": 79,
+      "face": "south",
+      "top": 3,
+      "bottom": 0
+    },
+    {
+      "x": 44,
+      "z": 79,
+      "face": "south",
+      "top": 3,
+      "bottom": 0
+    },
+    {
+      "x": 45,
+      "z": 79,
+      "face": "south",
+      "top": 3,
+      "bottom": 0
+    },
+    {
+      "x": 46,
+      "z": 79,
+      "face": "south",
+      "top": 3,
+      "bottom": 0
+    }
+  ]
+}

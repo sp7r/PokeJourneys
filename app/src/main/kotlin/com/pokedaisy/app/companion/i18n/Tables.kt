@@ -22,4 +22,5 @@ internal fun allTranslationTables(): List<Map<String, Tr>> = listOf(
     trCoop,
     trCoopBattle,
     trCoopLock,
+    trJourneys,
 )

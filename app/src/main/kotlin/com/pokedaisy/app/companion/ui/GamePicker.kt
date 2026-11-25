@@ -49,8 +49,8 @@ fun GamePickerPage(
                     when {
                         current != null -> tr("Read as {0}. If that's not the game you're playing, pick it below.", current.title)
                         picker.miss == BestEffort.Miss.NO_MATCH ->
-                            tr("Your party doesn't read clearly as any game PokéDaisy knows. Pick the one you're playing, or NONE OF THESE.")
-                        else -> tr("PokéDaisy doesn't know this build. Pick the game it's a version of - or play on: once you have a POKéMON, it checks by itself.")
+                            tr("Your party doesn't read clearly as any game PokeJourneys knows. Pick the one you're playing, or NONE OF THESE.")
+                        else -> tr("PokeJourneys doesn't know this build. Pick the game it's a version of - or play on: once you have a POKéMON, it checks by itself.")
                     },
                     OptionColors.label, OptionColors.labelShadow, small, maxLines = Int.MAX_VALUE,
                     modifier = Modifier.padding(horizontal = m.u * 8, vertical = m.u * 4),
@@ -186,7 +186,7 @@ private fun BestEffortShareNotice(
                     Spacer(Modifier.height(m.u * 2))
                     GbaText(tr("SHARE THIS MATCH?"), OptionColors.value, OptionColors.valueShadow, m)
                     GbaText(
-                        tr("It helps other players and lets a future release support this ROM properly. Sent once to PokéDaisy's database (Google Firebase): exactly the lines below - no file name, account or device details."),
+                        tr("It helps other players and lets a future release support this ROM properly. Sent once to PokeJourneys's database (Google Firebase): exactly the lines below - no file name, account or device details."),
                         OptionColors.label, OptionColors.labelShadow, small, maxLines = Int.MAX_VALUE,
                         modifier = Modifier.padding(top = m.u * 2, bottom = m.u * 3),
                     )

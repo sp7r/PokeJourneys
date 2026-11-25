@@ -2,48 +2,10 @@ cmake_minimum_required(VERSION 3.22.1)
 project(pokedaisy C CXX)
 
 # ---------------------------------------------------------------------------
-# Vendored mGBA (git submodule, pinned to 0.10.5) — core only.
-# No Qt/SDL/GL frontends, no external deps (libzip/sqlite/ffmpeg/png/lua).
-# This mirrors how mGBA's own 3DS/Switch/Vita targets build the bare core.
+# mGBA and the plain C API over it (pk_api.h, the portable pk_*.c): pk_api.cmake,
+# shared with the other hosts (the iPad app, the host test).
 # ---------------------------------------------------------------------------
-get_filename_component(MGBA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../third_party/mgba" ABSOLUTE)
-
-if(NOT EXISTS "${MGBA_DIR}/CMakeLists.txt")
-    message(FATAL_ERROR "mGBA submodule missing at ${MGBA_DIR} — run: git submodule update --init third_party/mgba")
-endif()
-
-set(BUILD_STATIC        ON  CACHE BOOL "" FORCE)
-set(BUILD_SHARED        OFF CACHE BOOL "" FORCE)
-set(DISABLE_FRONTENDS   ON  CACHE BOOL "" FORCE)
-set(DISABLE_DEPS        ON  CACHE BOOL "" FORCE)
-set(SKIP_LIBRARY        OFF CACHE BOOL "" FORCE)
-set(BUILD_GL            OFF CACHE BOOL "" FORCE)
-set(BUILD_GLES2         OFF CACHE BOOL "" FORCE)
-set(BUILD_GLES3         OFF CACHE BOOL "" FORCE)
-set(BUILD_PERF          OFF CACHE BOOL "" FORCE)
-set(BUILD_TEST          OFF CACHE BOOL "" FORCE)
-set(BUILD_SUITE         OFF CACHE BOOL "" FORCE)
-set(BUILD_LIBRETRO      OFF CACHE BOOL "" FORCE)
-set(BUILD_PYTHON        OFF CACHE BOOL "" FORCE)
-set(USE_DEBUGGERS       OFF CACHE BOOL "" FORCE)
-set(USE_GDB_STUB        OFF CACHE BOOL "" FORCE)
-set(USE_EDITLINE        OFF CACHE BOOL "" FORCE)
-set(USE_FFMPEG          OFF CACHE BOOL "" FORCE)
-set(USE_DISCORD_RPC     OFF CACHE BOOL "" FORCE)
-set(USE_LZMA            OFF CACHE BOOL "" FORCE)
-set(USE_LUA             OFF CACHE BOOL "" FORCE)
-set(USE_ELF             OFF CACHE BOOL "" FORCE)
-set(USE_SQLITE3         OFF CACHE BOOL "" FORCE)
-set(USE_LIBZIP          OFF CACHE BOOL "" FORCE)
-set(USE_MINIZIP         OFF CACHE BOOL "" FORCE)
-set(USE_PNG             OFF CACHE BOOL "" FORCE)
-set(USE_ZLIB            OFF CACHE BOOL "" FORCE)
-set(M_CORE_GBA          ON  CACHE BOOL "" FORCE)
-set(M_CORE_GB           ON  CACHE BOOL "" FORCE)   # Game Boy / Color (Pokémon Red/Blue/Yellow, G/S/C)
-set(BUILD_LTO           OFF CACHE BOOL "" FORCE)
-set(SKIP_INSTALL_ALL    ON  CACHE BOOL "" FORCE)
-
-add_subdirectory("${MGBA_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/mgba" EXCLUDE_FROM_ALL)
+include("${CMAKE_CURRENT_SOURCE_DIR}/pk_api.cmake")
 
 # ---------------------------------------------------------------------------
 # Vendored rcheevos (git submodule, pinned to v12.5.0) — RetroAchievements'
@@ -99,32 +61,61 @@ target_sources(core PRIVATE
 target_compile_definitions(core PUBLIC OGLRENDERER_ENABLED MELONDS_GLES "MELONDS_GL_HEADER=<GLES3/gl32.h>")
 target_link_libraries(core PUBLIC GLESv3 EGL)
 
+# DSperate (git submodule): the second DS core, for weak devices (nds/pk_nds_dsp.cpp). Its core library only.
+include("${CMAKE_CURRENT_SOURCE_DIR}/nds/dsperate.cmake")
+
+# ---------------------------------------------------------------------------
+# BananaDS (third_party/bananads + third_party/melonds-bananads): the third DS core, its own shared library
+# (bananads/CMakeLists.txt says why), built as a project of its own with this build's toolchain. AArch64 only (its
+# melonDS JIT as BananaDS ships it): other ABIs build no libpkbananads.so, and nds/pk_nds_bnd_load.cpp's dlopen() finds
+# none, so the core never starts there (DS CORE doesn't offer it: DsCore.bananaRuns).
+# ---------------------------------------------------------------------------
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+    include(ExternalProject)
+    set(PKB_DIR "${CMAKE_CURRENT_BINARY_DIR}/pkbananads")
+    set(PKB_LIB "${PKB_DIR}/libpkbananads.so")
+    ExternalProject_Add(pkbananads_build
+        SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bananads"
+        BINARY_DIR "${PKB_DIR}"
+        CMAKE_ARGS
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+            -DANDROID_ABI=${ANDROID_ABI}
+            -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+            -DANDROID_STL=${ANDROID_STL}
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+            "-DCMAKE_C_FLAGS=-O2"
+            "-DCMAKE_CXX_FLAGS=-O2"
+        BUILD_ALWAYS ON
+        INSTALL_COMMAND ""
+        BUILD_BYPRODUCTS "${PKB_LIB}")
+    add_library(pkbananads SHARED IMPORTED)
+    set_target_properties(pkbananads PROPERTIES IMPORTED_LOCATION "${PKB_LIB}")
+    add_dependencies(pkbananads pkbananads_build)
+    # libpokedaisy loads it at run time (nds/pk_nds_bnd_load.cpp: it needs Android 10's ELF TLS), so nothing links it;
+    # this empty library does, so that the build packages it into the APK beside the others.
+    add_library(pkbananads_pkg SHARED nds/pk_nds_bnd_pkg.c)
+    target_link_libraries(pkbananads_pkg pkbananads)
+endif()
+
 # ---------------------------------------------------------------------------
 # Our JNI bridge.
 # ---------------------------------------------------------------------------
-add_library(pokedaisy SHARED pokedaisy_jni.c pokedaisy_ra.c pk_call.c pk_host.c pk_cheats.c pk_coop.c pk_coop_field.c pk_coop_after.c pk_coop_lock.c pk_coop_link.c pk_coop_link_start.c pk_coop_link_wild.c pk_coop_link_story.c pk_coop_link_drop.c pk_coop_link_rewards.c pk_coop_link_end.c pk_coop_lock_jni.c pk_link.c pk_link_jni.c pk_rewind.c pk_savevf.c pk_wide.c pk_wide_gb.c pk_gb_field.c pk_gb_audio.c
-    nds/pk_nds.cpp nds/pk_nds_platform.cpp nds/pk_nds_field.cpp nds/pk_nds_field_gpu.cpp nds/pk_nds_call.cpp nds/pk_nds_call_melonds.cpp nds/pk_nds_wide.cpp nds/pk_nds_look.cpp
-    nds/pk_nds_music.cpp nds/pk_nds_gl.cpp)
+add_library(pokedaisy SHARED pokedaisy_jni.c pokedaisy_ra.c pk_coop_lock_jni.c pk_link.c pk_link_jni.c
+    nds/pk_nds_core.cpp nds/pk_nds_dsp.cpp nds/pk_nds.cpp nds/pk_nds_platform.cpp nds/pk_nds_field.cpp nds/pk_nds_field_gpu.cpp nds/pk_nds_call.cpp nds/pk_nds_call_melonds.cpp nds/pk_nds_wide.cpp
+    nds/pk_nds_music.cpp nds/pk_nds_gl.cpp nds/pk_nds_bnd_load.cpp nds/pk_nds_look.cpp)
 set_target_properties(pokedaisy PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 # melonDS's headers test these (its own sources get them from its directory's add_definitions).
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
     target_compile_definitions(pokedaisy PRIVATE ARCHITECTURE_ARM64=1)
 endif()
 
-# mGBA's own sources get these (add_definitions in its directory only). Some of its
-# structs change shape with them - mCoreRewindContext is ~100 bytes longer with
-# USE_PTHREADS - so our files must see the same headers, or mGBA writes past ours.
-target_compile_definitions(pokedaisy PRIVATE USE_PTHREADS M_CORE_GBA M_CORE_GB)
-
-target_include_directories(pokedaisy PRIVATE
-    "${MGBA_DIR}/include"
-    "${MGBA_DIR}/src"
-    "${CMAKE_CURRENT_BINARY_DIR}/mgba/include")
-
+# pk_api brings mGBA with its headers and the definitions they need (pk_api.cmake).
 target_link_libraries(pokedaisy
-    mgba
+    pk_api
     rcheevos
     core
+    dsperate_core
     z
     android
     log)

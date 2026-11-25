@@ -3,6 +3,7 @@ package com.pokedaisy.app.companion.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import app.cash.paparazzi.DeviceConfig
@@ -25,6 +26,7 @@ import org.junit.Test
  *     ./gradlew :app:recordPaparazziDebug --tests '*QuickMenuScreenshotTest'
  */
 class QuickMenuScreenshotTest {
+    @Before fun hosts() = installTestHosts(paparazzi.context)
     @get:Rule
     val paparazzi = Paparazzi(
         deviceConfig = DeviceConfig.PIXEL_5.copy(screenWidth = 1920, screenHeight = 1080, orientation = ScreenOrientation.LANDSCAPE),
@@ -37,17 +39,18 @@ class QuickMenuScreenshotTest {
 
     @After fun reset() = setup.reset()
 
-    private class Actions(val onBike: Boolean = false, val wild: Int = 100) : QuickActions {
+    private class Actions(val onBike: Boolean = false, val wild: Int = 100, val up: Boolean = false) : QuickActions {
         override fun offered(action: QuickAction) = true
         override fun run(action: QuickAction) {}
         override fun flyTo(mapsec: Int, targets: FlyTargets) {}
         override fun riding() = onBike
+        override fun flying() = up
         override fun wildEncounters() = wild
     }
 
     private fun shot(
         look: FieldHudLook = FieldHudLook.GLASS, moves: Int = 0, fly: FlyTargets? = null, ring: Boolean = false, labels: Boolean = true,
-        actions: QuickActions = Actions(), repels: List<Int>? = null, shown: Set<QuickAction> = QuickAction.entries.toSet(),
+        actions: QuickActions = Actions(), repels: List<Int>? = null, confirm: QuickAction? = null, shown: Set<QuickAction> = QuickAction.entries.toSet(),
         snapshot: com.pokedaisy.app.companion.data.SnapshotView = FieldHudScreenshotTest.snapshot,
     ) = paparazzi.snapshot {
         val state = QuickMenuState().apply {
@@ -59,6 +62,7 @@ class QuickMenuScreenshotTest {
             repeat(moves) { key(MenuKey.RIGHT) }
             if (fly != null) this.fly = fly
             if (repels != null) this.repels = repels
+            if (confirm != null) this.confirm = confirm
         }
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             FieldHudScene(FieldHudStyle(look = look), FieldHudScreenshotTest.wild)
@@ -73,17 +77,23 @@ class QuickMenuScreenshotTest {
     @Test fun dimmed() = shot(moves = 1)
 
     /** On FLASH, which nobody knows: dimmed, saying why. */
-    @Test fun flash() = shot(moves = 2)
+    @Test fun flash() = shot(moves = 3)
 
     /** On FLASH in a dark cave, a party Pokémon knowing it (the tile only shows then). */
-    @Test fun flashDark() = shot(moves = 2, actions = object : QuickActions by Actions() {
+    @Test fun flashDark() = shot(moves = 3, actions = object : QuickActions by Actions() {
         override fun flashDark() = true
     }, snapshot = FieldHudScreenshotTest.snapshot.let { s ->
         s.copy(party = s.party.mapIndexed { i, m -> if (i == 1) m.copy(moves = m.moves + com.pokedaisy.app.companion.data.MoveView("FLASH", "Normal", 20, 0, id = 148)) else m })
     })
 
+    /** On TAKE OFF (FREE FLIGHT), which nobody can do here (no one knows FLY): dimmed, saying why. */
+    @Test fun takeOff() = shot(moves = 2)
+
+    /** In the air: TAKE OFF says LAND, the wings' arrow down. */
+    @Test fun land() = shot(moves = 2, actions = Actions(up = true))
+
     /** On the bike: the bag's own icon. */
-    @Test fun bike() = shot(moves = 4)
+    @Test fun bike() = shot(moves = 5)
 
     @Test fun whiteGlass() = shot(FieldHudLook.WHITE_GLASS, moves = 4)
 
@@ -124,9 +134,39 @@ class QuickMenuScreenshotTest {
     @Test fun ring8Icons() = ringOf(8, false)
     @Test fun ring9Icons() = ringOf(9, false)
 
+    /** Every action on the RING in a small screen (a split screen, a phone's half: GitHub #1225): the ring shrinks to fit
+     *  rather than its tiles running into each other. */
+    private fun smallRing(labels: Boolean, widthPx: Int, heightPx: Int) = paparazzi.snapshot {
+        val state = QuickMenuState().apply { trigger(true); ring = true; this.labels = labels; items = QuickAction.entries }
+        Box(Modifier.fillMaxSize().background(Color.DarkGray)) {
+            val d = androidx.compose.ui.platform.LocalDensity.current
+            Box(Modifier.size(with(d) { widthPx.toDp() }, with(d) { heightPx.toDp() }).background(Color.Black)) {
+                FieldHudScene(FieldHudStyle(), FieldHudScreenshotTest.wild)
+                QuickMenu(state, FieldHudScreenshotTest.snapshot, Actions(), QuickAction.entries.toSet(), FieldHudLook.GLASS)
+            }
+        }
+    }
+
+    @Test fun ringSmall() = smallRing(true, 1080, 600)
+    @Test fun ringSmallIcons() = smallRing(false, 1080, 600)
+
     /** Three kinds of REPEL in the bag: which one. */
     @Test fun repelList() = shot(repels = listOf(86, 83, 84))
 
     /** FLY's places (Kanto's towns). */
     @Test fun flyList() = shot(fly = FlyTargets(FlyResult.OK, listOf(88, 89, 90, 91, 92, 93, 94, 95, 96, 97)))
+
+    /** HEAL asks first: the party as it is, YES / NO. */
+    @Test fun healConfirm() = shot(confirm = QuickAction.HEAL)
+
+    /** HEAL done: [ms] into its animation (the bars filling one by one, then the message). */
+    private fun healed(ms: Int) = paparazzi.snapshot {
+        Box(Modifier.fillMaxSize().background(Color.Black)) {
+            FieldHudScene(FieldHudStyle(), FieldHudScreenshotTest.wild)
+            HealedAnimation(HealShow(FieldHudScreenshotTest.snapshot.party, id = 1), FieldHudLook.GLASS, frozenAtMs = ms) {}
+        }
+    }
+
+    @Test fun healedFilling() = healed(900)
+    @Test fun healedDone() = healed(2300)
 }

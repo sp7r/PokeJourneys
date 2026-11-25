@@ -135,10 +135,23 @@ static void test_handheld_navigation(void) {
     assert(pd_ui_settings_control(&ui, 1, false));
     assert(ui.settingsNavId == HIT_SETTING + SETTING_HUD);
     assert(pd_ui_settings_control(&ui, 20, false));
-    assert(ui.settingsNavId == HIT_SETTING + SETTING_TAB_BAR && ui.settingsScroll > 0);
+    // The last row: LANGUAGE, under the game's own rows; TAB BAR above it.
+    assert(ui.settingsNavId == HIT_SETTING + SETTING_LANGUAGE && ui.settingsScroll > 0);
+    pd_ui_draw(&ui, &canvas, &game, &snap, &host);
+    assert(has(&ui, ui.settingsNavId));
+    assert(pd_ui_settings_control(&ui, -1, false));
+    assert(ui.settingsNavId == HIT_SETTING + SETTING_TAB_BAR);
     pd_ui_draw(&ui, &canvas, &game, &snap, &host);
     assert(has(&ui, ui.settingsNavId));
     assert(pd_ui_settings_control(&ui, 0, true) && ui.overlay == PD_OVERLAY_TAB_BAR);
+    // TAB BAR offers only the tabs this game has (GitHub #1346): no card, DEX or achievements in a game without them.
+    {
+        enum pd_tab tabs[UI_BAR_CHOICES];
+        const int n = ui_configurable_tabs(&ui, tabs);
+        assert(n > 0 && n == pd_ui_tab_menu_count(&ui));
+        for (int i = 0; i < n; i++)
+            assert(tabs[i] != PD_TAB_CARD && tabs[i] != PD_TAB_DEX && tabs[i] != PD_TAB_ACHIEVEMENTS && tabs[i] != PD_TAB_NUZLOCKE);
+    }
     assert(pd_ui_back(&ui));
     assert(pd_ui_settings_control(&ui, -20, false) && ui.settingsScroll == 0);
 
@@ -196,6 +209,15 @@ int main(void) {
     assert(back.aspect==PD_ASPECT_ZOOM_OUT && !back.autoZoom && back.ffSpeed==settings.ffSpeed);
     FILE* old=fopen(path,"w");fputs("screen=1\nff=3\nguide=0\n",old);fclose(old);
     assert(pd_settings_load(&back,path) && back.aspect==PD_ASPECT_ORIGINAL && back.autoZoom && back.ffSpeed==3);
+    // A second save over the first is read back (1.6.0's 3DS kept the first file forever), and the Old 3DS's switch too.
+    settings.darkMode=true;settings.theme=3;settings.expandOff=true;assert(pd_settings_save(&settings,path));
+    settings.theme=5;assert(pd_settings_save(&settings,path));
+    assert(pd_settings_load(&back,path) && back.darkMode && back.theme==5 && back.expandOff);
+    // Cut off between the 3DS's remove and rename: the .tmp is read.
+    char tmpPath[64];snprintf(tmpPath,sizeof tmpPath,"%s.tmp",path);
+    remove(tmpPath);assert(rename(path,tmpPath)==0);
+    assert(pd_settings_load(&back,path) && back.theme==5);
+    remove(tmpPath);settings.darkMode=false;settings.theme=0;settings.expandOff=false;
     remove(path);
     // PARTY at a Linux canvas size: Android's slot, edge to edge, three columns past 2:1 (426x240's tab).
     // The selected look (orange outline) follows the host's D-pad focus, else slot 0; empty slots are

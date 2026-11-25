@@ -8,6 +8,7 @@
 #include <strings.h>
 
 #include "pd_map.h"
+#include "pd_tr.h"
 #include "pd_games.h"
 #include "pd_gb.h"
 #include "pd_ui_internal.h"
@@ -15,9 +16,7 @@
 #define FRAME 5
 #define MAX_RECTS 8
 // The most MapScreen stretches the map to fill the tab (MAX_MAP_STRETCH); past it the map keeps its shape.
-#define MAX_STRETCH_NUM 6
-#define MAX_STRETCH_DEN 5
-#define PLACE_ROW 18
+#define PLACE_ROW pd_list_row(18)
 #define CURSOR 0xFFFFFF
 #define CURSOR_ARM 5
 #define CURSOR_THICK 2
@@ -98,7 +97,7 @@ static void build_places(const struct pd_game* g) {
     };
     for (int gi = 0; gi < 3; gi++) {
         if (!groups[gi].n) continue;
-        places[placeCount++] = (struct place) { -1, groups[gi].title };
+        places[placeCount++] = (struct place) { -1, pd_tr(groups[gi].title) };
         for (int i = 0; i < groups[gi].n && placeCount < MAX_PLACES; i++) places[placeCount++] = groups[gi].list[i];
     }
 }
@@ -112,14 +111,14 @@ static void frame(struct pd_canvas* c, int x, int y, int w, int h) {
 
 // The page scaled to the view, each canvas pixel its nearest map pixel.
 static void draw_page(struct pd_canvas* c, const uint32_t* px) {
-    static int col[1024];
-    for (int x = 0; x < view.w && x < 1024; x++) col[x] = crop.l + x * (crop.r - crop.l) / view.w;
+    static int col[4096];
+    for (int x = 0; x < view.w && x < 4096; x++) col[x] = crop.l + x * (crop.r - crop.l) / view.w;
     for (int y = 0; y < view.h; y++) {
         int cy = view.y + y;
         if (cy < c->cy0 || cy >= c->cy1) continue;
         const uint32_t* src = px + (crop.t + y * (crop.b - crop.t) / view.h) * mapW;
         uint32_t* dst = c->px + cy * c->w + view.x;
-        for (int x = 0; x < view.w && x < 1024; x++) {
+        for (int x = 0; x < view.w && x < 4096; x++) {
             int cx = view.x + x;
             if (cx >= c->cx0 && cx < c->cx1) dst[x] = src[col[x]];
         }
@@ -202,6 +201,7 @@ static int label(struct pd_canvas* c, const struct pd_game* g, const char* name,
 // The map's buttons, a row over its top right (MapScreen's), right to left.
 static int buttonRight, buttonTop;
 static void map_button(struct pd_ui* ui, struct pd_canvas* c, const char* text, int id) {
+    text = pd_tr(text);
     int w = pd_text_width(text) + 16;
     buttonRight -= w;
     ui_button(ui, c, buttonRight, buttonTop, w, 22, text, id);
@@ -217,12 +217,14 @@ static void layout_box(struct pd_canvas* c, int width, int height, int l, int t,
     crop.r = r;
     crop.b = b;
     int mw = crop.r - crop.l, mh = crop.b - crop.t;
-    // The map fills the tab: stretched to it while that's within 1.2x of its shape, else as big as fits,
-    // centred (MapScreen's MAX_MAP_STRETCH).
+    // As big as fits in its own shape, centred: never stretched (the user's call for the 3DS; the app stretches up
+    // to MAX_MAP_STRETCH).
     int aw = c->w - 2 * MARGIN - 2 * FRAME, ah = c->h - CONTENT_Y - MARGIN - 2 * FRAME;
-    int w = aw, h = ah;
-    if ((long) aw * mh * MAX_STRETCH_DEN > (long) ah * mw * MAX_STRETCH_NUM) w = ah * mw / mh;
-    else if ((long) ah * mw * MAX_STRETCH_DEN > (long) aw * mh * MAX_STRETCH_NUM) h = aw * mh / mw;
+    int w = aw, h = (int) ((long) aw * mh / mw);
+    if (h > ah) {
+        h = ah;
+        w = (int) ((long) ah * mw / mh);
+    }
     view.w = w > 0 ? w : 1;
     view.h = h > 0 ? h : 1;
     view.x = MARGIN + FRAME + (aw - w) / 2;
@@ -300,6 +302,12 @@ void ui_map_tab(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g, 
             map_button(ui, c, "ME", HIT_MAP_ME);
         if (art->pages > 1) map_button(ui, c, pd_map_page_name(g, (page + 1) % art->pages), HIT_MAP_REGION);
     }
+    // FREE FLIGHT's TAKE OFF (LAND while up) under the row, at its right end (MapScreen's TakeOffButton, under FLY).
+    if (host && host->flightReady) {
+        buttonRight = view.x + view.w - 4;
+        buttonTop += 26;
+        map_button(ui, c, host->flying ? "LAND" : "TAKE OFF", HIT_MAP_TAKE_OFF);
+    }
 }
 
 // MAP's FLY: the towns the game would fly to.
@@ -308,7 +316,7 @@ void ui_fly_overlay(struct pd_ui* ui, struct pd_canvas* c) {
     ui_add_hit(ui, 0, 0, c->w, c->h, HIT_SCRIM);
     int x = MARGIN, w = c->w - 2 * MARGIN, y = CONTENT_Y;
     int f = pd_title_box(c, x, y, w, 24, PD_TITLE_FILL);
-    pd_text(c, x + f + 6, pd_text_y(y, 24), "FLY", PD_TITLE_TEXT, PD_TITLE_SHADOW);
+    pd_text(c, x + f + 6, pd_text_y(y, 24), pd_tr("FLY"), PD_TITLE_TEXT, PD_TITLE_SHADOW);
     y += 28;
     int lf = pd_list_box(c, x, y, w, c->h - y - MARGIN);
     int ix = x + lf, iy = y + lf + 1, iw = w - 2 * lf, ih = c->h - y - MARGIN - 2 * lf - 2;
@@ -320,12 +328,13 @@ void ui_fly_overlay(struct pd_ui* ui, struct pd_canvas* c) {
         if (ry >= iy + ih) break;
         if (ui->pressedId == HIT_FLY_TOWN + i) pd_fill(c, ix, ry, iw, PLACE_ROW, PD_ROW_SELECTED);
         pd_text_fit(c, ix + 14, pd_text_y(ry, PLACE_ROW), iw - 28, ui->flyNames[i], PD_LABEL, PD_LABEL_SHADOW);
+        if (i < ui->flyCount - 1) ui_row_divider(c, ix + 2, ry + PLACE_ROW - 1, iw - 4);
         int top = ry < iy ? iy : ry;
         int bottom = ry + PLACE_ROW > iy + ih ? iy + ih : ry + PLACE_ROW;
         ui_add_scroll_hit(ui, ix, top, iw, bottom - top, HIT_FLY_TOWN + i);
     }
     pd_unclip(c);
-    ui_scroll_bar(c, ix + iw - 4, iy, ih, ui->placesScroll, ui->flyCount * PLACE_ROW, PD_MUTED);
+    ui_list_rail(ui, c, ix + iw, iy, ih, ui->placesScroll, ui->flyCount * PLACE_ROW);
 }
 
 void ui_places_overlay(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g) {
@@ -334,7 +343,7 @@ void ui_places_overlay(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
     ui_add_hit(ui, 0, 0, c->w, c->h, HIT_SCRIM);
     int x = MARGIN, w = c->w - 2 * MARGIN, y = CONTENT_Y;
     int f = pd_title_box(c, x, y, w, 24, PD_TITLE_FILL);
-    pd_text(c, x + f + 6, pd_text_y(y, 24), "PLACES", PD_TITLE_TEXT, PD_TITLE_SHADOW);
+    pd_text(c, x + f + 6, pd_text_y(y, 24), pd_tr("PLACES"), PD_TITLE_TEXT, PD_TITLE_SHADOW);
     y += 28;
     int lf = pd_list_box(c, x, y, w, c->h - y - MARGIN);
     int ix = x + lf, iy = y + lf + 1, iw = w - 2 * lf, ih = c->h - y - MARGIN - 2 * lf - 2;
@@ -361,12 +370,14 @@ void ui_places_overlay(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
         if (pd_map_tiles(g, places[i].mapsec, &page, &r, 1) && page > 0) {
             pd_text_right(c, ix + iw - 10, ty, pd_map_page_name(g, page), PD_MUTED, PD_MUTED_SHADOW);
         }
+        // Between two places (not over a heading).
+        if (i < placeCount - 1 && places[i + 1].mapsec >= 0) ui_row_divider(c, ix + 2, ry + PLACE_ROW - 1, iw - 4);
         int top = ry < iy ? iy : ry;
         int bottom = ry + PLACE_ROW > iy + ih ? iy + ih : ry + PLACE_ROW;
         ui_add_scroll_hit(ui, ix, top, iw, bottom - top, HIT_PLACE + i);
     }
     pd_unclip(c);
-    ui_scroll_bar(c, ix + iw - 4, iy, ih, ui->placesScroll, placeCount * PLACE_ROW, PD_MUTED);
+    ui_list_rail(ui, c, ix + iw, iy, ih, ui->placesScroll, placeCount * PLACE_ROW);
 }
 
 bool ui_map_act(struct pd_ui* ui, int id) {
@@ -438,6 +449,9 @@ bool ui_map_act(struct pd_ui* ui, int id) {
     case HIT_MAP_FLY:
         ui->action = PD_ACTION_FLY_ASK;
         return true;
+    case HIT_MAP_TAKE_OFF:
+        ui->action = PD_ACTION_FLIGHT;
+        return true;
     default:
         return false;
     }
@@ -466,7 +480,7 @@ enum pd_map_input pd_ui_map_control(int* action, int count, int dx, int dy, bool
 
 struct pd_map_viewport pd_ui_map_view(struct pd_canvas* c, const struct pd_map_source* source) {
     if (!source || !source->pixels || source->width < 1 || source->height < 1 ||
-        source->width > 4096 || source->height > 4096 || c->w < 32 || c->h < 32 || c->w > 1024) {
+        source->width > 4096 || source->height > 4096 || c->w < 32 || c->h < 32 || c->w > 4096) {
         ui_notice(c, "NO MAP", "The region map's art wasn't found", "in this ROM.");
         return (struct pd_map_viewport){0};
     }

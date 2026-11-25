@@ -1,6 +1,7 @@
 package com.pokedaisy.app.companion
 
-import com.pokedaisy.app.Prefs
+import kotlin.time.Clock
+import kotlin.concurrent.Volatile
 import com.pokedaisy.app.companion.i18n.tk
 
 /**
@@ -10,11 +11,28 @@ import com.pokedaisy.app.companion.i18n.tk
  * from the update. Every new feature gets one (CLAUDE.md): add its id to [ALL] and the badge to its row.
  */
 object NewFeatures {
+    /** Shared field HUD on iPhone and iPad. */
+    const val IOS_FIELD_HUD = "ios_field_hud"
+    /** GAME BUTTONS in the shared iPhone/iPad setup wizard. */
+    const val IOS_SETUP_BUTTONS = "ios_setup_buttons"
+    /** Shared game-button capture and bindings on iPhone and iPad. */
+    const val IOS_GAME_BINDINGS = "ios_game_bindings"
+    const val IOS_GAME_HOTKEYS = "ios_game_hotkeys"
+    const val IOS_REWIND = "ios_rewind"
+    const val IOS_TOUCH_XY = "ios_touch_xy"
+    const val IOS_CHEATS = "ios_cheats"
+    const val IOS_FIELD_ITEMS = "ios_field_items"
+    const val IOS_CLASSIC_FLY = "ios_classic_fly"
+    const val IOS_QUICK_MENU = "ios_quick_menu"
+
     /** SETTINGS > HUD (companion.ui.FieldHud). */
     const val HUD = "hud"
 
     /** SETTINGS > BATTLE BUTTONS (companion.ui.BattleButtons). */
     const val BATTLE_BUTTONS = "battle_buttons"
+
+    /** SETTINGS > HIDE BATTLE MENU: two screens, the game's own battle menus off its screen (pk_wide.c's menuHideBegin). */
+    const val HIDE_BATTLE_MENU = "hide_battle_menu"
 
     /** HOTKEYS > RESTART GAME and CLOSE APP (Hotkeys.Action.badge). */
     const val GAME_HOTKEYS = "game_hotkeys"
@@ -30,6 +48,8 @@ object NewFeatures {
 
     /** SETTINGS > HUD > REPEL STEPS: a REPEL's steps left, counting down beside the balls. */
     const val HUD_REPEL = "hud_repel"
+    /** SETTINGS > HUD > MOVE ADVICE: the card over the game's forget-a-move screen (MoveLearningHudCard). */
+    const val HUD_MOVE_ADVICE = "hud_move_advice"
 
     /** SETTINGS > SINGLE SCREEN: a two-screen device played on one, the companion over the game. */
     const val SINGLE_SCREEN = "single_screen"
@@ -45,6 +65,8 @@ object NewFeatures {
 
     /** SETTINGS > FOLD LAYOUT: a foldable half open puts the game on one side of its hinge, the companion on the other. */
     const val FOLD_LAYOUT = "fold_layout"
+    /** SETTINGS > TABLETOP CONTROLS: a foldable half open like a laptop, the touch controls on the bottom half. */
+    const val TABLETOP_CONTROLS = "tabletop_controls"
 
     /** TOUCH CONTROLS > LOOK / COLORS (and the MIRRORED / RAISED layouts): how the drawn buttons look. */
     const val TOUCH_STYLES = "touch_styles"
@@ -57,6 +79,25 @@ object NewFeatures {
 
     /** SETTINGS > REUSABLE TMS: a TM stays in the bag after it teaches a move (companion.data.ReusableTms). */
     const val REUSABLE_TMS = "reusable_tms"
+    /** The POKéMON CENTER anywhere: the QUICK MENU's HEAL and the summary's CENTER (companion.data.PokemonCenter). */
+    const val POKEMON_CENTER = "pokemon_center"
+    /** SETTINGS > EXP SHARE: the whole party gains EXP from a win (companion.data.ExpShare). */
+    const val EXP_SHARE = "exp_share"
+    /** SETTINGS > LEVEL CAP: no Pokémon past the next boss's top level (companion.data.LevelCap). */
+    const val LEVEL_CAP = "level_cap"
+    const val REPEL_REFILL = "repel_refill"
+    const val SHINY_ALERT = "shiny_alert"
+    const val LAST_BALL = "last_ball"
+    /** SETTINGS > ITEM POPUPS: the OBTAINED card (ItemToast.kt). */
+    const val ITEM_POPUPS = "item_popups"
+    const val POKEMON_PICTURES = "pokemon_pictures"
+    const val BOSS_RETRY = "boss_retry"
+    const val LOW_HP_BEEP = "low_hp_beep"
+    const val FIELD_POISON = "field_poison"
+    const val RUNNING_SHOES = "running_shoes"
+    const val SETTINGS_LOOK = "settings_look"
+    /** SETTINGS > NO HMS NEEDED: the field moves without a Pokémon that knows them (companion.data.HmFree). */
+    const val HM_FREE = "hm_free"
     /** SETTINGS > TRADE EVOLUTIONS: a trade evolution from the Pokémon's summary (companion.data.TradeEvolution). */
     const val TRADE_EVOLUTIONS = "trade_evolutions"
     /** SETTINGS > SHINY ODDS: a wild foe shiny at the odds picked (companion.data.ShinyOdds). */
@@ -74,6 +115,14 @@ object NewFeatures {
 
     /** GAME BUTTONS > START 2 / SELECT 2: the GBA / Game Boy games' spare buttons, apart from the DS games' X / Y. */
     const val GBA_BUTTONS = "gba_buttons"
+    /** GAME BUTTONS' UP / DOWN / LEFT / RIGHT: more keys for the D-pad (a controller whose D-pad sends letters). */
+    const val DPAD_KEYS = "dpad_keys"
+    /** SETTINGS > CHALLENGE ICONS: RetroAchievements' corner icons on or off. */
+    const val RA_ICONS = "ra_icons"
+    /** ACHIEVEMENT POPUPS / PROGRESS POPUPS: RetroAchievements' popups (and the unlock fanfare) on or off. */
+    const val RA_POPUPS = "ra_popups"
+    /** SETTINGS > DS TOUCH SCREEN: a DS game's touch screen stretched over the second display. */
+    const val DS_TOUCH_FILL = "ds_touch_fill"
 
     /** SETTINGS > PLAYER LOOK: play as another game's hero (companion.data.PlayerLook). */
     const val PLAYER_LOOK = "player_look"
@@ -100,6 +149,14 @@ object NewFeatures {
     const val DS_RESOLUTION = "ds_resolution"
     const val DS_CPU_BOOST = "ds_cpu_boost"
 
+    /** SETTINGS > DS CORE: DSperate, a second DS emulator for weak devices (companion.DsCore). */
+    const val DS_CORE = "ds_core"
+    /** SETTINGS > DS CORE's BANANADS: BananaOS's DS emulator as a third core (companion.DsCore). */
+    const val DS_CORE_BANANADS = "ds_core_bananads"
+
+    /** Settings > APP > BETA UPDATES: the in-app updater offers betas and release candidates too (AppUpdater). */
+    const val BETA_UPDATES = "beta_updates"
+
     /** SETTINGS > APP > TIPS: a card now and then about a feature the player hasn't found (FeatureTips). */
     const val TIPS = "tips"
 
@@ -120,10 +177,33 @@ object NewFeatures {
 
     /** Settings > LIBRARY > PATCH A ROM and the library's + menu: a .bps patch applied to a ROM the library has (RomPatchFlow). */
     const val ROM_PATCH = "rom_patch"
+    /** TOOLS > SPRITE PACK: the makeover's graphics loaded from a pack file instead of the other games' ROMs (SpritePack). */
+    const val SPRITE_PACK = "sprite_pack"
     /** Settings > TOOLS > LINK PLAY (and a GBA game's library menu): two to four GBA games on one link cable (LinkActivity). */
     const val LINK_PLAY = "link_play"
     /** TOOLS > SAVE EDITOR / TRADE SAVES and a game's library menu > SAVE EDITOR: the save editor, out from behind its flag. */
     const val SAVE_TRADE = "save_trade"
+    /** The save editor's second round (2026-11-15): a Pokémon's page (nature, ability, IVs / EVs, level, shiny...), the party
+     * in the editor and in trades, box tools, TRAINER's Pokédex and event tickets. On the same TOOLS cards. */
+    const val SAVE_EDITOR_PLUS = "save_editor_plus"
+    /** GAME BUTTONS' and HOTKEYS' RESET TO DEFAULTS (GitHub discussion #923). */
+    const val RESET_CONTROLS = "reset_controls"
+    /** TOOLS > PAL PARK: six Pokémon from a GBA game's PC into HeartGold / SoulSilver / Platinum (save.PalPark). */
+    const val PAL_PARK = "pal_park"
+    /** The save editor's TRAINER > MISSING: what a Pokédex lacks and which other save can send one (save.MissingDex). */
+    const val SAVE_MISSING = "save_missing"
+    /** TRADE SAVES' TRADE AND BACK, and MISSING's trade evolutions. */
+    const val TRADE_BACK = "trade_back"
+    /** TOOLS > COLLECTION: every save's Pokémon in one list (save.SaveCollection). */
+    const val SAVE_COLLECTION = "save_collection"
+    /** TOOLS > POKé TRANSFER: six Pokémon from HeartGold / SoulSilver / Platinum into Black / White and their sequels (save.PokeTransfer). */
+    const val POKE_TRANSFER = "poke_transfer"
+    /** The SAVE EDITOR on Black / White and their sequels' saves (save.Gen5SaveEditor): every page, MISSING through Poké Transfer, and their trades with each other (save.Gen5Trade). */
+    const val SAVE_EDITOR_GEN5 = "save_editor_gen5"
+    /** The SAVE EDITOR on Diamond / Pearl's saves (save.Gen4Layout.DP): every page, their trades with the other DS games, Pal Park and Poké Transfer. */
+    const val SAVE_EDITOR_DP = "save_editor_dp"
+    /** The QUICK MENU's TURBO A tile: holding A mashes it until it's tapped again (GbaInput.turboLatch). */
+    const val QUICK_TURBO = "quick_turbo"
 
     /** SETTINGS > DS LAYOUT: a DS game's two screens on one (companion.DsLayout), its touch screen floating in over the
      * game when wanted; the TOUCH SCREEN hotkey and the HUD's TOUCH button open it by hand. */
@@ -159,20 +239,76 @@ object NewFeatures {
     const val BATTLE_STYLE = "battle_style"
     /** QUICK MENU > FLASH: the field move from the quick menu (companion.data.Flash); the QUICK MENU row carries it too. */
     const val QUICK_FLASH = "quick_flash"
+    /** QUICK MENU > TOUCH SCREEN: a DS / 3DS game's touch screen in by hand on one screen (a phone has no L2). */
+    const val QUICK_TOUCH = "quick_touch"
+    /** SETTINGS > FONT on both screens: the pixel font or a smooth one (ui.theme.AppFont). */
+    const val APP_FONT = "app_font"
+    /** SETTINGS > FONT's PIXEL SMALL, the new default (the FONT row carries it now). */
+    const val PIXEL_SMALL = "pixel_small"
+    /** FREE FLIGHT: TAKE OFF / LAND (the QUICK MENU's tile and its row, the MAP tab, the FREE FLIGHT hotkey). */
+    const val FREE_FLIGHT = "free_flight"
+    /** SETTINGS > FLY STYLE: SCENIC flies over the field to the town. */
+    const val SCENIC_FLY = "scenic_fly"
+
+    /** MAKEOVER > RIDE ON: a motorcycle or a scooter in place of the bike (companion.data.RideOn). */
+    const val RIDE_ON = "ride_on"
+
+    /** SETTINGS > FLIGHT AREA: flying only over the maps the player has seen (companion.data.FlightArea). */
+    const val FLIGHT_AREA = "flight_area"
+    /** MAKEOVER > FLY ON: a balloon, a helicopter or a zeppelin in place of the bird. */
+    const val FLY_ON = "fly_on"
     /** SETTINGS > ZOOM: EXPAND's zoom picked from a list, without a right stick. */
     const val ZOOM_SETTING = "zoom_setting"
     /** TOUCH CONTROLS > VIBRATION as a switch with its STRENGTH under it (TouchHaptics). */
     const val TOUCH_VIBRATION = "touch_vibration"
     /** TOUCH CONTROLS' ZOOM / REWIND extras and X AND Y for GBA / Game Boy games. */
     const val TOUCH_MORE_BUTTONS = "touch_more_buttons"
+    /** GAME LOOK: the companion and the HUD in each game's own look (CompanionSkins), and HUD > LOOK GAME. */
+    const val GAME_LOOK = "game_look"
+
+    /** The iPad game loop now supports fast-forward and per-game speed. */
+    const val IPAD_PLAYBACK = "ipad_playback"
+
+    const val IPAD_STATES = "ipad_states"
+    const val IPAD_RESUME = "ipad_resume"
+    const val IPAD_TOUCH = "ipad_touch"
+    const val IPAD_APP_UI = "ipad_app_ui"
+    const val IOS_GAME_PICKER = "ios_game_picker"
+    const val IOS_FIELD_OPTIONS = "ios_field_options"
+    const val IOS_GAME_OPTIONS = "ios_game_options"
+    const val IOS_SCENE_SPEEDS = "ios_scene_speeds"
+    const val IOS_GAME_SCREEN = "ios_game_screen"
 
     val ALL = listOf(
+        IOS_FIELD_HUD,
+        IOS_SETUP_BUTTONS,
+        IOS_GAME_BINDINGS,
+        IOS_GAME_HOTKEYS,
+        IOS_REWIND,
+        IOS_TOUCH_XY,
+        IOS_CHEATS,
+        IOS_FIELD_ITEMS,
+        IOS_CLASSIC_FLY,
+        IOS_QUICK_MENU,
+        IOS_FIELD_OPTIONS,
+        IOS_GAME_OPTIONS,
+        IOS_SCENE_SPEEDS,
+        IOS_GAME_SCREEN,
+        IOS_GAME_PICKER,
+        IPAD_APP_UI,
+        IPAD_TOUCH,
+        IPAD_RESUME,
+        IPAD_STATES,
+        IPAD_PLAYBACK,
         HUD, BATTLE_BUTTONS, GAME_HOTKEYS, COMPANION_WINDOW, HUD_PC, QUICK_MENU, HUD_REPEL, SINGLE_SCREEN, MORE_TAB, TOUCH_CONTROLS,
         COMPANION_TAB, REUSABLE_TMS, SHINY_ODDS, UNLIT_SCREEN, LIGHT_COMPANION, X_COMPANION, PLAYER_LOOK, RIVAL_LOOK, TEXT_LOOK, DAY_NIGHT,
         FOLLOWER, COMPANION_HOTKEY, NUZLOCKE, GBA_BUTTONS, DS_RESOLUTION, TIPS, ROMS_FOLDERS, SAVE_BACKUPS, DISCORD, BOXES_TAB,
-        GAME_VOLUME, ROM_PATCH, TRADE_EVOLUTIONS, DS_LAYOUT, DS_CPU_BOOST, LINK_PLAY, BATTLE_FOCUS, THEMES, SAVE_TRADE, FOLD_LAYOUT, TOUCH_STYLES, TOUCH_SKINS,
+        GAME_VOLUME, ROM_PATCH, TRADE_EVOLUTIONS, DS_LAYOUT, DS_CPU_BOOST, LINK_PLAY, BATTLE_FOCUS, THEMES, SAVE_TRADE, SAVE_EDITOR_PLUS, RESET_CONTROLS, FOLD_LAYOUT, TABLETOP_CONTROLS, TOUCH_STYLES, TOUCH_SKINS,
         AUDIO_EFFECTS, BATTLE_INFO, BATTLE_VIEW, GAME_NAMES, SUPPORTED_ONLY, LOOK_AROUND, INSTANT_TEXT, BATTLE_STYLE,
-        QUICK_FLASH, ZOOM_SETTING, TOUCH_VIBRATION, TOUCH_MORE_BUTTONS,
+        QUICK_FLASH, ZOOM_SETTING, TOUCH_VIBRATION, TOUCH_MORE_BUTTONS, FREE_FLIGHT, SCENIC_FLY, FLIGHT_AREA, FLY_ON, RIDE_ON,
+        DPAD_KEYS, RA_ICONS, DS_TOUCH_FILL, DS_CORE, DS_CORE_BANANADS, RA_POPUPS, HIDE_BATTLE_MENU, SPRITE_PACK, HM_FREE, POKEMON_CENTER, EXP_SHARE, LEVEL_CAP, REPEL_REFILL, SHINY_ALERT, LAST_BALL, ITEM_POPUPS, HUD_MOVE_ADVICE, BOSS_RETRY, LOW_HP_BEEP, FIELD_POISON, RUNNING_SHOES, SETTINGS_LOOK,
+        QUICK_TOUCH, APP_FONT, PIXEL_SMALL, PAL_PARK, SAVE_MISSING, TRADE_BACK, SAVE_COLLECTION, POKE_TRANSFER, SAVE_EDITOR_GEN5, SAVE_EDITOR_DP, QUICK_TURBO,
+        GAME_LOOK, POKEMON_PICTURES, BETA_UPDATES,
     )
 
     private const val DAYS = 7
@@ -184,17 +320,21 @@ object NewFeatures {
     @Volatile
     private var started = false
 
-    /** App start: date every feature not seen before (now); the ones seen keep their date. */
-    fun init(prefs: Prefs, now: Long = System.currentTimeMillis()) {
-        val seen = prefs.newFeatureSince
+    /**
+     * App start: date every feature not seen before (now); the ones seen keep their date. [seen] is what the host kept
+     * (Prefs.newFeatureSince on Android); [save] gets the dates back when a feature was added.
+     */
+    fun init(seen: Map<String, Long>, save: (Map<String, Long>) -> Unit, now: Long = nowMillis()) {
         val all = seen + ALL.filter { it !in seen }.associateWith { now }
-        if (all != seen) prefs.newFeatureSince = all
+        if (all != seen) save(all)
         since = all
         started = true
     }
 
+    private fun nowMillis() = Clock.System.now().toEpochMilliseconds()
+
     /** Still new: dated less than [DAYS] days ago. Before [init] (screenshot tests, ui-preview) every feature is. */
-    fun isNew(id: String, now: Long = System.currentTimeMillis()): Boolean {
+    fun isNew(id: String, now: Long = nowMillis()): Boolean {
         if (!started) return true
         val at = since[id] ?: return false
         return now - at < DAYS * DAY_MS

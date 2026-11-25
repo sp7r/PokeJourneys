@@ -1,6 +1,8 @@
 package com.pokedaisy.app.companion.data
 
-import com.pokedaisy.app.MgbaCore
+import kotlin.concurrent.Volatile
+import kotlin.time.TimeSource
+import kotlinx.coroutines.channels.Channel
 
 /** Told once per game when the Poller has decided what it is (a GameKind's name, and a BEST EFFORT match's title):
  * crash reports name it (CrashReports.gameIdentified, set up in PokeDaisyApp). */
@@ -14,6 +16,8 @@ import com.pokedaisy.app.MgbaCore
  * reads never race a frame. Detection (ROM code, size and hash) is cached.
  */
 class TelemetrySampler {
+    /** The game's move-learning summary (the HUD's MOVE ADVICE card): this sampler's game only. */
+    private val moveWatch = MoveLearningWatch()
 
     init {
         resetNativeBagCache()
@@ -52,10 +56,21 @@ class TelemetrySampler {
     // A DS game's (Gen 4) addresses instead.
     private var gen4Cfg: Gen4Config? = null
     private var dsGameCode = ""
+    /** The DS header's revision byte, with [dsGameCode]: SHINY ODDS goes by both ([ShinyOdds.DS_VERIFIED]). */
+    private var dsRevision = -1
     /** The DS cart is Origin HeartGold's ([OriginHeartGold]: a Japanese HeartGold's header, English text). */
     private var dsOrigin = false
     /** The DS cart is Renegade Platinum's ([RenegadePlatinum]: the retail Platinum header, its own tables). */
     private var dsRenegade = false
+    /** The DS cart is Heartfelt Gold's ([HeartfeltGold]: the US HeartGold's header, its own tables). */
+    private var dsHeartfelt = false
+    /** The DS cart is Sacred Gold / Storm Silver ([SacredGold]: the retail HeartGold's / SoulSilver's header, their own tables). */
+    private var dsSacredGold = false
+    /** The Game Boy cart is Pokémon Brown 6.0.1 ([brownV601]). */
+    private var gbBrownV601 = false
+    /** The Game Boy cart is a Gen II Graphics hack ([gen1Gen2Graphics]). */
+    private var gbGen2Graphics = false
+    private var dsRedux = false
     /** The DS cart's language letter before its text is read: its header's, but English for Origin HeartGold. */
     private val dsLanguage: Char? get() = if (dsOrigin) 'E' else dsGameCode.getOrNull(3)
     private var gen5Cfg: Gen5Config? = null
@@ -63,6 +78,8 @@ class TelemetrySampler {
     // Set instead of nativeCfg for a large BPRE ROM that isn't recognized as
     // Unbound (see detect()) - a different hack we have no addresses for.
     private var unsupportedHackLabel: String? = null
+    // A game its makers asked PokéDaisy not to read ([BlockedGames]): unsupported, with its notice, and nothing guessed.
+    private var blocked: BlockedGame? = null
     // The ROM hashed as retail FireRed / Emerald.
     private var retailHash = false
     // Retail FireRed / Emerald with a randomizer's data (RandomizedRetail): read as retail, with its own tables.
@@ -71,6 +88,12 @@ class TelemetrySampler {
     // [nativeCfg]'s RAM is known to be this ROM's: a retail hash, or another language's retail
     // path - not an unrecognised same-size hack or a BEST EFFORT match landing on a retail config.
     private var ramVerified = false
+
+    /** A retail cart by its hash (any language or revision, a collection dump, a randomizer's output): FREE FLIGHT's
+     * retail records fly it (Flight.kt's [flightAllowed]); a hack edited in place keeps retail's code but not its maps. */
+    @Volatile
+    var retailRom = false
+        private set
     // An unrecognised FireRed / Emerald hack whose code proves it kept retail's engine and RAM (RetailEngine): its
     // battle cursors and gPartyMenu are retail's, whatever BEST EFFORT reads its names with.
     private var retailEngine: RetailEngine.Proof? = null
@@ -108,16 +131,16 @@ class TelemetrySampler {
         object Keep : PickAnswer
         object Seen : PickAnswer
     }
-    private val answers = java.util.concurrent.ConcurrentLinkedQueue<PickAnswer>()
+    private val answers = Channel<PickAnswer>(Channel.UNLIMITED)
 
     /** WHICH GAME IS THIS?: read the ROM as candidate [id] ([BestEffort.candidate]). */
-    fun pickGame(id: String) { answers += PickAnswer.Pick(id) }
+    fun pickGame(id: String) { answers.trySend(PickAnswer.Pick(id)) }
     /** NONE OF THESE: no game - NOT SUPPORTED, until the player opens the picker again. */
-    fun pickNone() { answers += PickAnswer.None }
+    fun pickNone() { answers.trySend(PickAnswer.None) }
     /** KEEP: the doubted match stays, as the player's own pick. */
-    fun keepGame() { answers += PickAnswer.Keep }
+    fun keepGame() { answers.trySend(PickAnswer.Keep) }
     /** The match notice was seen. */
-    fun bestEffortSeen() { answers += PickAnswer.Seen }
+    fun bestEffortSeen() { answers.trySend(PickAnswer.Seen) }
 
     /** [label]: the ROM isn't one detect() knows. A match kept for it ([BestEffortStore]) reads it anyway. */
     private fun unsupportedRom(reader: MemoryReader, code: String, size: Long, hash: String?, label: String) {
@@ -139,6 +162,17 @@ class TelemetrySampler {
         }
         // Look at it on the first sample: a guess or a sure match shows up at once.
         beSamples = EVALUATE_EVERY
+    }
+
+    /** A listed game: no config, no BEST EFFORT, no picker - only its notice ([SnapshotView.blocked]). */
+    private fun block(b: BlockedGame) {
+        blocked = b
+        kind = kind ?: GameKind.FIRERED
+        nativeCfg = null
+        baseCfg = null
+        beCode = null
+        beMatch = null
+        unsupportedHackLabel = "${b.title} is blocked"
     }
 
     private fun useBestEffort(m: BestEffort.Match) {
@@ -173,7 +207,7 @@ class TelemetrySampler {
 
     private fun takeAnswers(reader: MemoryReader) {
         while (true) {
-            when (val a = answers.poll() ?: return) {
+            when (val a = answers.tryReceive().getOrNull() ?: return) {
                 is PickAnswer.Pick -> {
                     val c = BestEffort.candidate(a.id) ?: continue
                     val code = beCode ?: continue
@@ -184,7 +218,7 @@ class TelemetrySampler {
                     useBestEffort(m)
                     beDeclined = false
                     save(m, BestEffortStore.Source.PICKED, verified = fit?.sure == true)
-                    android.util.Log.i("pokedaisy", "best effort: picked ${c.id} off=${m.off} for sha1=$beSha1")
+                    Logs.i("best effort: picked ${c.id} off=${m.off} for sha1=$beSha1")
                 }
                 PickAnswer.None -> {
                     dropBestEffort()
@@ -203,9 +237,9 @@ class TelemetrySampler {
 
     private fun verdict(reader: MemoryReader, code: String): BestEffort.Verdict? {
         val text = beText ?: runCatching {
-            val t0 = System.nanoTime()
+            val t0 = TimeSource.Monotonic.markNow()
             BestEffort.romText(reader, code, beSize).also {
-                android.util.Log.i("pokedaisy", "best effort: ROM text read in ${(System.nanoTime() - t0) / 1_000_000} ms")
+                Logs.i("best effort: ROM text read in ${t0.elapsedNow().inWholeMilliseconds} ms")
             }
         }.getOrNull()?.also { beText = it } ?: return null
         return BestEffort.evaluate(reader, code, beSize, text).also { beVerdict = it }
@@ -224,7 +258,7 @@ class TelemetrySampler {
         if (beVerdict != null && !unresolved && !unverified) return
         if (beGuess && ++beGuessSamples > GUESS_SAMPLES) {
             // A guess no party ever confirmed (the RAM isn't the guessed game's): the player picks.
-            android.util.Log.i("pokedaisy", "best effort: guess ${beMatch?.candidate?.id} never read a party, asking")
+            Logs.i("best effort: guess ${beMatch?.candidate?.id} never read a party, asking")
             dropBestEffort()
             return
         }
@@ -249,7 +283,7 @@ class TelemetrySampler {
                 beGuess = sure == null
                 beGuessSamples = 0
                 save(m, BestEffortStore.Source.AUTO, verified = sure != null)
-                android.util.Log.i("pokedaisy", "best effort: ${if (sure != null) "sure" else "guess"} ${m.candidate.id} off=${m.off} for sha1=$beSha1")
+                Logs.i("best effort: ${if (sure != null) "sure" else "guess"} ${m.candidate.id} off=${m.off} for sha1=$beSha1")
             }
             !v.sawParty -> {}
             sure != null && sure.candidate.kind == current.candidate.kind -> {
@@ -313,7 +347,10 @@ class TelemetrySampler {
 
     private fun sampleUntagged(reader: MemoryReader): SnapshotView {
         try {
-            if (kind == null) detect(reader)
+            if (kind == null) {
+                detect(reader)
+                BlockedGames.forSha1(romSha1)?.let(::block)
+            }
             if (beCode != null) {
                 takeAnswers(reader)
                 runBestEffort(reader)
@@ -322,10 +359,12 @@ class TelemetrySampler {
                 itemTextChosen = true
                 onGameIdentified?.invoke(kind!!.name, beMatch?.candidate?.title)
                 PokedexSource.romChanged()
+                moveWatch.reset()
                 // A DS cart: its text's language once NdsArt has read it (it applies it itself when it lands later), else the header's.
                 (nativeCfg?.language ?: gen1Cfg?.language ?: NdsArt.names?.takeIf { kind?.isDsGame == true }?.language
                     ?: dsLanguage)?.let { com.pokedaisy.app.companion.i18n.L10n.applyGameLanguage(it) }
                 RomItemText.use(itemTable(reader))
+                romHeaderCode = runCatching { EmulatorCore.current.romCode() }.getOrNull().orEmpty()
             }
             activeGame = kind ?: GameKind.FIRERED
             val base = baseCfg ?: unmarkedCfg
@@ -333,9 +372,13 @@ class TelemetrySampler {
                 base === NATIVE_SOULGOLD_V1_2_1
             amethystV141 = base === NATIVE_AMETHYST_V1_4_1
             eliteRedux265_3 = base === NATIVE_ELITE_REDUX_V2_65_3B
-            teamRocketV3 = base === NATIVE_TEAM_ROCKET_V3
+            monomythV1_2 = base === NATIVE_MONOMYTH_V1_2
+            teamRocketV3 = base === NATIVE_TEAM_ROCKET_V3 || base === NATIVE_TEAM_ROCKET_V3_1
             originHeartGold = dsOrigin
             renegadePlatinum = dsRenegade
+            heartfeltGold = dsHeartfelt
+            sacredGold = dsSacredGold
+            black2Redux = dsRedux
             fireRedHack = fireRedHackFor(base)
             // Modern Emerald's tables follow the save's settings (a few bytes a sample).
             emeraldHack = if (base === NATIVE_MODERN_EMERALD) {
@@ -344,19 +387,22 @@ class TelemetrySampler {
             randomizedRetail = randomizedText
             mariomonV13 = base === NATIVE_MARIOMON_V1_3 || base === NATIVE_MARIOMON_V1_2_2 || base === NATIVE_MARIOMON_V1_2_1
             quetzalV084 = base?.quetzalV084 == true
+            brownV601 = gbBrownV601
+            gen1Gen2Graphics = gbGen2Graphics
             quetzalV1 = base?.quetzalV1 == true
             gen2Cfg?.let { activeGen2 = it }
             // A DS cart: its own text's language (NdsArt.names: a French Sacred Gold is an IPKE HeartGold, GitHub #230).
-            romLanguage = nativeCfg?.language ?: gen1Cfg?.language ?: NdsArt.names?.takeIf { kind?.isDsGame == true }?.language ?: dsLanguage ?: 'E'
-            romGameCode = nativeCfg?.gameCode ?: gen1Cfg?.gameCode ?: dsGameCode
+            romLanguage = nativeCfg?.language ?: gen1Cfg?.language ?: gen2Cfg?.language ?: NdsArt.names?.takeIf { kind?.isDsGame == true }?.language ?: dsLanguage ?: 'E'
+            romGameCode = nativeCfg?.gameCode ?: gen1Cfg?.gameCode ?: gen2Cfg?.gameCode ?: dsGameCode
             // Quetzal picks each kind of name's language from its own options (a few bytes a sample).
             quetzalNames = nativeCfg?.takeIf { it.quetzalPlacesDefault >= 0 }
                 ?.let { runCatching { readQuetzalNames(reader, it) }.getOrNull() } ?: QuetzalNames()
 
             val telemetry = when (kind) {
                 // English Unbound leaves nativeCfg null (see detect()); its French translation sets its own.
-                GameKind.UNBOUND -> readNativeTelemetry(reader, nativeCfg ?: unboundCfg)
-                GameKind.YELLOW, GameKind.RED, GameKind.BLUE, GameKind.PURE_RED, GameKind.PURE_BLUE, GameKind.YELLOW_LEGACY ->
+                GameKind.UNBOUND -> readNativeTelemetry(reader, nativeCfg ?: unboundCfg, moveWatch)
+                GameKind.YELLOW, GameKind.RED, GameKind.BLUE, GameKind.PURE_RED, GameKind.PURE_BLUE, GameKind.YELLOW_LEGACY,
+                GameKind.BROWN ->
                     readGen1Telemetry(reader, gen1Cfg ?: GEN1_YELLOW)
                 GameKind.CRYSTAL, GameKind.CRYSTAL_CLEAR, GameKind.PRISM, GameKind.GOLD, GameKind.SILVER, GameKind.POLISHED_CRYSTAL,
                 GameKind.CRYSTAL_LEGACY ->
@@ -364,9 +410,9 @@ class TelemetrySampler {
                 GameKind.PLATINUM, GameKind.HEARTGOLD, GameKind.SOULSILVER -> readGen4Telemetry(reader, gen4Cfg ?: GEN4_PLATINUM_US)
                 GameKind.BLACK, GameKind.WHITE, GameKind.BLACK2, GameKind.WHITE2 -> readGen5Telemetry(reader, gen5Cfg ?: GEN5_BLACK)
                 else -> {
-                    unsupportedHackLabel?.let { return SnapshotView(connected = false, error = it, unsupported = true) }
+                    unsupportedHackLabel?.let { return SnapshotView(connected = false, error = it, unsupported = true, blocked = blocked) }
                     val cfg = nativeCfg ?: return SnapshotView(connected = false, error = "no telemetry source")
-                    readNativeTelemetry(reader, cfg)
+                    readNativeTelemetry(reader, cfg, moveWatch)
                 }
             }
             lastError = null
@@ -389,17 +435,17 @@ class TelemetrySampler {
         val t = cfg?.itemDescs
         if (t != null && RomItemText.matchesRom(reader, t)) return t
         if (cfg != null && t == null) return null
-        val size = runCatching { MgbaCore.pkRomSize() }.getOrDefault(0L)
+        val size = runCatching { EmulatorCore.current.romSize() }.getOrDefault(0L)
         return RomItemText.findVanillaItems(reader, size)
     }
 
     private fun detect(reader: MemoryReader) {
-        when (runCatching { MgbaCore.pkPlatform() }.getOrDefault(0)) {
-            MgbaCore.PLATFORM_GB -> return detectGameBoy()
-            MgbaCore.PLATFORM_NDS -> return detectDs()
+        when (runCatching { EmulatorCore.current.platform() }.getOrDefault(0)) {
+            EmulatorCore.PLATFORM_GB -> return detectGameBoy()
+            EmulatorCore.PLATFORM_NDS -> return detectDs()
         }
-        val code = runCatching { MgbaCore.pkRomCode() }.getOrNull().orEmpty()
-        val size = runCatching { MgbaCore.pkRomSize() }.getOrDefault(0L)
+        val code = runCatching { EmulatorCore.current.romCode() }.getOrNull().orEmpty()
+        val size = runCatching { EmulatorCore.current.romSize() }.getOrDefault(0L)
         romSha1 = null
         retailEngine = null
         fireRedEngine =code.startsWith("BPR") || code.startsWith("BPG")
@@ -420,6 +466,14 @@ class TelemetrySampler {
                     // BOXES too: the configs' storage was checked on retail captures only (every box record's checksum held).
                     val hash = runCatching { romHash(reader, size) }.getOrNull()
                     val retail = hash in ShinyOdds.RETAIL_SHA1S
+                    retailRom = retail
+                    // Retail LeafGreen's battle cursors: on its own configs, checked on the retail carts only.
+                    val cfg = when {
+                        !retail -> cfg
+                        cfg === NATIVE_LEAFGREEN_REV0 -> NATIVE_LEAFGREEN_REV0_RETAIL
+                        cfg === NATIVE_LEAFGREEN_REV1 -> NATIVE_LEAFGREEN_REV1_RETAIL
+                        else -> cfg
+                    }
                     nativeCfg = withCheckedTables(reader, cfg).let { if (retail) it.copy(shinyBelow = 8) else it.copy(pokemonStoragePtr = 0) }
                     ramVerified = true
                 }
@@ -483,6 +537,7 @@ class TelemetrySampler {
                 return
             }
             retailHash = hash in RETAIL_SHA1S || retailDump(reader, code, size) || randomizedDump(reader, code, size)
+            retailRom = retailHash
             smallHash = hash
         }
 
@@ -513,6 +568,7 @@ class TelemetrySampler {
             when (hash) {
                 UNBOUND_V2_1_1_1_SHA1 -> kind = GameKind.UNBOUND
                 UNBOUND_V2_1_1_1_FR_SHA1 -> { kind = GameKind.UNBOUND; nativeCfg = NATIVE_UNBOUND_FR }
+                UNBOUND_V2_1_1_1_IT_SHA1 -> { kind = GameKind.UNBOUND; nativeCfg = NATIVE_UNBOUND_IT }
                 GAIA_V3_2_SHA1 -> { kind = GameKind.GAIA; nativeCfg = NATIVE_GAIA_V3_2 }
                 RADICAL_RED_V4_1_SHA1 -> { kind = GameKind.RADICAL_RED; nativeCfg = NATIVE_RADICAL_RED_V4_1 }
                 ODYSSEY_V4_1_1_SHA1 -> { kind = GameKind.ODYSSEY; nativeCfg = NATIVE_ODYSSEY }
@@ -523,6 +579,8 @@ class TelemetrySampler {
                 SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_PERFORMANCE_SHA1, SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_CASUAL_PERFORMANCE_SHA1,
                 -> { kind = GameKind.SWORD_SHIELD; nativeCfg = NATIVE_SWORD_SHIELD }
                 GS_CHRONICLES_V2_7_6_SHA1 -> { kind = GameKind.GS_CHRONICLES; nativeCfg = NATIVE_GS_CHRONICLES }
+                RHYTHM_V1_4_0_SHA1 -> { kind = GameKind.RHYTHM; nativeCfg = NATIVE_RHYTHM; ramVerified = true }
+                OOPS_ALL_EEVEES_V1_3_2_SHA1 -> { kind = GameKind.OOPS_ALL_EEVEES; nativeCfg = NATIVE_OOPS_ALL_EEVEES; ramVerified = true }
                 else -> {
                     kind = GameKind.FIRERED
                     unsupportedRom(reader, code, size, hash, "unrecognized FireRed-based ROM hack " +
@@ -534,7 +592,7 @@ class TelemetrySampler {
                     // comment on why it can differ from a plain `shasum` on
                     // the file - RTC/GPIO registers mapped into the ROM's
                     // address space), so don't substitute a file-hash here.
-                    android.util.Log.i("pokedaisy", "unrecognized BPRE hack: full sha1=$hash size=$size")
+                    Logs.i("unrecognized BPRE hack: full sha1=$hash size=$size")
                     proveRetailEngine(reader, code)
                 }
             }
@@ -579,18 +637,24 @@ class TelemetrySampler {
                 ELITE_REDUX_V2_65_4_1B_SHA1 -> { kind = GameKind.ELITE_REDUX; nativeCfg = NATIVE_ELITE_REDUX_V2_65_4_1B }
                 TEAM_ROCKET_DRAGONSDEN_V1_5_SHA1 -> { kind = GameKind.TEAM_ROCKET; nativeCfg = NATIVE_TEAM_ROCKET }
                 TEAM_ROCKET_2026_V3_0_9_ES_SHA1 -> { kind = GameKind.TEAM_ROCKET; nativeCfg = NATIVE_TEAM_ROCKET_V3 }
+                TEAM_ROCKET_2026_V3_1_ES_SHA1 -> { kind = GameKind.TEAM_ROCKET; nativeCfg = NATIVE_TEAM_ROCKET_V3_1 }
                 WISHES_OF_TOMORROW_V1_2_6_SHA1 -> { kind = GameKind.WISHES; nativeCfg = NATIVE_WISHES }
+                CERULEUM_V1_1_1_SHA1 -> { kind = GameKind.CERULEUM; nativeCfg = NATIVE_CERULEUM; ramVerified = true }
+                RECORDKEEPERS_V1_2_1_SHA1 -> { kind = GameKind.RECORDKEEPERS; nativeCfg = NATIVE_RECORDKEEPERS }
                 DREAMSTONE_MYSTERIES_UNVERSIONED_SHA1 -> { kind = GameKind.DREAMSTONE; nativeCfg = NATIVE_DREAMSTONE }
                 MONOMYTH_V1_1_SHA1 -> { kind = GameKind.MONOMYTH; nativeCfg = NATIVE_MONOMYTH_V1_1 }
+                MONOMYTH_V1_2_SHA1 -> { kind = GameKind.MONOMYTH; nativeCfg = NATIVE_MONOMYTH_V1_2 }
                 // Modern Emerald: a gcc build of pokeemerald on Emerald's ids, run as Emerald with its own RAM and tables
                 // (ModernEmerald: its types follow the save's settings).
                 ModernEmerald.V3_6_SHA1 -> { kind = GameKind.EMERALD; nativeCfg = NATIVE_MODERN_EMERALD }
+                // Epsilon Emerald: a gcc pokeemerald on Emerald's ids with an expansion battle engine (EpsilonEmerald).
+                EpsilonEmerald.V1_0_0_SHA1 -> { kind = GameKind.EMERALD; nativeCfg = NATIVE_EPSILON_EMERALD }
                 else -> {
                     kind = GameKind.EMERALD
                     unsupportedRom(reader, code, size, hash, "unrecognized Emerald-based ROM hack " +
                         "(BPEE, ${size / (1024 * 1024)} MB, sha1 ${hash?.take(12) ?: "unknown"}…) " +
                         "- no known RAM addresses for this build")
-                    android.util.Log.i("pokedaisy", "unrecognized BPEE hack: full sha1=$hash size=$size")
+                    Logs.i("unrecognized BPEE hack: full sha1=$hash size=$size")
                     proveRetailEngine(reader, code)
                 }
             }
@@ -607,6 +671,14 @@ class TelemetrySampler {
             if (hash == EMERALD_SEAGLASS_V3_0_SHA1) {
                 kind = GameKind.EMERALD_SEAGLASS
                 nativeCfg = NATIVE_EMERALD_SEAGLASS
+                return
+            }
+            // Pokémon Clover: FireRed 1.0 edited in place under an Emerald header - FireRed's engine, rev 0's RAM.
+            if (hash == CLOVER_V1_3_3_SHA1) {
+                kind = GameKind.FIRERED
+                fireRedEngine = true
+                nativeCfg = NATIVE_CLOVER
+                ramVerified = true   // rev 0's battle cursors: a written cell + A checked headless (the clover_battle README)
                 return
             }
             // Emerald Kaizo: retail Emerald edited in place - retail's RAM, its own moves and wild table.
@@ -631,6 +703,7 @@ class TelemetrySampler {
                 return
             }
             retailHash = hash in RETAIL_SHA1S || retailDump(reader, code, size) || randomizedDump(reader, code, size)
+            retailRom = retailHash
             smallHash = hash
         }
 
@@ -641,7 +714,7 @@ class TelemetrySampler {
         if (!retailHash) {
             unsupportedRom(reader, code, size, smallHash, "unrecognized ${if (emerald) "Emerald" else "FireRed"}-based ROM hack " +
                 "($code, ${size / (1024 * 1024)} MB, sha1 ${smallHash?.take(12) ?: "unknown"}…) - no known RAM addresses for this build")
-            android.util.Log.i("pokedaisy", "unrecognized $code ROM: full sha1=$smallHash size=$size")
+            Logs.i("unrecognized $code ROM: full sha1=$smallHash size=$size")
             proveRetailEngine(reader, code)
             return
         }
@@ -649,8 +722,8 @@ class TelemetrySampler {
         val cfg = when {
             emerald -> NATIVE_EMERALD_RETAIL
             rev >= 1 -> NATIVE_FIRERED_REV1
-            // NATIVE_FIRERED_REV0 is the hacks' base too: only retail gets the card.
-            else -> NATIVE_FIRERED_REV0.copy(trainerCard = TRAINER_CARD_FIRERED)
+            // NATIVE_FIRERED_REV0 is the hacks' base too: only retail gets the card and the battle cursors.
+            else -> NATIVE_FIRERED_REV0_RETAIL
         }
         // The SHINY marks: retail's shiny check (8 of 65536), on this copy only - a randomizer leaves it be. BOXES:
         // gPokemonStoragePtr, right after gSaveBlock2Ptr (FireRed 0x03005010 in both revisions, Emerald 0x03005D94; read
@@ -671,7 +744,7 @@ class TelemetrySampler {
         val proof = runCatching {
             RetailEngine.check(code, rev) { off, len -> reader.readCoreMemory(0x08000000L + off, len) }
         }.getOrNull() ?: return
-        android.util.Log.i("pokedaisy", "retail engine: ${proof.build.id} " +
+        Logs.i("retail engine: ${proof.build.id} " +
             if (proof.ramProven) "proven (EXPAND row ${if (proof.wideRow != null) "rebuilt" else "not proven"})" else "not proven: ${proof.why.take(4)}")
         retailEngine = proof.takeIf { it.ramProven }
     }
@@ -686,7 +759,7 @@ class TelemetrySampler {
         val rev = runCatching { reader.readCoreMemory(0x080000BCL, 1)[0].toInt() and 0xFF }.getOrNull()
         randomizedRom = runCatching {
             RandomizedRetail.match(code, rev, size) { off, len -> reader.readCoreMemory(0x08000000L + off, len) }
-        }.getOrNull()?.also { android.util.Log.i("pokedaisy", "$code: retail randomized by Universal Pokemon Randomizer (retail ${it.retailSha1})") }
+        }.getOrNull()?.also { Logs.i("$code: retail randomized by Universal Pokemon Randomizer (retail ${it.retailSha1})") }
         return randomizedRom != null
     }
 
@@ -695,7 +768,7 @@ class TelemetrySampler {
         val rev = runCatching { reader.readCoreMemory(0x080000BCL, 1)[0].toInt() and 0xFF }.getOrNull()
         return runCatching {
             RetailDumps.match(code, rev, size) { off, len -> reader.readCoreMemory(0x08000000L + off, len) }
-        }.getOrNull()?.also { android.util.Log.i("pokedaisy", "$code: a retail dump with its save code patched / end trimmed (retail $it)") } != null
+        }.getOrNull()?.also { Logs.i("$code: a retail dump with its save code patched / end trimmed (retail $it)") } != null
     }
 
     /** No DEX tab, and no HERE / NEXT BOSS guide pages, unless the config's
@@ -727,11 +800,17 @@ class TelemetrySampler {
      * "not supported" notice.
      */
     private fun detectDs() {
-        val code = runCatching { MgbaCore.pkRomCode() }.getOrNull().orEmpty()
+        val code = runCatching { EmulatorCore.current.romCode() }.getOrNull().orEmpty()
         dsGameCode = code
         val rev = runCatching { reader0x1E() }.getOrDefault(-1)
-        dsOrigin = code == OriginHeartGold.CODE && OriginHeartGold.matches { off, len -> MgbaCore.pkReadBytes(0x08000000L + off, len) }
-        dsRenegade = code == RenegadePlatinum.CODE && RenegadePlatinum.matches { off, len -> MgbaCore.pkReadBytes(0x08000000L + off, len) }
+        dsRevision = rev
+        dsOrigin = code == OriginHeartGold.CODE && OriginHeartGold.matches { off, len -> EmulatorCore.current.readBytes(0x08000000L + off, len) }
+        dsRenegade = code == RenegadePlatinum.CODE && RenegadePlatinum.matches { off, len -> EmulatorCore.current.readBytes(0x08000000L + off, len) }
+        dsHeartfelt = code == HeartfeltGold.CODE && HeartfeltGold.matches { off, len -> EmulatorCore.current.readBytes(0x08000000L + off, len) }
+        dsSacredGold = (code == SacredGold.CODE_SACRED_GOLD || code == SacredGold.CODE_STORM_SILVER) &&
+            SacredGold.matches { off, len -> EmulatorCore.current.readBytes(0x08000000L + off, len) }
+        dsRedux = (code == Black2Redux.CODE_BLACK2 || code == Black2Redux.CODE_WHITE2) &&
+            Black2Redux.matches { off, len -> EmulatorCore.current.readBytes(0x08000000L + off, len) }
         when {
             dsOrigin && NDS_SUPPORT -> { kind = GameKind.HEARTGOLD; gen4Cfg = GEN4_ORIGIN_HEARTGOLD }
             ndsSupported(code, rev) && DsPorts.of(code, rev) != null -> {
@@ -741,7 +820,7 @@ class TelemetrySampler {
                 gen5Cfg = DsPorts.gen5Config(port)
             }
             ndsSupported(code, rev) -> when (code) {
-                "IPKE" -> { kind = GameKind.HEARTGOLD; gen4Cfg = GEN4_HEARTGOLD_US }
+                "IPKE" -> { kind = GameKind.HEARTGOLD; gen4Cfg = if (dsHeartfelt) GEN4_HEARTFELT_GOLD else GEN4_HEARTGOLD_US }
                 "IPKD" -> { kind = GameKind.HEARTGOLD; gen4Cfg = GEN4_HEARTGOLD_DE }
                 "IPKF" -> { kind = GameKind.HEARTGOLD; gen4Cfg = GEN4_HEARTGOLD_FR }
                 "IPGD" -> { kind = GameKind.SOULSILVER; gen4Cfg = GEN4_SOULSILVER_DE }
@@ -751,8 +830,8 @@ class TelemetrySampler {
                 "IRAO" -> { kind = GameKind.WHITE; gen5Cfg = GEN5_WHITE }
                 "IRBF" -> { kind = GameKind.BLACK; gen5Cfg = GEN5_BLACK_FR }
                 "IRAF" -> { kind = GameKind.WHITE; gen5Cfg = GEN5_WHITE_FR }
-                "IREO" -> { kind = GameKind.BLACK2; gen5Cfg = GEN5_BLACK2 }
-                "IRDO" -> { kind = GameKind.WHITE2; gen5Cfg = GEN5_WHITE2 }
+                "IREO" -> { kind = GameKind.BLACK2; gen5Cfg = if (dsRedux) GEN5_BLACK2_REDUX else GEN5_BLACK2 }
+                "IRDO" -> { kind = GameKind.WHITE2; gen5Cfg = if (dsRedux) GEN5_WHITE2_REDUX else GEN5_WHITE2 }
                 "CPUF" -> { kind = GameKind.PLATINUM; gen4Cfg = GEN4_PLATINUM_FR }
                 else -> { kind = GameKind.PLATINUM; gen4Cfg = if (dsRenegade) GEN4_RENEGADE_PLATINUM else GEN4_PLATINUM_US }
             }
@@ -764,29 +843,40 @@ class TelemetrySampler {
     }
 
     /** The DS header's revision byte (0x1E), from the cart's ROM window (pk_nds_read: 0x08000000 + offset). */
-    private fun reader0x1E(): Int = MgbaCore.pkReadBytes(0x0800001EL, 1)?.get(0)?.toInt()?.and(0xFF) ?: -1
+    private fun reader0x1E(): Int = EmulatorCore.current.readBytes(0x0800001EL, 1)?.get(0)?.toInt()?.and(0xFF) ?: -1
 
     private fun detectGameBoy() {
-        val size = runCatching { MgbaCore.pkRomSize() }.getOrDefault(0L)
-        val digest = java.security.MessageDigest.getInstance("SHA-1")
+        val size = runCatching { EmulatorCore.current.romSize() }.getOrDefault(0L)
+        val digest = Sha1()
         var off = 0L
         while (off < size) {
             val len = minOf(1L shl 20, size - off).toInt()
-            digest.update(MgbaCore.pkRomRead(off, len) ?: break)
+            digest.update(EmulatorCore.current.romRead(off, len) ?: break)
             off += len
         }
-        val hash = if (off == size && size > 0) digest.digest().joinToString("") { "%02x".format(it) } else null
+        val hash = if (off == size && size > 0) digest.digest().hex() else null
+        gbBrownV601 = hash == BROWN_V6_0_1_SHA1
+        gbGen2Graphics = hash == RED_GEN2_GRAPHICS_V2_0_SHA1 || hash == YELLOW_GEN2_GRAPHICS_V1_1_SHA1
         when {
             GAME_BOY_SUPPORT && hash == RED_SHA1 -> { kind = GameKind.RED; gen1Cfg = GEN1_RED }
+            GAME_BOY_SUPPORT && hash == RED_GEN2_GRAPHICS_V2_0_SHA1 -> { kind = GameKind.RED; gen1Cfg = GEN1_RED_GEN2_GRAPHICS }
             GAME_BOY_SUPPORT && hash == BLUE_SHA1 -> { kind = GameKind.BLUE; gen1Cfg = GEN1_BLUE }
+            GAME_BOY_SUPPORT && hash == RED_DE_SHA1 -> { kind = GameKind.RED; gen1Cfg = GEN1_RED_DE }
+            GAME_BOY_SUPPORT && hash == BLUE_DE_SHA1 -> { kind = GameKind.BLUE; gen1Cfg = GEN1_BLUE_DE }
             GAME_BOY_SUPPORT && hash == PURE_RED_V2_7_6_SHA1 -> { kind = GameKind.PURE_RED; gen1Cfg = GEN1_PURE_RED }
             GAME_BOY_SUPPORT && hash == PURE_BLUE_V2_7_6_SHA1 -> { kind = GameKind.PURE_BLUE; gen1Cfg = GEN1_PURE_BLUE }
             GAME_BOY_SUPPORT && hash == YELLOW_LEGACY_V1_0_10_SHA1 -> { kind = GameKind.YELLOW_LEGACY; gen1Cfg = GEN1_YELLOW_LEGACY }
+            // Pokémon Brown (Koolboyman's Rijon on Red's engine): Red's RAM, its own tables (GEN1_BROWN; 6.0.1: brownV601).
+            GAME_BOY_SUPPORT && hash == BROWN_V6_1_2_SHA1 -> { kind = GameKind.BROWN; gen1Cfg = GEN1_BROWN }
+            GAME_BOY_SUPPORT && hash == BROWN_V6_0_1_SHA1 -> { kind = GameKind.BROWN; gen1Cfg = GEN1_BROWN_V601 }
             GAME_BOY_SUPPORT && hash == CRYSTAL_LEGACY_V1_3_1_SHA1 -> { kind = GameKind.CRYSTAL_LEGACY; gen2Cfg = GEN2_CRYSTAL_LEGACY }
             GAME_BOY_SUPPORT && gen1ConfigFor(hash) != null -> { kind = GameKind.YELLOW; gen1Cfg = gen1ConfigFor(hash) }
             hash in CRYSTAL_SHA1S && GAME_BOY_SUPPORT -> { kind = GameKind.CRYSTAL; gen2Cfg = GEN2_CRYSTAL }
+            GAME_BOY_SUPPORT && hash == CRYSTAL_DE_SHA1 -> { kind = GameKind.CRYSTAL; gen2Cfg = GEN2_CRYSTAL_DE }
             GAME_BOY_SUPPORT && hash == GOLD_SHA1 -> { kind = GameKind.GOLD; gen2Cfg = GEN2_GOLD }
             GAME_BOY_SUPPORT && hash == SILVER_SHA1 -> { kind = GameKind.SILVER; gen2Cfg = GEN2_SILVER }
+            GAME_BOY_SUPPORT && hash == GOLD_DE_SHA1 -> { kind = GameKind.GOLD; gen2Cfg = GEN2_GOLD_DE }
+            GAME_BOY_SUPPORT && hash == SILVER_DE_SHA1 -> { kind = GameKind.SILVER; gen2Cfg = GEN2_SILVER_DE }
             GAME_BOY_SUPPORT && crystalClearConfigFor(hash) != null -> { kind = GameKind.CRYSTAL_CLEAR; gen2Cfg = crystalClearConfigFor(hash) }
             GAME_BOY_SUPPORT && hash == PRISM_V0_95_254_SHA1 -> { kind = GameKind.PRISM; gen2Cfg = GEN2_PRISM }
             GAME_BOY_SUPPORT && hash in POLISHED_CRYSTAL_SHA1S ->
@@ -814,6 +904,13 @@ class TelemetrySampler {
     val knownPartyMenu: Pair<Long, Long>?
         get() = nativeCfg?.takeIf { it.partyMenu != 0L }?.let { it.partyMenu to it.playerParty }
 
+    /** The detected game's party layout, for overworld reordering only. English Unbound reads through a fallback;
+     * admit that fallback only after its exact supported ROM has been verified, without enabling other config users. */
+    val knownPartyReorderConfig: NativeConfig?
+        get() = nativeCfg ?: NATIVE_UNBOUND_WITH_DEX.takeIf {
+            kind == GameKind.UNBOUND && romSha1 == UNBOUND_V2_1_1_1_SHA1 && ramVerified && beMatch == null
+        }
+
     /** Where the detected game's save keeps the option that shapes its battle party menu (gSaveBlock1Ptr + the offset:
      * SoulGold's PARTY MENU), or null when the shape is fixed. */
     val knownPartyMenuStyle: Pair<Long, Int>?
@@ -825,10 +922,32 @@ class TelemetrySampler {
 
     /** SHINY ODDS' foe party and player ID: on a config the Poller marked by its ROM's hash ([NativeConfig.shinyBelow]),
      * never a hack on retail's RAM - CFRU's plaintext boxes would be scrambled by a re-encryption. */
-    val knownShinyTarget: ShinyOdds.Target?
-        get() = (nativeCfg ?: unboundCfg.takeIf { kind == GameKind.UNBOUND })?.takeIf { it.shinyBelow > 0 && beMatch == null }
-            ?.let { ShinyOdds.targetFor(it, fireRedFamily = fireRedEngine, plaintext = romSha1 in ShinyOdds.PLAINTEXT_SHA1S,
-                national = romSha1 in ShinyOdds.NATIONAL_SHA1S) }
+    val knownShinyTarget: ShinyOdds.FoeTarget?
+        get() = if (kind.isDsGame) dsShinyTarget
+            else if (kind.isGen2) gbShinyTarget
+            else (nativeCfg ?: unboundCfg.takeIf { kind == GameKind.UNBOUND })?.takeIf { it.shinyBelow > 0 && beMatch == null }
+                ?.let { ShinyOdds.targetFor(it, fireRedFamily = fireRedEngine, plaintext = romSha1 in ShinyOdds.PLAINTEXT_SHA1S,
+                    national = romSha1 in ShinyOdds.NATIONAL_SHA1S) }
+
+    /** Gold / Silver / Crystal's SHINY ODDS ([ShinyOdds.GbRoller]): the English carts, by the config their hash picked (the
+     * German ones and the hacks keep RAM of their own). */
+    private val gbShinyTarget: ShinyOdds.GbTarget?
+        get() = when (gen2Cfg) {
+            GEN2_CRYSTAL -> ShinyOdds.GB_CRYSTAL
+            GEN2_GOLD, GEN2_SILVER -> ShinyOdds.GB_GOLD_SILVER
+            else -> null
+        }
+
+    /** A DS cart's SHINY ODDS: one it was checked on ([ShinyOdds.DS_VERIFIED]), the retail engine only (not Origin HeartGold's,
+     * Heartfelt Gold's or Sacred Gold / Storm Silver's - hg-engine and Drayano's, under the US HeartGold / SoulSilver header -
+     * nor Renegade Platinum / the Redux builds, whose shiny rules are their own). */
+    private val dsShinyTarget: ShinyOdds.DsTarget?
+        get() {
+            if (dsOrigin || dsHeartfelt || dsSacredGold || dsRenegade || dsRedux || "$dsGameCode$dsRevision" !in ShinyOdds.DS_VERIFIED) return null
+            // By the game's kind: the other generation's config can be left over from an earlier cart.
+            return if (kind.isGen5) gen5Cfg?.battle?.let { ShinyOdds.DsTarget(gen5 = true, systemPtr = it.gameSystemPtr, battleOverlay = it.battleOverlay) }
+                else gen4Cfg?.battle?.let { ShinyOdds.DsTarget(gen5 = false, systemPtr = it.fieldSystemPtr, battleTemplate = it.battleTemplate) }
+        }
 
     /** The detected game's own USE / GIVE / TAKE tables when its config has them (Recharged Emerald), or null. */
     val knownFieldItems: FieldItemFns?
@@ -858,6 +977,10 @@ class TelemetrySampler {
         if (kind.isDsGame) {
             if (gen5Cfg != null) return gen5Cfg?.battle?.let { b ->
                 runCatching { 0 to readGen5BattleInput(reader, b) }.getOrNull()
+            }
+            // Origin HeartGold: its own battle engine (0 outside a battle: the manager pointer is cleared after one).
+            gen4Cfg?.managedBattle?.takeIf { originHeartGold && kind == GameKind.HEARTGOLD }?.let { b ->
+                return runCatching { 0 to readManagedBattleInput(reader, b) }.getOrNull()
             }
             return gen4Cfg?.battle?.takeIf { it.offBattleInput != 0 }?.let { b ->
                 if (kind != GameKind.HEARTGOLD && kind != GameKind.SOULSILVER && kind != GameKind.PLATINUM) null
@@ -923,6 +1046,8 @@ class TelemetrySampler {
         // Its French fan translation (the same release's code and RAM, French text) - host-side
         // masked hash (GPIO bytes zero, so a plain `shasum`).
         const val UNBOUND_V2_1_1_1_FR_SHA1 = "0ce2a880aa097f1dce4e1db8ee513d0e82d15859"
+        // Its Italian fan translation (giacomo-spadoni/pokemon-unbound-ita, patch v7): the same, Italian text.
+        const val UNBOUND_V2_1_1_1_IT_SHA1 = "8114e0f81eb3581f699c74a5891c7b75a130269d"
         // Pokémon Gaia v3.2 - see NATIVE_GAIA_V3_2 in NativeReader.kt for the
         // verification this address reuse is based on.
         const val GAIA_V3_2_SHA1 = "d5b1e77975fcda831e0e9a7b527906bf3f40ecd0"
@@ -1041,9 +1166,17 @@ class TelemetrySampler {
         // Pokémon Team Rocket Edition 2026 - Dragonsden, Spanish (its START menu says v3.0.9; BPEE, 32 MB, an expansion
         // 1.14.4 rebuild) - host-side masked hash (GPIO bytes zero, so a plain `shasum`).
         const val TEAM_ROCKET_2026_V3_0_9_ES_SHA1 = "0d8bdaeeca0856175037a75679c1a2b73ad2b68a"
+        /** v3.1: v3.0.9's RAM and tables, its ROM moved (NATIVE_TEAM_ROCKET_V3_1). */
+        const val TEAM_ROCKET_2026_V3_1_ES_SHA1 = "32d9e438ab791a0477fffe9f1cca750cab5a4a80"
         // Pokémon Wishes of Tomorrow v1.2.6 (FlatFoot Labs; BPEE, 32 MB, pokeemerald-expansion 1.15.3) - host-side masked
         // hash (GPIO bytes zero, so a plain `shasum`).
         const val WISHES_OF_TOMORROW_V1_2_6_SHA1 = "60182b934d2e8eb3eef226a9bbc25e5df6becd4f"
+
+        // Pokémon Ceruleum v1.1.1 (selenol; the PokeCommunity thread's xdelta over Emerald): pokeemerald-expansion 1.13.2, 32 MB.
+        const val CERULEUM_V1_1_1_SHA1 = "2b0b608666cc2d553ce08d88fa76dce1fa577e51"
+
+        // Pokémon RecordKeepers v1.2.1 (Eventide Devs; the Hackdex patch over Emerald): a roguelike on pokeemerald-expansion, 32 MB.
+        const val RECORDKEEPERS_V1_2_1_SHA1 = "8df1c9720842c668448d5ad880e9c48bb29d7200"
         // Pokémon Dreamstone Mysteries (BPEE, 32 MB; dsmyst; the game shows no version: its title, START menu and save screen
         // have none) - host-side masked hash (GPIO bytes zero, so a plain `shasum`).
         const val DREAMSTONE_MYSTERIES_UNVERSIONED_SHA1 = "20e91aecb3243eea7cd610659846f37062f5d709"
@@ -1068,14 +1201,32 @@ class TelemetrySampler {
             GHOST_GREY_V1_0_1_SHA1 -> NATIVE_GHOST_GREY_V1_0_1
             LETS_GO_PIKACHU_UNVERSIONED_SHA1, LETS_GO_PIKACHU_TRANSLATION_ONLY_UNVERSIONED_SHA1 -> NATIVE_LETS_GO_PIKACHU
             LETS_GO_EEVEE_UNVERSIONED_SHA1, LETS_GO_EEVEE_TRANSLATION_ONLY_UNVERSIONED_SHA1 -> NATIVE_LETS_GO_EEVEE
+            ELYSIUM_V2_5_0_A_SHA1 -> NATIVE_ELYSIUM_A
+            ELYSIUM_V2_5_0_B_SHA1 -> NATIVE_ELYSIUM_B
             else -> null
         }
+
+        // Pokémon Rhythm v1.4.0 (Hackdex's xdelta over FireRed 1.0): Vedeo on CFRU, 32 MB.
+        const val RHYTHM_V1_4_0_SHA1 = "b0d6b91356ee4d4c8f8c70020fe0352c391a12e2"
+
+        // Pokémon Oops All Eevees! v1.3.2 Alpha (the author's BPS over FireRed 1.0): Kanto on CFRU, 32 MB.
+        const val OOPS_ALL_EEVEES_V1_3_2_SHA1 = "4234507f92101a322aa5c0518a6aa1f1fe807832"
+
+        // Pokémon Elysium v2.5.0 (Hackdex's BPS patches over FireRed 1.0), its two parts: FireRed 1.0 edited in place, 16 MB.
+        const val ELYSIUM_V2_5_0_A_SHA1 = "d2440fd6bae5a12dfc3cecc129b9bbff22d74b2e"
+        const val ELYSIUM_V2_5_0_B_SHA1 = "71bf40178a1f5c69dc1c22099623434ba1e74318"
+
+        // Pokémon Clover v1.3.3 (poclo.net's BPS over FireRed 1.0): FireRed 1.0 edited in place, its header's game code
+        // BPEE. Host-side masked hash.
+        const val CLOVER_V1_3_3_SHA1 = "7eca3ef1580e21b96027b721ecd3ba1aa36a6ea2"
 
         // Pokémon Monomyth v1.0 (Team Monomyth; 32 MB, its own pokeemerald build under the game code MONE) - host-side
         // masked hash (GPIO bytes zero, so a plain `shasum`).
         const val MONOMYTH_V1_0_SHA1 = "ae1c4be9be8d706bb989602bc05731203d42860d"
         // v1.1: v1.0 rebuilt under Emerald's own game code (BPEE), so it's told apart with the big BPEE hacks.
         const val MONOMYTH_V1_1_SHA1 = "eb660caffbc26e1f09f86714d03af4c3eccd9e4d"
+        // v1.2 (released 2026-11-15): BPEE too, its RAM 4 bytes later from gMapHeader on.
+        const val MONOMYTH_V1_2_SHA1 = "742e62ffa5a8d607171fdb8477eb1f417dc36086"
         const val MONOMYTH_CODE = "MONE"
 
         /** Hacks under a game code of their own that detect() reads as their base game (by hash). */
@@ -1105,6 +1256,9 @@ class TelemetrySampler {
         // Pokémon Modern Emerald (resetes12; BPEE, 32 MB, a pokeemerald build with its source public): NATIVE_MODERN_EMERALD.
         const val MODERN_EMERALD_V3_6_SHA1 = "ab3bc012598d73dce965450df79893aeff97c834"
 
+        // Pokémon Epsilon Emerald (pokemerrp; BPEE, 32 MB, closed): NATIVE_EPSILON_EMERALD (EpsilonEmerald).
+        const val EPSILON_EMERALD_V1_0_0_SHA1 = "8decf0571ba3f17d31c76168346e240a14e248ce"
+
         /** Recharged Emerald's config for a build's hash; null for any other ROM. */
         fun rechargedEmeraldConfig(hash: String?): NativeConfig? = when (hash) {
             RECHARGED_EMERALD_V2_2_5_SHA1 -> NATIVE_RECHARGED_EMERALD_V2_2_5
@@ -1123,6 +1277,8 @@ class TelemetrySampler {
 
         // Pokémon Yellow (USA, Europe) - the Game Boy cart (pret/pokeyellow builds it byte for byte).
         const val YELLOW_SHA1 = "cc7d03262ebfaf2f06772c1a480c7d9d5f4a38e1"
+        // Pokémon Yellow Gen II Graphics V1.1
+        const val YELLOW_GEN2_GRAPHICS_V1_1_SHA1 = "8e3d5a2b508ad832b86ae1dea72dd6d646b634c0"
         // The German, French, Italian and Spanish carts (GBC, SGB Enhanced): plain `shasum`s.
         const val YELLOW_DE_SHA1 = "42f3714eec6eca25200d42461ff08d57c98f6d1d"
         const val YELLOW_FR_SHA1 = "0aceec0ef7aa2ca5aa831554598d91f61a925591"
@@ -1131,10 +1287,18 @@ class TelemetrySampler {
 
         // Pokémon Red and Blue (USA, Europe): pret/pokered builds both byte for byte.
         const val RED_SHA1 = "ea9bcae617fdf159b045185467ae58b2e4a48b9a"
+        // Pokémon Red Gen II Graphics V2.0
+        const val RED_GEN2_GRAPHICS_V2_0_SHA1 = "ad1adc824456f593f5bdb4cbfeb0ec12b24abb6d"
         const val BLUE_SHA1 = "d7037c83e1ae5b39bde3c30787637ba1d4c48ce2"
+        // Pokémon Rote / Blaue Edition (Germany) (SGB Enhanced): English Red's code translated (GEN1_RED_DE). Plain `shasum`s.
+        const val RED_DE_SHA1 = "87d523fe1a0c548db7c5477b451ddec1eb083c06"
+        const val BLUE_DE_SHA1 = "20e72dc6f41493eee1fdd0cef54214e6c3389688"
 
         // PureRed / PureBlue v2.7.6 (Vortyne/pureRGB): its source at tag v2.7.6 builds both byte for byte.
         const val PURE_RED_V2_7_6_SHA1 = "2e94d09c1e16a57eb079404c030f26fdeeac949d"
+        // Pokémon Brown (Koolboyman's; 2 MB Game Boy carts, a hack of Red): GEN1_BROWN.
+        const val BROWN_V6_1_2_SHA1 = "24eeda80ee78fa214a6f4a85164a2492d2b017ad"
+        const val BROWN_V6_0_1_SHA1 = "2d6d1f1a6010f578d67045802611a288ebd8748b"
         // Yellow Legacy v1.0.10 and Crystal Legacy v1.3.1: the release BPS patches over retail (Crystal Legacy's two patches, one
         // for each retail revision, make the same ROM) = `make` at their tags (rgbds 0.6.1 / 0.5.2).
         const val YELLOW_LEGACY_V1_0_10_SHA1 = "2ac87de42afc70ef6016805acb3b206644417f97"
@@ -1144,6 +1308,7 @@ class TelemetrySampler {
         /** A Yellow cart's config by its hash, or null for any other Game Boy game. */
         fun gen1ConfigFor(hash: String?): Gen1Config? = when (hash) {
             YELLOW_SHA1 -> GEN1_YELLOW
+            YELLOW_GEN2_GRAPHICS_V1_1_SHA1 -> GEN1_YELLOW_GEN2_GRAPHICS
             YELLOW_DE_SHA1 -> GEN1_YELLOW_DE
             YELLOW_FR_SHA1 -> GEN1_YELLOW_FR
             YELLOW_IT_SHA1 -> GEN1_YELLOW_IT
@@ -1156,10 +1321,15 @@ class TelemetrySampler {
         const val CRYSTAL_REV1_SHA1 = "f2f52230b536214ef7c9924f483392993e226cfb"
         const val CRYSTAL_AU_SHA1 = "a0fc810f1d4e124434f7be2c989ab5b5892ddf36"
         val CRYSTAL_SHA1S = setOf(CRYSTAL_SHA1, CRYSTAL_REV1_SHA1, CRYSTAL_AU_SHA1)
+        // Pokémon Kristall-Edition (Germany): English Crystal's code translated, its own ROM tables (GEN2_CRYSTAL_DE).
+        const val CRYSTAL_DE_SHA1 = "accb584293ba056152f1fd908439b019017ff2fe"
 
         // Pokémon Gold and Silver (USA, Europe): pret/pokegold builds both byte for byte.
         const val GOLD_SHA1 = "d8b8a3600a465308c9953dfa04f0081c05bdcb94"
         const val SILVER_SHA1 = "49b163f7e57702bc939d642a18f591de55d92dae"
+        // Pokémon Goldene / Silberne Edition (Germany): English Gold / Silver's code translated (GEN2_GOLD_DE / GEN2_SILVER_DE).
+        const val GOLD_DE_SHA1 = "9254195d461ea942eaaa08cc4b83de3cf82aea0d"
+        const val SILVER_DE_SHA1 = "8ecc58d621faaedf2a934bd2583d527220df7bb9"
 
         // Pokémon Crystal Clear (ShockSlayer's open-world Crystal hack): v2.5.11 and v2.6.0, each a Standard Colors
         // build and a Color Filter one (the same code and tables, other palettes): one RAM, a version's ROM tables.
@@ -1211,9 +1381,11 @@ class TelemetrySampler {
         )
 
         /** The Game Boy / Color carts the companion reads ([CompanionSupport] checks imports against it). */
-        val SUPPORTED_GB_SHA1S = setOf(YELLOW_SHA1, YELLOW_DE_SHA1, YELLOW_FR_SHA1, YELLOW_IT_SHA1, YELLOW_ES_SHA1, RED_SHA1, BLUE_SHA1) +
-            CRYSTAL_SHA1S + CRYSTAL_CLEAR_SHA1S + PRISM_V0_95_254_SHA1 + GOLD_SHA1 + SILVER_SHA1 + POLISHED_CRYSTAL_SHA1S +
-            PURE_RED_V2_7_6_SHA1 + PURE_BLUE_V2_7_6_SHA1 + YELLOW_LEGACY_V1_0_10_SHA1 + CRYSTAL_LEGACY_V1_3_1_SHA1
+        val SUPPORTED_GB_SHA1S = setOf(YELLOW_SHA1, YELLOW_GEN2_GRAPHICS_V1_1_SHA1, YELLOW_DE_SHA1, YELLOW_FR_SHA1, YELLOW_IT_SHA1, YELLOW_ES_SHA1, RED_SHA1, RED_GEN2_GRAPHICS_V2_0_SHA1, BLUE_SHA1,
+            RED_DE_SHA1, BLUE_DE_SHA1) +
+            CRYSTAL_SHA1S + CRYSTAL_DE_SHA1 + CRYSTAL_CLEAR_SHA1S + PRISM_V0_95_254_SHA1 + GOLD_SHA1 + SILVER_SHA1 + GOLD_DE_SHA1 + SILVER_DE_SHA1 + POLISHED_CRYSTAL_SHA1S +
+            PURE_RED_V2_7_6_SHA1 + PURE_BLUE_V2_7_6_SHA1 + YELLOW_LEGACY_V1_0_10_SHA1 + CRYSTAL_LEGACY_V1_3_1_SHA1 +
+            BROWN_V6_1_2_SHA1 + BROWN_V6_0_1_SHA1
 
         /**
          * Game Boy / Color (Pokémon Yellow): the library, folder scan, frontend launch and
@@ -1253,24 +1425,26 @@ class TelemetrySampler {
             ROWE_V2_1_9_1_SHA1, EMERALD_ROGUE_V2_2_1_EX_SHA1, TMT2_V1_5_2_SHA1, EMERALD_SEAGLASS_V3_0_SHA1, EMERALD_KAIZO_V2_0_SHA1, EMERALD_LEGACY_V1_1_4_SHA1,
             SOULGOLD_V1_1_4_SHA1, SOULGOLD_V1_2_SHA1, SOULGOLD_V1_2B_SHA1, SOULGOLD_V1_2C_SHA1, GLAZED_V9_2_0_SHA1, IMPERIUM_V1_3_1_SHA1,
             SOULGOLD_V1_2_1_SHA1, SOULGOLD_V1_2_1B_SHA1,
-            QUETZAL_V9_0_ALPHA_SHA1, QUETZAL_V9_0_ALPHA_ES_SHA1, QUETZAL_V9_1_ALPHA_SHA1, QUETZAL_V9_1_ALPHA_ES_SHA1, UNBOUND_V2_1_1_1_FR_SHA1,
+            QUETZAL_V9_0_ALPHA_SHA1, QUETZAL_V9_0_ALPHA_ES_SHA1, QUETZAL_V9_1_ALPHA_SHA1, QUETZAL_V9_1_ALPHA_ES_SHA1, UNBOUND_V2_1_1_1_FR_SHA1, UNBOUND_V2_1_1_1_IT_SHA1,
             QUETZAL_V0_8_4_ALPHA_SHA1, QUETZAL_V0_8_4_ALPHA_ES_SHA1, MOEMON_QUETZAL_V0_8_4_ALPHA_Hotfix_SHA1,
             MOEMON_QUETZAL_V0_8_4_ALPHA_ES_Hotfix_SHA1,
             ORANGE_ISLANDS_V5_7_BETA_SHA1, ORANGE_ISLANDS_UNVERSIONED_SHA1,
             FIRERED_ROCKET_EDITION_UNVERSIONED_SHA1, ASH_GRAY_V4_5_3_SHA1, ASH_GRAY_FORK_BUG_FIX_V1_0_SHA1,
             GHOST_GREY_V1_0_1_SHA1, GHOST_GREY_V1_0_2_SHA1, GHOST_GREY_V1_0_4_SHA1,
-            LETS_GO_PIKACHU_UNVERSIONED_SHA1, LETS_GO_PIKACHU_TRANSLATION_ONLY_UNVERSIONED_SHA1,
+            LETS_GO_PIKACHU_UNVERSIONED_SHA1, LETS_GO_PIKACHU_TRANSLATION_ONLY_UNVERSIONED_SHA1, CLOVER_V1_3_3_SHA1,
+            ELYSIUM_V2_5_0_A_SHA1, ELYSIUM_V2_5_0_B_SHA1, RHYTHM_V1_4_0_SHA1, OOPS_ALL_EEVEES_V1_3_2_SHA1,
             LETS_GO_EEVEE_UNVERSIONED_SHA1, LETS_GO_EEVEE_TRANSLATION_ONLY_UNVERSIONED_SHA1,
             ELITE_REDUX_V2_65_3B_SHA1, ELITE_REDUX_V2_65_4_1B_SHA1, TEAM_ROCKET_DRAGONSDEN_V1_5_SHA1,
-            TEAM_ROCKET_2026_V3_0_9_ES_SHA1,
-            WISHES_OF_TOMORROW_V1_2_6_SHA1,
-            DREAMSTONE_MYSTERIES_UNVERSIONED_SHA1, MONOMYTH_V1_0_SHA1, MONOMYTH_V1_1_SHA1,
+            TEAM_ROCKET_2026_V3_0_9_ES_SHA1, TEAM_ROCKET_2026_V3_1_ES_SHA1,
+            WISHES_OF_TOMORROW_V1_2_6_SHA1, CERULEUM_V1_1_1_SHA1, RECORDKEEPERS_V1_2_1_SHA1,
+            DREAMSTONE_MYSTERIES_UNVERSIONED_SHA1, MONOMYTH_V1_0_SHA1, MONOMYTH_V1_1_SHA1, MONOMYTH_V1_2_SHA1,
             ULTRA_VIOLET_V1_22_SHA1, SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_SHA1, SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_CASUAL_SHA1,
             SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_PERFORMANCE_SHA1, SWORD_SHIELD_ULTIMATE_PLUS_V1_2_1_2_CASUAL_PERFORMANCE_SHA1,
             RECHARGED_YELLOW_V1_8_0_SHA1, RECHARGED_YELLOW_V1_9_0_SHA1, RECHARGED_YELLOW_V1_9_4_SHA1,
             RECHARGED_YELLOW_V1_9_7_SHA1,
             RECHARGED_EMERALD_V2_2_5_SHA1, RECHARGED_EMERALD_V2_2_8_SHA1, RECHARGED_EMERALD_REBALANCED_V2_2_8_SHA1,
             ModernEmerald.V3_6_SHA1,
+            EpsilonEmerald.V1_0_0_SHA1,
             MARIOMON_V1_2_1_SHA1, MARIOMON_V1_2_2_SHA1, MARIOMON_V1_3_SHA1, MARIOMON_V1_5_1_Anniversary_SHA1,
             MARIOMON_V1_5_2_Anniversary_SHA1,
             GS_CHRONICLES_V2_7_6_SHA1,
@@ -1300,7 +1474,7 @@ private const val GPIO_HOLE_SIZE = 6
 
 private fun sha1HexChunked(reader: MemoryReader, baseAddr: Long, size: Long): String {
     val chunkSize = 1 shl 20 // 1 MB - comfortably under pkReadBytes' 16 MB cap
-    val digest = java.security.MessageDigest.getInstance("SHA-1")
+    val digest = Sha1()
     var off = 0L
     while (off < size) {
         val len = minOf(chunkSize.toLong(), size - off).toInt()
@@ -1313,5 +1487,5 @@ private fun sha1HexChunked(reader: MemoryReader, baseAddr: Long, size: Long): St
         digest.update(chunk)
         off += len
     }
-    return digest.digest().joinToString("") { "%02x".format(it) }
+    return digest.digest().hex()
 }

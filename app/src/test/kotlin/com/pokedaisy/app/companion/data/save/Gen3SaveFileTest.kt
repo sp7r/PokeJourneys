@@ -235,6 +235,25 @@ class Gen3SaveFileTest {
         assertEquals(100, Gen3BoxMon.levelFor(1, 10_000_000))
     }
 
+    /** The slots a party shrank from hold ZeroMonData's record: zeroes but the mail field, MAIL_NONE (0xFF) - every real
+     * save whose party ever got smaller (a player's Emerald save was refused). Anything else there still refuses it. */
+    @Test
+    fun aPartySlotEmptiedByTheGameIsAccepted() {
+        val f = Gen3SaveFormat.EMERALD
+        val (s2, s1, st) = SyntheticSave.blocks(f)
+        s1[f.partyCountOff] = 1
+        for (i in 1 until 6) {
+            for (b in 0 until 100) s1[f.partyOff + i * 100 + b] = 0
+            s1[f.partyOff + i * 100 + 0x55] = 0xFF.toByte()
+        }
+        val emptied = parse(SyntheticSave.file(f, SyntheticSave.Slot(3, 0, s2, s1, st), null), f)
+        assertNull(Gen3SaveData(emptied).mismatch())
+        assertEquals(1, Gen3SaveData(emptied).party.size)
+        s1[f.partyOff + 2 * 100 + 0x56] = 0x0A
+        val other = parse(SyntheticSave.file(f, SyntheticSave.Slot(3, 0, s2, s1, st), null), f)
+        assertNotNull(Gen3SaveData(other).mismatch())
+    }
+
     @Test
     fun debugEditsRoundTripFlagsAndNewPokemon() {
         val f = Gen3SaveFormat.FIRERED_LEAFGREEN
@@ -301,6 +320,22 @@ class Gen3SaveFileTest {
         for (i in 4 until 4 + 20 * 80) st[i] = rnd.nextInt().toByte()
         val save = parse(SyntheticSave.file(f, SyntheticSave.Slot(9, 2, s2, s1, st), null), f)
         assertNotNull(Gen3SaveData(save).mismatch())
+    }
+
+    /** pokeemerald-expansion's records (Emerald Seaglass, GitHub #1167) keep 21 bits of experience with a nickname's 11th
+     * letter above them: read as retail, more than any level 100 has. Such a save is another engine's, refused. */
+    @Test
+    fun experiencePastLevel100MeansAnotherEngine() {
+        val f = Gen3SaveFormat.EMERALD
+        fun withPcMon(exp: Long): Gen3SaveFile {
+            val (s2, s1, st) = SyntheticSave.blocks(f)
+            SyntheticSave.mon(0x1234_5678L, 0x0BAD_F00DL, 123, exp, nickname = "SCYTHER").copyInto(st, 4)
+            return parse(SyntheticSave.file(f, SyntheticSave.Slot(3, 0, s2, s1, st), null), f)
+        }
+        assertNull(Gen3SaveData(withPcMon(1_000_000)).mismatch())
+        assertNull(Gen3SaveData(withPcMon(Gen3SaveData.MAX_EXP)).mismatch())
+        // Its 11th letter 0xFF over 135 EXP (an expansion record's u32 at growth +4).
+        assertNotNull(Gen3SaveData(withPcMon(0x1FE00087L)).mismatch())
     }
 
     @Test

@@ -26,6 +26,7 @@
 #include <zlib.h>
 
 #include <chrono>
+#include <ctime>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -101,6 +102,7 @@ static u64 frameCount = 0;
 static u64 frameCount_() { return frameCount; }
 static int wideMargin = 0;   // wide MX [MY]: EXPAND drawn every frame (pk_nds_wide.cpp)
 static int wideMarginY = 0;
+static int foreignProps = 1; // foreignprops 0: another area's map props left as the game draws them (pk_nds_field_foreign_props)
 // look DX DY: the window (wide's, at first) moved DX, DY DS pixels a frame, as the look-around moves it - set before
 // each frame as the app sets it (pk_nds_wide_need), the GPU path composing that frame's window
 static int lookX = 0, lookY = 0, lookDX = 0, lookDY = 0;
@@ -115,6 +117,10 @@ static u32 read32(u32 addr) { return nds->ARM9Read32(addr); }
 static void write32(u32 addr, u32 v) { nds->ARM9Write32(addr, v); }
 static int wildOff = 0;          // wildoff 1: WILD ENCOUNTERS OFF, the field read run every frame (pk_nds_field.cpp)
 static int battlesSeen = 0;      // battles started since wildoff (the field read's BATTLE bit going on)
+static void write16(u32 addr, uint16_t v) { nds->ARM9Write16(addr, v); }
+static int expShareMode = 0;     // expshare MODE MASK: EXP SHARE as the app runs it (pk_nds_exp_share_tick), every frame
+static uint32_t expShareMask = 0;
+static bool expSharePatched = false;
 
 static void onSave(PkNdsHost*, const uint8_t* data, uint32_t len, uint32_t, uint32_t)
 {
@@ -290,15 +296,21 @@ static void runFrames(int n, u32 keys)
 #ifdef NDS_DUMP_GL
         if (gpuOn) pk_nds_gl_begin_frame();
 #endif
+        const PkNdsFieldGame* propsGame = nullptr;
+        if (wideMargin && foreignProps)
+            if (auto* cart = nds->NDSCartSlot.GetCart()) propsGame = pk_nds_field_game_rom(cart->GetROM(), cart->GetROMLength());
+        pk_nds_field_foreign_props(propsGame, read32, write32, 1);
         inFrame = true;
         nds->RunFrame();
         inFrame = false;
+        pk_nds_field_foreign_props(propsGame, read32, write32, 0);
         frameCount++;
         static int wasBattle = 0;
         int battle = 0, inBattle = 0, battle3d = 0;
         if (auto* cart = nds->NDSCartSlot.GetCart()) {
             if (const PkNdsFieldGame* g = pk_nds_field_game_rom(cart->GetROM(), cart->GetROMLength())) {
                 int bits = pk_nds_field_state(g, read32, write32, wildOff);
+                expSharePatched = pk_nds_exp_share_tick(g, expShareMode, expShareMask, expSharePatched, read32, write32, write16);
                 pk_nds_call_frame(nds, g);
                 battle = (bits & PK_NDS_FIELD_BATTLE) != 0;
                 if (battle && !wasBattle) battlesSeen++;
@@ -386,6 +398,7 @@ static void recordShown()
 static bool saveState(const std::string& path)
 {
     Savestate st;
+    pk_nds_wide_sync();
     if (!nds->DoSavestate(&st) || st.Error) { fprintf(stderr, "savestate failed\n"); return false; }
     st.Finish();
     return writeFile(path, st.Buffer(), st.Length());
@@ -396,6 +409,7 @@ static bool loadState(const std::string& path)
     std::vector<u8> data = readFile(path.c_str());
     if (data.empty()) { fprintf(stderr, "can't read %s\n", path.c_str()); return false; }
     Savestate st(data.data(), (u32) data.size(), false);
+    pk_nds_wide_sync();
     if (st.Error || !nds->DoSavestate(&st) || st.Error) { fprintf(stderr, "loadstate failed\n"); return false; }
     return true;
 }
@@ -521,8 +535,8 @@ int main(int argc, char** argv)
     static PkNdsHost host {onSave, onStop, nullptr};
 
     NDSArgs args;
-    // The app's JIT: no fast memory (pk_nds.cpp)
-    if (jit) args.JIT = JITArgs {32, true, true, false};
+    // The app's JIT (pk_nds.cpp): fast memory on, which melonDS turns off on macOS (IsFastMemSupported)
+    if (jit) args.JIT = JITArgs {32, true, true, true};
     else args.JIT = std::nullopt;
     if (const char* dir = getenv("NDS_BIOS_DIR")) {
         // The real BIOS (bios7.bin / bios9.bin in that folder) instead of FreeBIOS, to compare against
@@ -550,6 +564,8 @@ int main(int argc, char** argv)
     nds->SetNDSCart(std::move(cart));
     nds->Reset();
     nds->SetupDirectBoot("rom.nds");
+    // The 3D on its own thread, as the app runs it (pk_nds_init); `threaded 0` puts it on this one
+    static_cast<SoftRenderer&>(nds->GPU.GetRenderer3D()).SetThreaded(true, nds->GPU);
     nds->Start();
     fprintf(stderr, "booted %s, save %u bytes\n", argv[1], nds->GetNDSSaveLength());
 
@@ -643,6 +659,9 @@ int main(int argc, char** argv)
             // look DX DY: from here on the window moves DX, DY DS pixels a frame (look 0 0 stops it where it is)
             lookDX = (int) num(a);
             lookDY = n > 2 ? (int) num(b) : 0;
+        } else if (!strcmp(cmd, "foreignprops")) {
+            // foreignprops 1/0: another area's map props hidden for each frame under EXPAND, as the app does (default 1)
+            foreignProps = (int) num(a);
         } else if (!strcmp(cmd, "wide")) {
             // wide MX [MY]: EXPAND with MX DS pixels left and right, MY above and below (0 = off; MY defaults to 0)
             wideMargin = (int) num(a);
@@ -655,6 +674,7 @@ int main(int argc, char** argv)
         } else if (!strcmp(cmd, "gpu")) {
             // gpu N: DS RESOLUTION at N (1 = back to the software renderer)
             pk_nds_gl_capture(true);
+            pk_nds_wide_sync();
             int s = pk_nds_gl_set_scale(nds, (int) num(a));
             gpuOn = s > 1;
             printf("gpu: scale %d\n", s);
@@ -736,7 +756,8 @@ int main(int argc, char** argv)
                 frames, cmpTotal, diffTotal, farTotal, badFrames);
             fflush(stdout);
         } else if (!strcmp(cmd, "threaded")) {
-            // threaded 1 / 0: the 3D renderer on its own thread, as the app runs it (pk_nds.cpp)
+            // threaded 1 / 0: the 3D renderer on its own thread (the default, as the app runs it: pk_nds.cpp) / on this one
+            pk_nds_wide_sync();
             static_cast<SoftRenderer&>(nds->GPU.GetRenderer3D()).SetThreaded(num(a) != 0, nds->GPU);
         } else if (!strcmp(cmd, "ffmode")) {
             // ffmode GROUP PREFIX: from here on every command's frames run in the app's fast-forward pattern at GROUP
@@ -800,6 +821,11 @@ int main(int argc, char** argv)
             printf("widecount frame %llu: above %d %d %d, beside %d %d, below %d %d %d polygons\n",
                 (unsigned long long) frameCount, c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
             fflush(stdout);
+        } else if (!strcmp(cmd, "expshare")) {
+            // expshare MODE MASK: EXP SHARE from now on (0 off, 1 SPLIT, 2 FULL EXP; MASK the party slots), as the app runs it
+            expShareMode = (int) num(a);
+            expShareMask = num(b);
+            printf("expshare: mode %d mask %X\n", expShareMode, expShareMask);
         } else if (!strcmp(cmd, "wildoff")) {
             // wildoff 1 / 0: WILD ENCOUNTERS OFF / back on; battles counts the battles started since
             wildOff = (int) num(a);
@@ -933,6 +959,8 @@ int main(int argc, char** argv)
                             one = (px[(gy * 16 + 8) * 256 + gx * 16 + 8] & 0xFFFFFF) == (px[8 * 256 + 8] & 0xFFFFFF);
                     if (one) flat[sc] = sc ? 'B' : 'T';
                 }
+                // The screens' own bits, as the cores add them (TOUCH for a blank top, DARK_TOP / _BOTTOM).
+                bits = pk_nds_field_screen_bits(bits, flat[0] == 'T', flat[1] == 'B');
                 printf("trace %llu: bits %04X brightA %04X brightB %04X flat %s dispA %08X bg3 %d dispB %08X\n", (unsigned long long) frameCount, bits,
                     nds->GPU.GPU2D_A.MasterBrightness, nds->GPU.GPU2D_B.MasterBrightness, flat, nds->GPU.GPU2D_A.DispCnt,
                     pk_nds_bg3_tiles(nds), nds->GPU.GPU2D_B.DispCnt);
@@ -952,10 +980,15 @@ int main(int argc, char** argv)
         } else if (!strcmp(cmd, "bench")) {
             // bench N: N frames as fast as they go, then the average ms per frame (with wide on, its frames too)
             int frames = (int) num(a);
+            timespec c0, c1;
+            clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c0);
             auto t0 = std::chrono::steady_clock::now();
             runFrames(frames, heldKeys);
             double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
-            printf("bench %d frames: %.3f ms a frame (wide %d)\n", frames, ms / frames, wideMargin);
+            clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c1);
+            double cpu = (c1.tv_sec - c0.tv_sec) * 1e3 + (c1.tv_nsec - c0.tv_nsec) / 1e6;
+            // (process CPU as dsp_dump prints it: the two DS cores' runs compare)
+            printf("bench %d frames: %.3f ms a frame (wide %d), %.3f ms CPU\n", frames, ms / frames, wideMargin, cpu / frames);
             fflush(stdout);
         } else if (!strcmp(cmd, "watch")) {
             // watch LO HI [r|w|rw] [N]: report the game's accesses to [LO, HI) (at most N, default 20); watch off clears

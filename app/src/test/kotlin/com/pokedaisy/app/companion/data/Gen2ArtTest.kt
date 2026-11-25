@@ -6,6 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.File
+import okio.Path.Companion.toOkioPath
 
 /**
  * Crystal's art and dex pages, rebuilt from the player's own ROMs (skipped without them): every release
@@ -29,11 +30,11 @@ class Gen2ArtTest {
     fun `every release gives the same art`() {
         val out = File("build/gen2-art")
         out.deleteRecursively()
-        val wrote = Gen2Art.extractTo(rom(0), out)
+        val wrote = Gen2Art.extractTo(rom(0), out.toOkioPath())
         assertTrue(wrote.size > 250)
         for (i in 1..2) {
             val other = File.createTempFile("gen2", "").also { it.delete() }
-            Gen2Art.extractTo(rom(i), other)
+            Gen2Art.extractTo(rom(i), other.toOkioPath())
             for (path in wrote) assertTrue(path, File(out, path).readBytes().contentEquals(File(other, path).readBytes()))
             other.deleteRecursively()
         }
@@ -87,6 +88,26 @@ class Gen2ArtTest {
     }
 
     @Test
+    fun `each ball in the colours the battle throws it in, English and German alike`() {
+        val balls = Gen2Art.balls(rom(), Gen2Art.CRYSTAL)
+        // BallColors: MASTER ... LOVE BALL, then any other (PARK BALL).
+        assertEquals(setOf(0x01, 0x02, 0x04, 0x05, 0x9D, 0x9F, 0xA0, 0xA1, 0xA4, 0xA5, 0xA6, -1), balls.keys)
+        // The POKé BALL resting after a throw, sampled headless: black, red (30,10,6), pink (31,19,24).
+        assertEquals(setOf(0xFF000000.toInt(), 0xFFF75231.toInt(), 0xFFFF9CC6.toInt()), balls.getValue(0x05).argb.filter { it != 0 }.toSet())
+        // The game's six colours: MASTER green, ULTRA / FRIEND yellow, GREAT / LURE / FAST blue, POKé / LOVE red,
+        // HEAVY / MOON / any other grey, LEVEL brown.
+        assertEquals(6, balls.values.map { it.argb.toList() }.toSet().size)
+        assertTrue(balls.getValue(0x02).argb.toList() != balls.getValue(0x04).argb.toList())
+        val de = File(dir, "Pokemon - Kristall-Edition (Germany).gbc")
+        assumeTrue("Kristall ROM not on this machine", de.isFile)
+        val german = Gen2Art.balls(de.readBytes(), Gen2Art.CRYSTAL_DE)
+        assertEquals(balls.keys, german.keys)
+        for ((id, img) in balls) assertTrue("ball $id", img.argb.contentEquals(german.getValue(id).argb))
+        val out = File("build/gen2-art/balls").also { it.mkdirs() }
+        for ((id, img) in balls) File(out, "ball-$id.png").writeBytes(img.png())
+    }
+
+    @Test
     fun `the font parses`() {
         val ttf = Gen2Art.font(rom(), Gen2Art.CRYSTAL)
         val fontClass = Class.forName("java.awt.Font")
@@ -99,7 +120,7 @@ class Gen2ArtTest {
 
     @Test
     fun `another cart gets nothing`() {
-        assertTrue(Gen2Art.extractTo(ByteArray(0x8000), File.createTempFile("gen2", "").also { it.delete() }).isEmpty())
+        assertTrue(Gen2Art.extractTo(ByteArray(0x8000), File.createTempFile("gen2", "").also { it.delete() }.toOkioPath()).isEmpty())
     }
 
     private fun <T> assertNotNullAndGet(v: T?): T { assertNotNull(v); return v!! }

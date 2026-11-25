@@ -2,19 +2,21 @@
 // Each tab draws itself in its own file (pd_ui_party.c, _battle, _bag,
 // _settings); pd_ui_internal.h has what they share.
 #include "pd_font.h"
+#include "pd_tr.h"
 #include <stdlib.h>
 #include <string.h>
 
 #include "pd_dex.h"
 #include "pd_guide.h"
 #include "pd_party_art.h"
+#include "pd_settings.h"
 #include "pd_ui_internal.h"
 
 static void cycle_button(struct pd_settings* s, int row);
 
-#define CHIP_H 28
+#define CHIP_H TAB_BAR_H
 #define FF_W 28
-#define ICON_CHIP_W 30
+#define ICON_CHIP_W (pd_font_size_small() ? 24 : 30) // MORE / the gear: 12 px smoothed icons at SMALL
 #define CHIP_GAP 2
 #define SHOULDER_W 16
 // How far the stylus moves on a list before it scrolls instead of tapping.
@@ -33,7 +35,7 @@ static const char* const TAB_LABELS[PD_TAB_COUNT] = {
     [PD_TAB_ACHIEVEMENTS] = "CHEEVOS",
 };
 
-const char* ui_tab_label(enum pd_tab t) { return t < PD_TAB_COUNT ? TAB_LABELS[t] : ""; }
+const char* ui_tab_label(enum pd_tab t) { return t < PD_TAB_COUNT ? pd_tr(TAB_LABELS[t]) : ""; }
 
 const struct pd_art* ui_tab_art(enum pd_tab t) {
     for (int i = 0; i < UI_BAR_CHOICES; i++)
@@ -52,7 +54,8 @@ bool ui_tab_available(const struct pd_ui* ui, const struct pd_game* g, enum pd_t
     case PD_TAB_CARD: return cfg && cfg->cardStyle;
     case PD_TAB_STATES: return ui->hostHasStates;
     case PD_TAB_BOXES: return ui->boxes != NULL;
-    case PD_TAB_NUZLOCKE: case PD_TAB_ACHIEVEMENTS: return false; // not ported yet
+    case PD_TAB_NUZLOCKE: return ui->nuzlockeAvailable; // the host's tracker follows this game (always under MORE)
+    case PD_TAB_ACHIEVEMENTS: return false; // not ported yet
     default: return true;
     }
 }
@@ -89,11 +92,15 @@ int ui_bar_count(const struct pd_ui* ui) {
     return n;
 }
 
+// TAB BAR's rows: only the tabs this game has (GitHub #1346: CHEEVOS, CARD and NUZLOCKE were offered on games without
+// them and never showed). The bits stay per tab, so a tab picked in another game is still on there.
 int ui_configurable_tabs(const struct pd_ui* ui, enum pd_tab out[UI_BAR_CHOICES]) {
     int n = 0;
     for (int i = 0; i < UI_BAR_CHOICES; i++) {
         const enum pd_tab tab = UI_BAR_CHOICE[i];
-        if (!ui->availableTabs || (ui->availableTabs & (1u << tab))) out[n++] = tab;
+        if (ui->drawnGame || ui->content ? ui_tab_available(ui, ui->drawnGame, tab)
+                                         : !ui->availableTabs || (ui->availableTabs & (1u << tab)))
+            out[n++] = tab;
     }
     return n;
 }
@@ -146,7 +153,10 @@ void ui_toggle_act(struct pd_ui* ui, int i) {
         // HUD, then LAYOUT / LOOK / SIZE (each cycles on a press, FieldHud.kt's fieldHudRows), then the parts.
         if (i == 0) s->hud = !s->hud;
         else if (!s->hud) return;
-        else if (i == 1) s->hudLayout = (s->hudLayout + 1) % PD_HUD_LAYOUTS;
+        else if (i == 1) {
+            if (ui->hudLayoutFixed) return;
+            s->hudLayout = (s->hudLayout + 1) % PD_HUD_LAYOUTS;
+        }
         else if (i == 2) s->hudLook = (s->hudLook + 1) % PD_HUD_LOOKS;
         else if (i == 3) s->hudSize = (s->hudSize + 1) % PD_HUD_SIZES;
         else if (i - 4 < PD_HUD_PARTS) s->hudHidden ^= 1 << (i - 4);
@@ -200,7 +210,9 @@ void pd_ui_update(struct pd_ui* ui, const struct pd_snapshot* s) {
         ui->summarySlot = -1;
         ui->overlay = PD_OVERLAY_NONE;
         ui->battlePane = 0;
-        ui->battleInfoOpen = false;
+        // BATTLE VIEW: INFO first, or the buttons (always the buttons with BATTLE INFO off).
+        ui->battleInfoOpen = ui->settings && ui->settings->battleInfoFirst && ui_battle_info_on(ui);
+        ui->ranAway = ui->ranWaited = false;
         ui->foeSeen = 0;
         ui->foeSelected = -1;
         ui->lastFoeActive = ui->lastFoeNext = -1;
@@ -209,6 +221,11 @@ void pd_ui_update(struct pd_ui* ui, const struct pd_snapshot* s) {
         ui->battleOnBar = false;
     }
     ui->battleWasOn = on;
+    // RUN's hold ends with the battle, or when the menu is back after the turn (the escape failed).
+    bool myTurn = s->battleState >= PD_BATTLE_ACTION;
+    if (!on || !ui->ranAway) ui->ranAway = ui->ranWaited = false;
+    else if (!myTurn) ui->ranWaited = true;
+    else if (ui->ranWaited) ui->ranAway = ui->ranWaited = false;
     // Our move grid and party pane sit on the action menu.
     if (s->battleState != PD_BATTLE_ACTION) ui->battleChoosingMon = ui->battleChoosingMove = false;
     // The FOE TEAM: what's been sent out or announced counts as seen; a new
@@ -258,14 +275,19 @@ static bool on_bar(const struct pd_ui* ui, enum pd_tab t) {
 }
 
 static void chip(struct pd_ui* ui, struct pd_canvas* c, int x, int w, bool open, int id) {
-    pd_layered_box(c, x, BAR_Y(c), w, CHIP_H, 3, pd_cur->chip, pd_cur->chipCount,
-                   open || ui->pressedId == id ? pd_cur->tabSelectedFill : pd_cur->tabIdleFill);
+    // HeartGold's two-tone face, like every companion button (the app's tab chips).
+    pd_layered_two_tone(c, x, BAR_Y(c), w, CHIP_H, 3, pd_cur->chip, pd_cur->chipCount,
+                        open || ui->pressedId == id ? pd_cur->tabSelectedFill : pd_cur->tabIdleFill, 0);
     ui_add_hit(ui, x, BAR_Y(c), w, CHIP_H, id);
 }
 
 static void icon_chip(struct pd_ui* ui, struct pd_canvas* c, int x, const struct pd_mono* icon, bool open, int id) {
     chip(ui, c, x, ICON_CHIP_W, open, id);
-    ui_mono(c, icon, x + (ICON_CHIP_W - icon->w) / 2, BAR_Y(c) + (CHIP_H - icon->h) / 2, 1, open ? PD_VALUE : PD_TITLE_TEXT);
+    uint32_t color = open ? PD_VALUE : PD_TITLE_TEXT;
+    if (pd_font_size_small()) {
+        const int size = 12;
+        ui_icon_smooth(c, NULL, icon, color, x + (ICON_CHIP_W - size) / 2, BAR_Y(c) + (CHIP_H - size) / 2, size);
+    } else ui_mono(c, icon, x + (ICON_CHIP_W - icon->w) / 2, BAR_Y(c) + (CHIP_H - icon->h) / 2, 1, color);
 }
 
 static void tab_bar(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g, const struct pd_host_info* host) {
@@ -287,14 +309,29 @@ static void tab_bar(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game*
         pd_text(c, x + (SHOULDER_W - pd_text_width("L")) / 2, pd_text_y(by, CHIP_H), "L", PD_TITLE_TEXT, PD_TITLE_SHADOW);
         x += SHOULDER_W + CHIP_GAP;
     }
+    // Equal chips while every label fits one; a longer word (another language's) gets its width and the rest
+    // share what's left, so no label runs over its chip.
+    int widths[PD_MAX_BAR_TABS + 1], textW = 0;
+    bool equal = true;
     for (int i = 0; i < n; i++) {
-        int w = room / n + (i < room % n ? 1 : 0);
+        widths[i] = pd_text_width(ui_tab_label(tabs[i])) + 6;
+        textW += widths[i];
+        equal &= widths[i] <= room / n;
+    }
+    for (int i = 0, extra = room - textW; i < n; i++) {
+        if (equal || extra < 0) widths[i] = room / n + (i < room % n ? 1 : 0);
+        else widths[i] += extra / n + (i < extra % n ? 1 : 0);
+    }
+    for (int i = 0; i < n; i++) {
+        int w = widths[i];
         enum pd_tab t = tabs[i];
         bool open = ui->tab == t && ui->overlay != PD_OVERLAY_MORE;
         chip(ui, c, x, w, open, HIT_TAB + (int) t);
-        int tw = pd_text_width(TAB_LABELS[t]);
-        pd_text(c, x + (w - tw) / 2, pd_text_y(by, CHIP_H), TAB_LABELS[t], open ? PD_VALUE : PD_TITLE_TEXT,
-                open ? PD_VALUE_SHADOW : PD_TITLE_SHADOW);
+        const char* label = ui_tab_label(t);
+        int tw = pd_text_width(label);
+        if (tw > w - 4) tw = w - 4;
+        pd_text_fit(c, x + (w - tw) / 2, pd_text_y(by, CHIP_H), tw, label, open ? PD_VALUE : PD_TITLE_TEXT,
+                    open ? PD_VALUE_SHADOW : PD_TITLE_SHADOW);
         x += w + CHIP_GAP;
     }
     // MORE: lit while a tab it opens is up.
@@ -324,7 +361,7 @@ static void tab_bar(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game*
 static bool focusable(int id) {
     return !(id >= HIT_TAB && id < HIT_TAB + PD_TAB_COUNT) && id != HIT_MORE && id != HIT_FF && id != HIT_SCRIM && id != HIT_BAG_LIST &&
         id != HIT_DEX_LIST && id != HIT_GUIDE_LIST && id != HIT_SETTINGS_LIST && id != HIT_SCROLL_BAR &&
-        id != HIT_SHOULDER_L && id != HIT_SHOULDER_R;
+        id != HIT_SHOULDER_L && id != HIT_SHOULDER_R && !(id >= HIT_SETTINGS_GROUP && id < HIT_SETTINGS_GROUP + 10);
 }
 
 static int focus_index(const struct pd_ui* ui, int id) {
@@ -377,6 +414,10 @@ static void focus_ring(struct pd_ui* ui, struct pd_canvas* c) {
 
 const struct pd_game* ui_game;
 
+void pd_ui_warm(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g) {
+    if (ui_gen5_style(ui, g)) ui_gen5_warm(c);
+}
+
 void pd_ui_draw(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g,
                 const struct pd_snapshot* s, const struct pd_host_info* host) {
     const bool dexFont = ui->handheldDex && ui->tab == PD_TAB_DEX;
@@ -392,7 +433,17 @@ void pd_ui_draw(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g,
     ui->drawn = s;
     ui->drawnGame = g;
     ui->hostHasStates = host && host->hasStates;
-    if (!ui->keepBackdrop && !pd_party_backdrop(c, g)) pd_backdrop(c);
+    ui->nuzlockeAvailable = host && host->nuzlockeSupported;
+    // The BATTLE tab: the DS battle screens' mint and Poké Ball in place of the game's backdrop (a Game Boy game keeps its
+    // own plain look).
+    if (!ui->keepBackdrop) {
+        if (ui->tab == PD_TAB_BATTLE && ui->overlay != PD_OVERLAY_MORE && !pd_gb_look) {
+            // BATTLE STYLE > GEN 5: Black's dark closed-ball screen instead, behind INFO / SUGGESTIONS too.
+            if (ui_gen5_style(ui, g)) ui_gen5_backdrop(ui, c, s);
+            else pd_battle_backdrop(c);
+        }
+        else if (!pd_party_backdrop(c, g)) pd_backdrop(c);
+    }
     tab_bar(ui, c, g, host);
     // The tabs draw above the bar: the same pixels, a shorter canvas.
     struct pd_canvas full = *c, view = *c;
@@ -424,6 +475,8 @@ void pd_ui_draw(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g,
         ui_card_tab(ui, c, g, s);
     } else if (ui->tab == PD_TAB_STATES) {
         ui_states_tab(ui, c, host);
+    } else if (ui->tab == PD_TAB_NUZLOCKE) {
+        ui_nuzlocke_tab(ui, c, g, host);
     } else if (ui->tab == PD_TAB_BOXES) {
         ui_boxes_tab(ui, c, g, s);
     } else {
@@ -437,6 +490,10 @@ void pd_ui_draw(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g,
         ui_fly_overlay(ui, c);
     } else if (ui->overlay == PD_OVERLAY_GUIDE_NOTICE) {
         ui_guide_notice(ui, c);
+    } else if (ui->overlay == PD_OVERLAY_DEX_PICK) {
+        ui_dex_pick_overlay(ui, c);
+    } else if (ui->overlay == PD_OVERLAY_NUZ_PICK || ui->overlay == PD_OVERLAY_NUZ_CONFIRM) {
+        ui_nuzlocke_overlay(ui, c);
     } else if (ui->overlay != PD_OVERLAY_MORE) {
         ui_overlay(ui, c);
     }
@@ -451,6 +508,7 @@ static int* scroll_target(struct pd_ui* ui) {
     case PD_TAB_BAG: return &ui->bagScroll;
     case PD_TAB_DEX: return ui->dexOpen && ui->dexSection ? &ui->dexPageScroll : &ui->dexScroll;
     case PD_TAB_GUIDE: return &ui->guideScroll;
+    case PD_TAB_NUZLOCKE: return &ui->nuzScroll;
     case PD_TAB_SETTINGS: return &ui->settingsScroll;
     default: return NULL;
     }
@@ -480,7 +538,7 @@ bool ui_summary_learn(struct pd_ui* ui) {
 }
 
 static void act(struct pd_ui* ui, int id) {
-    if (ui_map_act(ui, id) || ui_dex_act(ui, id) || ui_guide_act(ui, id) || ui_battle_act(ui, id) || ui_card_act(ui, id) ||
+    if (ui_map_act(ui, id) || ui_dex_act(ui, id) || ui_nuzlocke_act(ui, id) || ui_guide_act(ui, id) || ui_battle_act(ui, id) || ui_card_act(ui, id) ||
         ui_battle_controls_act(ui, id, ui->drawn) || ui_states_act(ui, id) || ui_boxes_act(ui, id, ui->drawn) ||
         ui_bag_act(ui, id, ui->drawn)) {
         return;
@@ -509,8 +567,16 @@ static void act(struct pd_ui* ui, int id) {
             if (ui->overlay == PD_OVERLAY_PICK_SCREEN) ui->settings->screenMode = i + (ui->pixelOff ? 1 : 0);
             if (ui->overlay == PD_OVERLAY_PICK_FF && i < PD_FF_CHOICES) ui->settings->ffSpeed = PD_FF_SPEEDS[i];
             if (ui->overlay == PD_OVERLAY_PICK_ASPECT && i < PD_ASPECTS) ui->settings->aspect = i;
+            if (ui->overlay == PD_OVERLAY_PICK_ZOOM && i < ui->zoomCount) ui->settings->zoom = i;
+            if (ui->overlay == PD_OVERLAY_PICK_VIEW) pd_view_set(ui->settings, i, ui->viewExpand);
             if (ui->overlay == PD_OVERLAY_PICK_SPEED) ui->settings->gameSpeed = i;
+            if (ui->overlay == PD_OVERLAY_PICK_SCENE && i < PD_SCENE_SPEED_COUNT) ui->settings->sceneSpeed[ui->scenePick] = i;
             if (ui->overlay == PD_OVERLAY_PICK_VOLUME) ui->settings->gameVolume = (i + 1) * 20;
+            if (ui->overlay == PD_OVERLAY_PICK_FLY_ON && i < 4) ui->settings->flightVehicle = i;
+            if (ui->overlay == PD_OVERLAY_PICK_LANGUAGE && i <= PD_LANGS) ui->settings->language = i == 0 ? PD_LANG_AUTO : i - 1;
+            close_overlay(ui, PD_ACTION_SETTINGS_CHANGED);
+        } else if (id == HIT_YES && ui->overlay == PD_OVERLAY_CONFIRM_RESET) {
+            pd_settings_defaults(ui->settings);
             close_overlay(ui, PD_ACTION_SETTINGS_CHANGED);
         } else if (id == HIT_YES) {
             enum pd_action a = ui->overlay == PD_OVERLAY_CONFIRM_SAVE ? PD_ACTION_SAVE_STATE
@@ -529,11 +595,15 @@ static void act(struct pd_ui* ui, int id) {
         ui->tab = (enum pd_tab) (id - HIT_TAB);
         ui->summarySlot = -1;
         ui->moreOpened = false;
+        // BATTLE VIEW: the tab opens on what it says.
+        if (ui->tab == PD_TAB_BATTLE) ui->battleInfoOpen = ui->settings && ui->settings->battleInfoFirst && ui_battle_info_on(ui);
     } else if (id == HIT_MORE) {
         ui->overlay = ui->overlay == PD_OVERLAY_MORE ? PD_OVERLAY_NONE : PD_OVERLAY_MORE;
     } else if (id == HIT_MORE_TAB_BAR) {
         ui->tab = PD_TAB_SETTINGS;
         ui->overlay = PD_OVERLAY_TAB_BAR;
+    } else if (id >= HIT_SETTINGS_GROUP && id < HIT_SETTINGS_GROUP + 10) {
+        ui_settings_group(ui, id - HIT_SETTINGS_GROUP);
     } else if (id == HIT_SETTING + SETTING_TAB_BAR) {
         ui->overlay = PD_OVERLAY_TAB_BAR;
     } else if (id == HIT_SETTING + SETTING_HUD) {
@@ -546,23 +616,57 @@ static void act(struct pd_ui* ui, int id) {
         ui->overlay = PD_OVERLAY_PICK_VOLUME;
     } else if (id == HIT_SETTING + SETTING_THEME) {
         ui->overlay = PD_OVERLAY_PICK_THEME;
+    } else if (id >= HIT_SETTING + SETTING_SCENE && id < HIT_SETTING + SETTING_SCENE + PD_SCENES) {
+        ui->scenePick = id - HIT_SETTING - SETTING_SCENE;
+        ui->overlay = PD_OVERLAY_PICK_SCENE;
+    } else if (id == HIT_SETTING + SETTING_NUZLOCKE) {
+        ui->action = PD_ACTION_NUZLOCKE_TOGGLE;
+    } else if (id == HIT_SETTING + SETTING_FLY_ON) {
+        ui->overlay = PD_OVERLAY_PICK_FLY_ON;
+    } else if (id == HIT_SETTING + SETTING_LANGUAGE) {
+        ui->overlay = PD_OVERLAY_PICK_LANGUAGE;
     } else if (id == HIT_SETTING + SETTING_DARK || id == HIT_SETTING + SETTING_FF_MODE || id == HIT_SETTING + SETTING_CHEATS) {
         bool* flag = id == HIT_SETTING + SETTING_DARK ? &ui->settings->darkMode :
             id == HIT_SETTING + SETTING_FF_MODE ? &ui->settings->ffNormal : &ui->settings->cheats;
         *flag = !*flag;
         ui->action = PD_ACTION_SETTINGS_CHANGED;
+    } else if (id == HIT_SETTING + SETTING_RESET) {
+        ui->overlay = PD_OVERLAY_CONFIRM_RESET;
     } else if (id == HIT_SETTING + SETTING_RESTART) {
         ui->overlay = PD_OVERLAY_CONFIRM_RESTART;
     } else if (id == HIT_SETTING + SETTING_MUTE || id == HIT_SETTING + SETTING_WILD || id == HIT_SETTING + SETTING_AUTO_RUN ||
-               id == HIT_SETTING + SETTING_RUN_INDOORS || id == HIT_SETTING + SETTING_HINTS || id == HIT_SETTING + SETTING_ONE_TAP) {
+               id == HIT_SETTING + SETTING_RUN_INDOORS || id == HIT_SETTING + SETTING_HINTS || id == HIT_SETTING + SETTING_ONE_TAP ||
+               id == HIT_SETTING + SETTING_BATTLE_STYLE || id == HIT_SETTING + SETTING_BATTLE_INFO ||
+               id == HIT_SETTING + SETTING_BATTLE_VIEW || id == HIT_SETTING + SETTING_FLY_STYLE ||
+               id == HIT_SETTING + SETTING_FLIGHT_AREA || id == HIT_SETTING + SETTING_REUSABLE_TMS ||
+               id == HIT_SETTING + SETTING_INSTANT_TEXT || id == HIT_SETTING + SETTING_TRADE_EVOS) {
         struct pd_settings* st = ui->settings;
         bool* flag = id == HIT_SETTING + SETTING_MUTE ? &st->gameMuted : id == HIT_SETTING + SETTING_WILD ? &st->wildOff
             : id == HIT_SETTING + SETTING_AUTO_RUN ? &st->autoRun : id == HIT_SETTING + SETTING_RUN_INDOORS ? &st->runIndoors
-            : id == HIT_SETTING + SETTING_HINTS ? &st->hideHints : &st->oneTapMoves;
+            : id == HIT_SETTING + SETTING_HINTS ? &st->hideHints : id == HIT_SETTING + SETTING_ONE_TAP ? &st->oneTapMoves
+            : id == HIT_SETTING + SETTING_BATTLE_INFO ? &st->noBattleInfo : id == HIT_SETTING + SETTING_BATTLE_VIEW ? &st->battleInfoFirst
+            : id == HIT_SETTING + SETTING_FLY_STYLE ? &st->flyClassic : id == HIT_SETTING + SETTING_FLIGHT_AREA ? &st->flightAnywhere
+            : id == HIT_SETTING + SETTING_REUSABLE_TMS ? &st->reusableTms
+            : id == HIT_SETTING + SETTING_INSTANT_TEXT ? &st->instantText : id == HIT_SETTING + SETTING_TRADE_EVOS ? &st->tradeEvos
+            : &st->battleGen5;
         *flag = !*flag;
         ui->action = PD_ACTION_SETTINGS_CHANGED;
     } else if (id == HIT_FF) {
         ui->action = PD_ACTION_TOGGLE_FF;
+    } else if (id == HIT_SUMMARY_EVOLVE) {
+        ui->action = PD_ACTION_TRADE_EVOLVE;
+    } else if (id == HIT_SUMMARY_SWITCH) {
+        ui->summarySwitching = true;
+    } else if (id == HIT_SWITCH_CANCEL) {
+        ui->summarySwitching = false;
+    } else if (ui->summarySwitching && id >= HIT_SLOT && id < HIT_SLOT + PD_PARTY_SIZE) {
+        // SWITCH's pick: the Pokemon tapped trades places with the summary's (itself = nothing to do).
+        ui->summarySwitching = false;
+        if (id - HIT_SLOT != ui->summarySlot) {
+            ui->switchFrom = ui->summarySlot;
+            ui->switchTo = id - HIT_SLOT;
+            ui->action = PD_ACTION_PARTY_SWAP;
+        }
     } else if (id >= HIT_SLOT && id < HIT_SLOT + PD_PARTY_SIZE) {
         ui->summarySlot = id - HIT_SLOT;
         ui->summaryStats = ui->summaryInfo = ui->summaryLearn = false;
@@ -600,9 +704,13 @@ static void act(struct pd_ui* ui, int id) {
     } else if (id == HIT_SETTING + SETTING_PERF) {
         ui->settings->showPerf = !ui->settings->showPerf;
         ui->action = PD_ACTION_SETTINGS_CHANGED;
+    } else if (id == HIT_SETTING + SETTING_VIEW) {
+        ui->overlay = PD_OVERLAY_PICK_VIEW;
     } else if (id == HIT_SETTING + SETTING_AUTO_ZOOM) {
         ui->settings->autoZoom = !ui->settings->autoZoom;
         ui->action = PD_ACTION_SETTINGS_CHANGED;
+    } else if (id == HIT_SETTING + SETTING_ZOOM) {
+        ui->overlay = PD_OVERLAY_PICK_ZOOM;
     } else if (id >= HIT_SETTING && id <= HIT_SETTING + SETTING_ASPECT) {
         static const enum pd_overlay OPENS[] = {
             [SETTING_SCREEN] = PD_OVERLAY_PICK_SCREEN,
@@ -612,7 +720,14 @@ static void act(struct pd_ui* ui, int id) {
             [SETTING_LEAVE] = PD_OVERLAY_CONFIRM_LEAVE,
             [SETTING_ASPECT] = PD_OVERLAY_PICK_ASPECT,
         };
-        ui->overlay = OPENS[id - HIT_SETTING];
+        // With ZOOM's steps (a host that has them), ASPECT is the app's EXPAND on / off: two values, so it
+        // flips in place. A host without them keeps the pick-list.
+        if (id == HIT_SETTING + SETTING_ASPECT && ui->zoomCount > 1) {
+            ui->settings->aspect = ui->settings->aspect == PD_ASPECT_ORIGINAL ? PD_ASPECT_EXPAND : PD_ASPECT_ORIGINAL;
+            ui->action = PD_ACTION_SETTINGS_CHANGED;
+        } else {
+            ui->overlay = OPENS[id - HIT_SETTING];
+        }
     }
 }
 
@@ -627,7 +742,7 @@ bool pd_ui_settings_control(struct pd_ui* ui, int dy, bool accept) {
     return true;
 }
 
-/* A BUTTON row: the next button (X, Y, L2, R2; the HUD's also NONE). A button another action already uses goes to
+/* A BUTTON row: the next button (X, Y, L2, R2, L3; the HUD's also NONE). A button another action already uses goes to
  * this one's old button, so no two actions ever share one; the HUD's NONE can't be handed to the other two. */
 static void cycle_button(struct pd_settings* s, int row) {
     int* mine = row == SETTING_QUICK_BTN ? &s->quickBtn : row == SETTING_COMPANION_BTN ? &s->companionBtn : &s->hudBtn;
@@ -646,7 +761,25 @@ static void cycle_button(struct pd_settings* s, int row) {
     }
 }
 
+// The list under the stylus: the biggest part of a list (pd_hit.scroll) at the point - its whole box, not a row.
+static bool scroll_area_at(struct pd_ui* ui, int x, int y) {
+    const struct pd_hit* best = NULL;
+    for (int i = 0; i < ui->hitCount; i++) {
+        const struct pd_hit* h = &ui->hits[i];
+        if (!h->scroll || x < h->x || x >= h->x + h->w || y < h->y || y >= h->y + h->h) continue;
+        if (!best || h->w * h->h > best->w * best->h) best = h;
+    }
+    ui->scrollAreaW = 0;
+    if (!best) return false;
+    ui->scrollAreaX = best->x;
+    ui->scrollAreaY = best->y;
+    ui->scrollAreaW = best->w;
+    ui->scrollAreaH = best->h;
+    return true;
+}
+
 bool pd_ui_touch(struct pd_ui* ui, int x, int y, bool down) {
+    ui->touchScrollOnly = false;
     if (down) {
         const struct pd_hit* h = hit_at(ui, x, y);
         int id = h ? h->id : -1;
@@ -660,30 +793,52 @@ bool pd_ui_touch(struct pd_ui* ui, int x, int y, bool down) {
             ui->touchLastY = y;
             ui->pressedId = id;
             ui->barDragging = id == HIT_SCROLL_BAR;
-            if (!ui->barDragging) return id != -1;
+            if (!ui->barDragging) {
+                // A row pressed in a list lights inside the list alone.
+                ui->touchScrollOnly = id != -1 && ui->touchScroll && scroll_area_at(ui, x, y);
+                return id != -1;
+            }
         }
         // ... a list's bar follows the stylus: the thumb's middle under it ...
         if (ui->barDragging) {
             int* scroll = scroll_target(ui), span = ui->barH - ui->barThumb;
+            const bool first = ui->pressedId != -1;
+            int was = scroll ? *scroll : 0;
             if (scroll && span > 0) *scroll = ui_clamp_scroll((y - ui->barY - ui->barThumb / 2) * ui->barMax / span, ui->barMax, 0);
             ui->pressedId = -1;
+            if (first) {
+                scroll_area_at(ui, ui->touchX0, ui->touchY0);
+                return true;
+            }
+            if (!scroll || *scroll == was) return false;
+            ui->touchScrollOnly = ui->scrollAreaW > 0;
             return true;
         }
         // ... a list scrolls under a drag ...
         if (ui->touchScroll && !ui->dragging && abs(y - ui->touchY0) > DRAG_SLOP) {
+            // The pressed row lets go and the list moves: all of it inside the list.
             ui->dragging = true;
             ui->pressedId = -1;
-        }
-        if (ui->dragging) {
             int* scroll = scroll_target(ui);
             if (scroll) *scroll -= y - ui->touchLastY;
             ui->touchLastY = y;
+            ui->touchScrollOnly = scroll_area_at(ui, ui->touchX0, ui->touchY0);
+            return true;
+        }
+        if (ui->dragging) {
+            int* scroll = scroll_target(ui);
+            // A stylus held still moves nothing: no redraw.
+            if (y == ui->touchLastY || !scroll) return false;
+            *scroll -= y - ui->touchLastY;
+            ui->touchLastY = y;
+            ui->touchScrollOnly = ui->scrollAreaW > 0;
             return true;
         }
         ui->touchLastY = y;
         // ... and sliding off an element cancels it; another is never picked up.
         if (ui->pressedId != -1 && id != ui->pressedId) {
             ui->pressedId = -1;
+            ui->touchScrollOnly = ui->touchScroll && ui->scrollAreaW > 0;
             return true;
         }
         return false;
@@ -696,6 +851,7 @@ bool pd_ui_touch(struct pd_ui* ui, int x, int y, bool down) {
     }
     if (ui->dragging) {
         ui->dragging = false;
+        ui->touchScrollOnly = ui->scrollAreaW > 0;
         return true;
     }
     int id = ui->pressedId;
@@ -705,10 +861,26 @@ bool pd_ui_touch(struct pd_ui* ui, int x, int y, bool down) {
     return true;
 }
 
+void pd_ui_draw_scrolled(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g,
+                         const struct pd_snapshot* s, const struct pd_host_info* host) {
+    if (ui->scrollAreaW <= 0 || ui->tab == PD_TAB_BATTLE) {
+        pd_ui_draw(ui, c, g, s, host);
+        return;
+    }
+    // A scrolled list sits inside its own filled window, which paints over the backdrop there: it isn't drawn under it.
+    const bool keep = ui->keepBackdrop;
+    ui->keepBackdrop = true;
+    pd_canvas_limit(c, ui->scrollAreaX, ui->scrollAreaY, ui->scrollAreaW, ui->scrollAreaH);
+    pd_ui_draw(ui, c, g, s, host);
+    pd_canvas_unlimit(c);
+    ui->keepBackdrop = keep;
+}
+
 int pd_ui_tab_menu_count(const struct pd_ui* ui) {
     enum pd_tab tabs[UI_BAR_CHOICES];
     if (ui->overlay == PD_OVERLAY_MORE) return ui_more_tabs(ui, ui->drawnGame, tabs);
     if (ui->overlay == PD_OVERLAY_TAB_BAR) return ui_configurable_tabs(ui, tabs);
+    if (ui->overlay == PD_OVERLAY_HUD) return 4 + PD_HUD_PARTS; // HUD, LAYOUT, LOOK, SIZE, then the parts
     return 0;
 }
 
@@ -721,12 +893,12 @@ void pd_ui_tab_menu_choose(struct pd_ui* ui, int row) {
 }
 
 void pd_ui_next_tab(struct pd_ui* ui, int dir) {
-    if (ui->overlay != PD_OVERLAY_NONE &&
-        !(ui->shoulderTabs && ui->overlay == PD_OVERLAY_MORE)) return;
+    // MORE is a stop of its own (its chip sits on the bar whenever tabs are off it), and L / R go on from it.
+    if (ui->overlay != PD_OVERLAY_NONE && ui->overlay != PD_OVERLAY_MORE) return;
     enum pd_tab order[PD_MAX_BAR_TABS + 3];
     int n = chips(ui, ui->drawnGame, order);
     enum pd_tab more[UI_BAR_CHOICES];
-    const bool hasMore = ui->shoulderTabs && ui_more_tabs(ui, ui->drawnGame, more) > 0;
+    const bool hasMore = ui_more_tabs(ui, ui->drawnGame, more) > 0;
     const enum pd_tab current = hasMore && (ui->overlay == PD_OVERLAY_MORE || ui->moreOpened)
         ? PD_TAB_COUNT : ui->tab;
     if (hasMore) order[n++] = PD_TAB_COUNT;
@@ -795,6 +967,10 @@ bool pd_ui_back(struct pd_ui* ui) {
     }
     if (ui->tab == PD_TAB_BOXES && ui->boxSummary >= 0) {
         ui->boxSummary = -1;
+        return true;
+    }
+    if (ui->summarySwitching) {
+        ui->summarySwitching = false;
         return true;
     }
     if (ui->summarySlot >= 0) {

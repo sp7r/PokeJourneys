@@ -96,6 +96,10 @@ data class BattleMon(
 
 data class Item(val itemId: Int, val quantity: Int, val pocket: Int = POCKET_ITEMS)
 
+/** The game's move-learning summary is up (SUMMARY_MODE_SELECT_MOVE): [partyIndex] is learning [move], and is on
+ * the screen where one of its four moves is picked to forget. */
+data class MoveLearningPrompt(val partyIndex: Int, val move: Int)
+
 data class Telemetry(
     val frameCounter: Long,
     val inBattle: Boolean,
@@ -125,7 +129,8 @@ data class Telemetry(
     val enemyParty: List<Mon> = emptyList(),
     /** gEnemyParty in any battle, wild ones included: where the foe battlers' IVs come from. */
     val battleFoes: List<Mon> = emptyList(),
-    /** gBattleTypeFlags' TRAINER bit: a trainer battle, not a wild one; null = not read (the NUZLOCKE tracker skips it). */
+    /** gBattleTypeFlags' TRAINER bit: a trainer battle, not a wild one; null = not read, or the catching tutorial (the
+     * NUZLOCKE tracker skips it). */
     val isTrainerBattle: Boolean? = null,
     /** [enemyParty] index of the foe that's out, and of monToSwitchIntoId (its trainer's last pick); -1 = unknown. */
     val enemyActive: Int = -1,
@@ -157,6 +162,8 @@ data class Telemetry(
     val pokegearState: Int? = null,
     /** The PC's boxes (the BOXES tab, [readPcBoxes]); null where the game's storage isn't mapped. */
     val pcBoxes: PcBoxes? = null,
+    /** The game's move-learning summary, while it's up (see [MoveLearningPrompt]); null otherwise. */
+    val moveLearning: MoveLearningPrompt? = null,
 )
 
 /** The PC's Pokémon storage: the box the PC opens on and every box, in order. */
@@ -196,6 +203,11 @@ data class IconTables(
     // Each species' own icon palette (a pointer per gSpeciesInfo entry, [monIconStride]
     // apart) instead of an index into the 6 shared ones: SoulGold's. 0 = the shared ones.
     val monIconPalettes: Long = 0,
+    // [monIconPalettes]' stride when it isn't [monIconStride] (Epsilon Emerald's are gMonPaletteTable's 8-byte {raw palette,
+    // tag} entries, its icon table plain pointers: 0 = [monIconStride]), and where the shiny palette's pointer is from the
+    // normal one's (SoulGold's next field, 4; Epsilon's gMonShinyPaletteTable, right after gMonPaletteTable).
+    val monIconPalStride: Int = 0,
+    val monIconShinyOff: Long = 4,
     // gMonPaletteTable ({LZ77 palette, tag} per species), with gMonShinyPaletteTable right after it: a shared-palette icon's
     // shiny colours (decodeMonIcon). 0 = no shiny icons.
     val battlePalettes: Long = 0,

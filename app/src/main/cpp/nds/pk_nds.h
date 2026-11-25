@@ -1,6 +1,9 @@
-// The app's Nintendo DS core: melonDS behind a small C interface, which pokedaisy_jni.c calls when the
-// loaded ROM is a DS cart (pk_nds_is_rom). One DS at a time, owned by the emu thread like the mGBA core;
-// pk_nds_read is the only call other threads make, under pokedaisy_jni.c's core lock.
+// The app's Nintendo DS cores behind a small C interface, which pokedaisy_jni.c calls when the loaded ROM is a DS
+// cart (pk_nds_is_rom): melonDS (pk_nds.cpp) or DSperate (pk_nds_dsp.cpp, for devices too slow for melonDS), picked
+// by pk_nds_set_core before pk_nds_init (pk_nds_core.cpp passes each call to the one that's up). One DS at a time,
+// owned by the emu thread like the mGBA core; pk_nds_read is the only call other threads make, under
+// pokedaisy_jni.c's core lock. Some calls only melonDS has (EXPAND, DS RESOLUTION, STEADY music, the game's own
+// functions, DS CPU BOOST): on DSperate they do nothing and report off.
 #pragma once
 
 #include <stdbool.h>
@@ -15,6 +18,14 @@ extern "C" {
 
 // Whether the file at path has a DS cart header (the Nintendo logo's CRC at 0x15C).
 bool pk_nds_is_rom(const char* path);
+
+#define PK_NDS_CORE_MELONDS 0
+#define PK_NDS_CORE_DSPERATE 1
+#define PK_NDS_CORE_BANANADS 2
+// The core the next pk_nds_init starts (PK_NDS_CORE_*; melonDS until told otherwise). Emu thread, no DS up.
+void pk_nds_set_core(int core);
+// The core that's up, or -1 with no DS game.
+int pk_nds_core(void);
 
 // Boots the ROM at romPath (FreeBIOS, generated firmware: no BIOS / firmware files) with the save at savePath
 // (read if it exists, written each time the game saves; NULL = none), audio resampled to sampleRate.
@@ -44,7 +55,8 @@ int pk_nds_finish_save(int maxFrames);
 
 bool pk_nds_save_state(const char* path);
 bool pk_nds_load_state(const char* path);
-// 1 = the save inside the state at path is the save file as it is now, 0 = it isn't, -1 = can't tell.
+// 1 = the save inside the state at path is the save file as it is now, 0 = it isn't, -1 = can't tell, 2 = the state is
+// the other DS core's (it won't load: each core reads only its own).
 int pk_nds_state_matches_save(const char* path);
 
 // Reads len bytes at addr: main RAM (0x02000000-0x023FFFFF, mirrored as the DS does), shared WRAM, the ARM9's
@@ -65,8 +77,13 @@ int pk_nds_action_status(int seq);
 bool pk_nds_action_results(int seq, uint32_t* out);
 // WILD ENCOUNTERS OFF: no random encounters (the field read holds the map's grass / surf rates at 0). Emu thread.
 void pk_nds_set_wild_off(bool off);
+/** Code of ours into the game (INSTANT TEXT, DsInstantText.kt): main RAM or the spare ITCM (0x01FFC000..), and the JIT
+ * told, so a block it compiled from there is compiled again. False on DSperate (no calls into the game there). Emu thread. */
+bool pk_nds_code_write(uint32_t addr, const uint8_t* src, int len);
 /** DS LAYOUT floats the X menu: it comes back after a menu screen left by touch (the game closes it then). */
 void pk_nds_set_keep_start_menu(bool on);
+/** EXP SHARE (Gen 4, melonDS): 0 off, 1 SPLIT, 2 FULL EXP; [mask] the party slots that aren't eggs. Emu thread. */
+void pk_nds_set_exp_share(int mode, uint32_t mask);
 /** DS CPU BOOST: the ARM9 at twice the DS's clock (fewer of a game's own slow frames). Emu thread, between frames. */
 void pk_nds_set_cpu_boost(bool on);
 // Action Replay DS codes into melonDS's AREngine (it runs them on the ARM7's VBlank), replacing the ones before:
@@ -132,7 +149,7 @@ void pk_nds_set_window(struct ANativeWindow* window);
 bool pk_nds_rom_code(char out[5]);
 int pk_nds_rom_revision(void);
 uint32_t pk_nds_rom_size(void);
-// The cart's ROM image as melonDS reads it (writable: nds/pk_nds_look.cpp), NULL with no DS up. Emu thread.
+// The cart's ROM image as melonDS reads it (writable: nds/pk_nds_look.cpp), NULL with no DS up or another DS core. Emu thread.
 uint8_t* pk_nds_rom_image(void);
 // The ARM9's data TCM (16 KB), RetroAchievements' $1000000; NULL with no DS up. Emu thread.
 const uint8_t* pk_nds_dtcm(void);

@@ -90,11 +90,15 @@ Backups you already have stay where they are when you change the folder, and `RE
 
 To use a save from somewhere else (an old save from another emulator, a friend's file), long-press the game in the library and tap `LOAD SAVE`. Pick the file, and PokeDaisy tells you what it's about to do before you confirm with `LOAD`:
 
-- Your current save is renamed to `<game>.backup-<date and time>` next to it, so nothing is lost.
+- Your current save is renamed to `<game>.backup-<date and time>` next to it, so nothing is lost. If that name is already taken, a number is added so both copies are kept.
 - The new file is written under the name the game reads.
 - The next time you start the game, it starts from this save rather than picking up where you left off.
 
 If the file doesn't look like a GBA save, the confirmation says so.
+
+An unreadable or oversized file is rejected before confirmation. Wait for the import result before starting a game or loading another save.
+
+If replacing the save fails, PokeDaisy tries to put the old one back. If your storage prevents that, the error gives you the backup's name.
 
 ## Resuming where you left off
 
@@ -116,11 +120,18 @@ Save states are instant snapshots you can take and load at any moment: before a 
 The companion's `STATES` tab shows 10 slots (`SLOT 0` to `SLOT 9`), each with a screenshot of the moment and when it was saved. It isn't in the tab bar at first: find it under `MORE`, left of the gear, or put it in the tab bar with `TAB BAR`.
 
 - `SAVE` under a slot saves the game into it, replacing what was there.
-- `LOAD` puts the game back to that moment.
+- `LOAD` puts the game back to that moment. Tapping a slot's screenshot does the same.
+- Long-press a saved slot to delete it: its screenshot turns into `DELETE`, a tap asks `CONFIRM DELETE?`, and a second tap removes the slot. A tap anywhere else keeps it. Your game's own save is never touched.
 - `UNDO SAVE` gives the last slot you saved over its previous contents back.
 - `UNDO LOAD` takes you back to right before the last load.
 
 The title shows the current slot, the one the hotkeys save to and load from.
+
+Saving or loading a slot makes it your current slot. If a state cannot be saved, your previous copy stays available.
+If PokeDaisy cannot keep the moment needed for `UNDO LOAD`, it leaves your game running instead of loading the slot.
+
+After you import a save or restart a game, PokeDaisy keeps starting from that save until it has captured a new
+resume point. An interrupted first launch cannot bring back an older slot automatically.
 
 ![The companion's STATES tab: UNDO SAVE and UNDO LOAD buttons above slot cards, each with a screenshot and SAVE and LOAD buttons](shots/companion-states.png "The STATES tab")
 
@@ -152,5 +163,7 @@ Walked into the wrong trainer, or picked the wrong move? With rewind on, you can
 2. Hold the `REWIND HOLD` hotkey to go back. Let go to play on from there.
 
 On a keyboard, `REWIND HOLD` is R. It has no controller button until you pick one under `HOTKEYS` (see [Controls](controls.md)). The sound is muted while you rewind, and when you reach the oldest moment it keeps, the picture stops there.
+
+Loading a save state starts a new rewind history. You cannot rewind from the loaded state into the timeline you left behind.
 
 Rewinding never touches your save file: it only moves the game back in time, and whatever you saved in the game stays saved until the game saves again.

@@ -22,17 +22,21 @@ for name in ('fieldSystemPtr', 'battleTemplate'):
 for name in ('offChild', 'offAppData', 'offBattleType', 'offBattleCtx', 'offBattleMons'):
     fields['battle_' + name] = number(battle_defaults, name)
 dex = (data / 'Gen4Dex.kt').read_text()
-# Platinum's dex block size: the read's own, or its floor since other games' blocks came in (maxOf(size, 0x340)).
-fields['dexSize'] = int(re.search(r'val d = r.readCoreMemory\(body \+ off, (?:maxOf\(size, )?(0x[0-9A-Fa-f]+)\)', dex)[1], 0)
 fields['dexMagic'] = int(re.search(r'if \(magic != (0x[0-9A-Fa-f]+)L\)', dex)[1], 0)
 # Platinum's species count and flag size: its POKEDEX tables' nationalCount, Gen4Config's dexFlagBytes (Platinum keeps the
 # default), the seen flags after the caught ones (the reader went by config when Origin HeartGold came in).
 fields['dexMax'] = int(re.search(r'nationalCount = (\d+), regionalCount = \d+, regionName = "SINNOH"', dex)[1])
 flag_bytes = int(re.search(r'val dexFlagBytes: Int = (0x[0-9A-Fa-f]+|\d+)', reader)[1], 0)
 assert 'dexFlagBytes' not in config, 'Platinum sets its own dexFlagBytes'
-assert 'bit(4 + flagBytes, it)' in dex and 'bit(4, it)' in dex
+assert 'val seenOff = cfg.dexSeenOff ?: (4 + flagBytes)' in dex and 'bit(seenOff, it)' in dex and 'bit(4, it)' in dex
+assert 'dexSeenOff' not in config, 'Platinum sets its own dexSeenOff'
 fields['dexCaughtBase'] = 4
 fields['dexSeenBase'] = 4 + flag_bytes
+# Platinum's dex block size: the read's own size (seen flags right after the caught ones, so its second term is the first's
+# floor), whose rule is checked here as written.
+size_rule = re.search(r'val size = maxOf\(4 \+ 4 \* flagBytes \+ (0x[0-9A-Fa-f]+), seenOff \+ flagBytes, (0x[0-9A-Fa-f]+)\)', dex)
+assert size_rule and 'val d = r.readCoreMemory(body + off, size)' in dex, "Gen4Dex.kt's dex read changed"
+fields['dexSize'] = max(4 + 4 * flag_bytes + int(size_rule[1], 0), 4 + 2 * flag_bytes, int(size_rule[2], 0))
 fields['bodyOff'] = number(reader, 'bodyOff')
 fields['monSize'] = number(reader, 'GEN4_MON_SIZE')
 fields['boxSize'] = number(reader, 'GEN4_BOX_SIZE')
@@ -221,6 +225,27 @@ for suffix, source, count in (
     ids = re.findall(r'\d+', moves)
     assert len(ids) == count
     out.insert(-1, f'inline constexpr int tmMoves{suffix}[] = {{'+', '.join(ids)+'};')
+# The language ports this reader takes beside the US carts: each one's digest, the US game whose tables and save layout it
+# shares, and the globals that moved (NdsPortsGen.kt's rows = gamedata/nds/ports.toml; Gen4Reader.kt's German Johto pair).
+# Named one by one: only carts somebody has run with this reader.
+ports_src = (data / 'NdsPortsGen.kt').read_text()
+port_base = {'HEARTGOLD': 'heartGoldSha1', 'SOULSILVER': 'soulSilverSha1', 'BLACK': 'blackSha1', 'WHITE': 'whiteSha1',
+             'BLACK2': 'black2Sha1', 'WHITE2': 'white2Sha1'}
+johto_de = re.search(r'val GEN4_HEARTGOLD_DE = gen4HeartGoldFamily\(([^)]*)\)', reader)[1]
+assert johto_de == re.search(r'val GEN4_SOULSILVER_DE = gen4HeartGoldFamily\(([^)]*)\)', reader)[1]
+port_rows = []
+for code, kind, title in (('IPKD', 'HEARTGOLD', 'Goldene Edition HeartGold'), ('IPGD', 'SOULSILVER', 'Silberne Edition SoulSilver')):
+    digest = re.search(r'"([a-f0-9]{40})" to "Pokémon '+title+'"', identity)[1]
+    port_rows.append((digest, kind, code, number(johto_de, 'saveDataPtr'), number(johto_de, 'fieldSystemPtr')))
+for code in ('IRBD', 'IRAD', 'IRED', 'IRDD'):
+    kind, digest, save, system = re.search(r'NdsPort\("'+code+r'", 0, GameKind\.(\w+), "[^"]*", "([a-f0-9]{40})", '
+                                           r'saveData = (0x[0-9A-Fa-f]+), system = (0x[0-9A-Fa-f]+)', ports_src).groups()
+    port_rows.append((digest, kind, code, int(save, 0), int(system, 0)))
+# saveData: Gen 4's SaveData pointer, Gen 5's save control; system: Gen 4's FieldSystem pointer, Gen 5's GameSystem.
+out.insert(-1, 'struct Port { const char* sha1; const char* base; const char* code; uint32_t saveData, system; };')
+out.insert(-1, 'inline constexpr Port ports[] = {'+', '.join(
+    '{"%s", %s, "%s", 0x%08x, 0x%08x}' % (digest, port_base[kind], code, save, system)
+    for digest, kind, code, save, system in port_rows)+'};')
 generated = '\n'.join(out)+'\n'
 # --output: the libretro DS core's build writes it there; no flag: the Linux host's checked-in data_gen.h; --check: that
 # file matches (the Linux host's ds-generated-data test).

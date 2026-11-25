@@ -49,7 +49,7 @@ object JourneyRules {
     val SAVE_TOOL_ITEMS = setOf("SAVE EDITOR", "RESTORE BACKUP", "LOAD SAVE", "SAVE FOLDER", "DEFAULT SAVE FOLDER")
 
     /** The library's TOOLS cards that [SAVE_TOOLS] covers, by their id. */
-    val SAVE_TOOL_CARDS = setOf("EDIT", "TRADE")
+    val SAVE_TOOL_CARDS = setOf("EDIT", "TRADE", "PALPARK", "TRANSFER", "COLLECTION")
 
     /**
      * Settings PokeJourneys doesn't offer (owner's review, 2026-11-13), by their label on the settings pages:
@@ -82,7 +82,7 @@ object JourneyRules {
         "CO-OP" -> COOP
         "FOE IVS" -> FOE_IVS
         "THEME", "DARK MODE" -> THEMES
-        "RIVAL LOOK", "TEXT LOOK", "FOLLOWER", "DAY AND NIGHT" -> MAKEOVERS
+        "RIVAL LOOK", "TEXT LOOK", "FOLLOWER", "DAY AND NIGHT", "FLY ON", "RIDE ON" -> MAKEOVERS
         else -> actionAllowed(label.replace(' ', '_'))
     }
 }

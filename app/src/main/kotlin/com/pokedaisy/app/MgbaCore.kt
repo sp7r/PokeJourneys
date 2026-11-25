@@ -15,23 +15,6 @@ object MgbaCore {
         System.loadLibrary("pokedaisy")
     }
 
-    /** GBA key bit positions, matching the native bridge. */
-    object Key {
-        const val A = 1 shl 0
-        const val B = 1 shl 1
-        const val SELECT = 1 shl 2
-        const val START = 1 shl 3
-        const val RIGHT = 1 shl 4
-        const val LEFT = 1 shl 5
-        const val UP = 1 shl 6
-        const val DOWN = 1 shl 7
-        const val R = 1 shl 8
-        const val L = 1 shl 9
-        /** The DS's X / Y (melonDS's key mask bits 10 and 11); a GBA core ignores them. */
-        const val X = 1 shl 10
-        const val Y = 1 shl 11
-    }
-
     /** Loads [romPath], attaches [savePath] as persistent SRAM, resets. */
     external fun pkInit(romPath: String, savePath: String?): Boolean
     external fun pkDeinit()
@@ -47,6 +30,35 @@ object MgbaCore {
     /** Runs the game's Thumb function [fn] (r0-r3 = [a0]-[a3]) to its return on the player's
      * core and gives back its r0, or -1 if it never returned. Emu thread, between frames. */
     external fun pkCall(fn: Long, a0: Int, a1: Int, a2: Int, a3: Int): Long
+
+    /** FREE FLIGHT (pk_flight.h, companion.data.Flight.kt): the game's addresses ([com.pokedaisy.app.companion.data.FlightFns.words]),
+     * or null to switch it off. Emu thread. */
+    external fun pkFlightConfigure(words: IntArray?)
+    /** Takes off: [FLIGHT_OK] or why not ([FLIGHT_BUSY], [FLIGHT_NOT_NOW], [FLIGHT_NOT_ON_FOOT]). Emu thread, between frames. */
+    external fun pkFlightTakeOff(): Int
+    /** Lands on the nearest tile a player can stand on. */
+    external fun pkFlightLand()
+    /** The scenic FLY: flies [dirs] (1 down, 2 up, 3 left, 4 right) at the faster speed, then lands. */
+    external fun pkFlightRoute(dirs: ByteArray): Int
+    /** FLIGHT AREA (companion.data.FlightArea): a bit per map (group shl 8 or num) the flight may cross into, null = anywhere. Emu thread. */
+    external fun pkFlightArea(bits: ByteArray?)
+    /** True once after the D-pad met FLIGHT AREA's edge (a map the player hasn't seen). Emu thread. */
+    external fun pkFlightAreaTurned(): Boolean
+    /** [FLIGHT_IDLE], [FLIGHT_TAKING_OFF], [FLIGHT_FLYING], [FLIGHT_LANDING] or [FLIGHT_DISMOUNT]. */
+    external fun pkFlightState(): Int
+    /** Steps of the route flown so far, -1 with none. */
+    external fun pkFlightRouteDone(): Int
+
+    const val FLIGHT_IDLE = 0
+    const val FLIGHT_TAKING_OFF = 1
+    const val FLIGHT_FLYING = 2
+    const val FLIGHT_LANDING = 3
+    const val FLIGHT_DISMOUNT = 4
+    const val FLIGHT_OK = 0
+    const val FLIGHT_NOT_CONFIGURED = -1
+    const val FLIGHT_BUSY = -2
+    const val FLIGHT_NOT_NOW = -3
+    const val FLIGHT_NOT_ON_FOOT = -4
 
     /** Whether [pkCall] can run now: the frame ended with the CPU in the BIOS, not part-way through the game's own
      * code (its interrupt handler, a lag frame) - pokedaisy_jni.c's pk_call_safe. Field-item jobs wait a frame if not. */
@@ -87,9 +99,27 @@ object MgbaCore {
 
     /** FOLLOWER: the Pokémon's six 32x32 frames (3072 bytes) and palette (32); nulls = none. Emu thread. */
     external fun pkFollowerSet(frames: ByteArray?, pal: ByteArray?)
+    /** RIDE ON's vehicle (companion.data.RideOn.Sprite): three views (1024 bytes each, OBJ tile order: 32 x 64 or 64 x 32 by
+     * [width]) and a palette, or null. Emu thread. */
+    external fun pkRideSet(frames: ByteArray?, pal: ByteArray?, width: Int)
+    /** RIDE ON's vehicle drawn this frame (behind the player, only while they're on a bike). Emu thread. */
+    external fun pkRideShow(on: Boolean)
 
     /** FOLLOWER: drawn from the next frame on, or not (off, it reappears only once the player steps). Emu thread. */
     external fun pkFollowerShow(on: Boolean)
+
+    /** HIDE BATTLE MENU: the battle's FIGHT / BAG and move menus left off the frames drawn ([mode] 1 = the two-screens sign at
+     * the text box's bottom right lighting the bottom screen, 2 = the top one, 0 = shown), in the renderer only; [battleTypeFlags] =
+     * gBattleTypeFlags' address (0 = unknown), whose double / Safari bits keep the menus. GBA only. Emu thread. */
+    external fun pkBattleMenuHide(mode: Int, battleTypeFlags: Int)
+
+    /** Which battle menu HIDE BATTLE MENU left off the last frame drawn: 160 = the action menu, 320 = the moves, 0 = none
+     * (off, no battle menu up, a double battle / the Safari Zone, a shape it didn't know). Emu thread. */
+    external fun pkBattleMenuHidden(): Int
+
+    /** Why the menu hidden on the last frame had no two-screens sign (0 = it had one): 1 no room in the box, 2 too few free
+     * tiles, 3 its tiles in use on screen, 4 the text's colours not found. For debug logs. Emu thread. */
+    external fun pkBattleMenuSignWhy(): Int
 
     /** Co-op presence: the player this frame - valid, map group, map num, fine x, fine y (object-event coords x 16 +
      * the step's pixels), facing (DIR_*), mode (PresenceMode), step count (pk_wide.h's PK_PARTNER_SELF_*); null = not a
@@ -106,21 +136,21 @@ object MgbaCore {
     external fun pkPartnerPlace(visible: Boolean, fineX: Int, fineY: Int, frame: Int, hflip: Boolean, blobFrame: Int, bob: Int)
 
     // pkFieldState's bits (pk_wide.h's PK_FIELD_*).
-    const val FIELD_KNOWN = 1
-    const val FIELD_LOCKED = 2
-    const val FIELD_BATTLE = 4
-    const val FIELD_TEXT = 8
-    const val FIELD_BIKE = 16
+    const val FIELD_KNOWN = com.pokedaisy.app.companion.data.GameField.KNOWN
+    const val FIELD_LOCKED = com.pokedaisy.app.companion.data.GameField.LOCKED
+    const val FIELD_BATTLE = com.pokedaisy.app.companion.data.GameField.BATTLE
+    const val FIELD_TEXT = com.pokedaisy.app.companion.data.GameField.TEXT
+    const val FIELD_BIKE = com.pokedaisy.app.companion.data.GameField.BIKE
     /** WILD ENCOUNTERS set the game's switch: keep calling (with 100) until it's been put back. */
-    const val FIELD_WILD_HELD = 32
-    const val FIELD_SURF = 64
+    const val FIELD_WILD_HELD = com.pokedaisy.app.companion.data.GameField.WILD_HELD
+    const val FIELD_SURF = com.pokedaisy.app.companion.data.GameField.SURF
     /** [FIELD_BIKE] / [FIELD_SURF] come from the game's own player state (FIELD SPEED's BIKE / SURF rows work). */
-    const val FIELD_AVATAR = 128
+    const val FIELD_AVATAR = com.pokedaisy.app.companion.data.GameField.AVATAR
     /** A DS game's own: the overworld is on screen (its field map runs, nothing over it) - what FfMenuWatch.onField
      * tells for a GBA game. */
     const val FIELD_SCREEN = 256
     /** A DS game's own: a menu screen (party, bag, Pokédex, ...) runs over the field. */
-    const val FIELD_MENU = 512
+    const val FIELD_MENU = com.pokedaisy.app.companion.data.GameField.MENU
     /** A DS game's own: a battle waits for the player's command (FIGHT / BAG / POKéMON / RUN, a move, a target). */
     const val FIELD_BATTLE_INPUT = 1024
     /** A DS game's own: the game wants its touch screen now (DS LAYOUT floats it in; nds/pk_nds_field.cpp's touch rules). */
@@ -136,6 +166,9 @@ object MgbaCore {
     const val FIELD_DARK_BOTTOM = 65536
     /** A DS game's own: a menu screen all on the top screen, its touch screen a picture (Platinum's party): the game alone. */
     const val FIELD_TOP_ONLY = 131072
+    /** A GBA game: a window up on the field's text layer while its controls are free (a START menu that doesn't lock them,
+     *  Recharged Yellow's): AUTO-RUN keeps its B out of it (GitHub #610). */
+    const val FIELD_WINDOW = com.pokedaisy.app.companion.data.GameField.WINDOW
     /** WIDE: the window to draw around the frame from the next frame on ([WideCamera]), in the frame's pixels
      * (its top-left 0, 0); [w] 0 = none. Any thread. */
     external fun pkWideSetView(x: Int, y: Int, w: Int, h: Int)
@@ -217,6 +250,13 @@ object MgbaCore {
     /** DS LAYOUT floats the X menu (one screen): it comes back after a menu screen left by touch, as after B (the game
      * closes it then: HeartGold / SoulSilver's menuInputState). Emu thread. */
     external fun pkNdsKeepStartMenu(on: Boolean)
+    /** EXP SHARE on the DS (Gen 4, melonDS: pk_nds.cpp's expShareTick): [mode] 0 off / 1 SPLIT / 2 FULL EXP, [mask] the
+     * party slots that aren't eggs. Emu thread. */
+    external fun pkNdsExpShare(mode: Int, mask: Int)
+
+    /** Code of ours into a DS game ([com.pokedaisy.app.companion.data.DsInstantText]): main RAM or the spare ITCM, the JIT
+     * told. False on DSperate. Emu thread. */
+    external fun pkNdsCodeWrite(addr: Long, bytes: ByteArray): Boolean
 
     /** A DS game's screens fading by master brightness (towards black or white): the factor 0-16, the top screen's in
      * bits 0-7, the touch screen's in 8-15; 0 = no fade. Emu thread, after [pkRunFrame]. */
@@ -224,6 +264,13 @@ object MgbaCore {
 
     /** DS CPU BOOST: the emulated ARM9 at twice the DS's clock - a game's own slow frames (HeartGold walking) go. Emu thread. */
     external fun pkNdsCpuBoost(on: Boolean)
+
+    /** DS CORE (companion.DsCore): the DS core the next [pkInit] of a DS cart starts, companion.DsCore.CORE_*. Emu thread. */
+    external fun pkNdsSetCore(core: Int)
+    /** The DS core that's up (companion.DsCore.CORE_*), -1 with no DS game. */
+    external fun pkNdsCore(): Int
+    /** [pkStateMatchesSave]'s answer for a DS state the other core made: it won't load. */
+    const val STATE_OTHER_CORE = 2
     /** A DS game's Action Replay codes ([words], [lengths] words per cheat: cheats.DsCheats) into melonDS's AREngine,
      * replacing the ones before; none = no cheats. Emu thread, between frames. The count loaded, -1 with no DS game. */
     external fun pkNdsCheats(words: IntArray, lengths: IntArray): Int
@@ -469,4 +516,14 @@ object MgbaCore {
 
     /** [pkReadBytes] for the render core (which song it's really playing - see FfMusicKey). */
     external fun pkRenderReadBytes(addr: Long, len: Int): ByteArray?
+}
+
+/** [MgbaCore]'s calls for the data code ([com.pokedaisy.app.companion.data.EmulatorCore]); PokeDaisyApp plugs it in. */
+object MgbaEmulatorCore : com.pokedaisy.app.companion.data.EmulatorCore {
+    override fun readBytes(addr: Long, len: Int) = MgbaCore.pkReadBytes(addr, len)
+    override fun readInto(addr: Long, dst: ByteArray) = MgbaCore.pkReadInto(addr, dst)
+    override fun romCode() = MgbaCore.pkRomCode()
+    override fun romSize() = MgbaCore.pkRomSize()
+    override fun platform() = MgbaCore.pkPlatform()
+    override fun romRead(off: Long, len: Int) = MgbaCore.pkRomRead(off, len)
 }

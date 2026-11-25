@@ -1,6 +1,9 @@
 #include "pd_menu.h"
 
 #include "pd_style.h"
+#include "pd_tr.h"
+
+#include <stddef.h>
 
 #define MARGIN 4
 #define TITLE_H 24
@@ -42,8 +45,8 @@ void pd_menu_draw(struct pd_menu* m, struct pd_canvas* c) {
     int x = MARGIN + LIST_FRAME, iw = w - 2 * LIST_FRAME;
     int y = LIST_Y + LIST_FRAME + 2;
     if (m->count == 0) {
-        pd_text(c, x + 6, y, "No games found.", PD_LABEL, PD_LABEL_SHADOW);
-        pd_text(c, x + 6, y + ROW_H, "Put .gba files in", PD_MUTED, PD_MUTED_SHADOW);
+        pd_text(c, x + 6, y, pd_tr("No games found."), PD_LABEL, PD_LABEL_SHADOW);
+        pd_text(c, x + 6, y + ROW_H, pd_tr("Put .gba files in"), PD_MUTED, PD_MUTED_SHADOW);
         pd_text(c, x + 6, y + 2 * ROW_H, "sdmc:/pokedaisy/roms/", PD_VALUE, PD_VALUE_SHADOW);
         return;
     }
@@ -99,14 +102,36 @@ int pd_menu_touch(struct pd_menu* m, int x, int y, bool down) {
 
 void pd_splash_draw(struct pd_canvas* c, const char* line1, const char* line2, const char* line3) {
     pd_backdrop(c);
-    int w = 300, h = 120;
+    // Each line wrapped, never cut: an error's detail is what a player's photo of the screen has to tell us. The box grows
+    // with the lines (to the screen's height; past that the rows close up, then the last is cut).
+    const char* lines[3] = { line1, line2, line3 };
+    int w = c->w - 24 < 376 ? c->w - 24 : 376;
+    int textW = w - 2 * (8 + 8);   // a title box's frame is under 8 px in every look
+    int rows[3] = { 0 }, total = 0;
+    for (int i = 0; i < 3; i++) {
+        if (!lines[i]) continue;
+        rows[i] = pd_text_wrap(NULL, 0, 0, textW, 16, 8, lines[i], PD_LABEL, PD_LABEL_SHADOW);
+        total += rows[i];
+    }
+    int gaps = 0;
+    for (int i = 0; i < 3; i++) gaps += lines[i] && rows[i] ? 1 : 0;
+    int room = c->h - 16 - 34 - 12;   // the box's frame, its title and the bottom padding
+    int lineH = total * 16 + (gaps - 1) * 4 <= room ? 16 : total * 14 + (gaps - 1) * 2 <= room ? 14 : 12;
+    int gap = lineH == 16 ? 4 : 2;
+    int maxRows = (room - (gaps - 1) * gap) / lineH;
+    int h = 34 + total * lineH + (gaps > 1 ? (gaps - 1) * gap : 0) + 16;
+    if (h < 120) h = 120;
+    if (h > c->h - 8) h = c->h - 8;
     int x = (c->w - w) / 2, y = (c->h - h) / 2;
     int f = pd_title_box(c, x, y, w, h, PD_TITLE_FILL);
     const char* name = "POKéDAISY";
     pd_text(c, x + (w - pd_text_width(name)) / 2, y + f + 6, name, PD_VALUE, PD_VALUE_SHADOW);
-    const char* lines[3] = { line1, line2, line3 };
-    for (int i = 0; i < 3; i++) {
-        if (!lines[i]) continue;
-        pd_text_fit(c, x + f + 8, y + f + 34 + i * 20, w - 2 * (f + 8), lines[i], PD_LABEL, PD_LABEL_SHADOW);
+    int ty = y + f + 30;
+    for (int i = 0; i < 3 && maxRows > 0; i++) {
+        if (!lines[i] || !rows[i]) continue;
+        int n = rows[i] < maxRows ? rows[i] : maxRows;
+        pd_text_wrap(c, x + f + 8, ty, textW, lineH, n, lines[i], PD_LABEL, PD_LABEL_SHADOW);
+        ty += n * lineH + gap;
+        maxRows -= n;
     }
 }

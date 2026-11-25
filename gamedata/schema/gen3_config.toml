@@ -138,6 +138,17 @@ kotlin = 'Long'
 type = 'long'
 default = 0
 
+# See IconTables.monIconPalStride / monIconShinyOff (Epsilon Emerald's per-species icon palettes).
+[field.monIconPalStride]
+kotlin = 'Int'
+type = 'int'
+default = 0
+
+[field.monIconShinyOff]
+kotlin = 'Long'
+type = 'long'
+default = 4
+
 [field.extraItemFirst]
 kotlin = 'Int'
 type = 'int'
@@ -313,6 +324,20 @@ kotlin = 'Long'
 type = 'long'
 default = 0
 
+# sMonSummaryScreen (pokemon_summary_screen.c): the pointer to the summary screen's state; its mode / newMove tell the
+# game's SELECT_MOVE (learn a move, forget one) screen apart. 0 = not mapped for this game.
+[field.summaryScreen]
+kotlin = 'Long'
+type = 'long'
+default = 0
+
+# gMoveToLearn: the move a level-up is teaching (it stays set after the screen), paired with gPartyMenu.data1 for a TM /
+# tutor / party-menu learn. 0 = not mapped for this game.
+[field.moveToLearn]
+kotlin = 'Long'
+type = 'long'
+default = 0
+
 # Where SaveBlock1 keeps a PARTY MENU option that changes the battle party menu's shape (SoulGold's byte: 0 = its
 # own one-column list, 1 = BW, 2 = HGSS, both a two-column grid - BattleInputController.SwitchAddrs.gridOption);
 # -1 = none, the shape is fixed.
@@ -419,6 +444,12 @@ default = 'none'
 # A bag kept as one "owned" bit per item id in SaveBlock1, no counts (Elite Redux); null = gBagPockets.
 [field.itemFlagsBag]
 kotlin = 'ItemFlagsBag?'
+type = 'ref'
+default = 'none'
+
+# gBagPockets packed another way, its TM pocket a bit per machine, pockets filtered by each item's own (Epsilon Emerald).
+[field.packedBag]
+kotlin = 'PackedBagLayout?'
 type = 'ref'
 default = 'none'
 

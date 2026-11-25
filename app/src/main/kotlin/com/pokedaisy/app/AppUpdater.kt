@@ -24,14 +24,15 @@ object AppUpdater {
         val sha256: String? = null,
     )
 
-    /** The newest release that is newer than [current], or null (none, or offline). Blocking. */
-    fun check(current: String): Release? = ServerUpdates.check(current)
+    /** The newest release that is newer than [current], or null (none, or offline). Blocking. [betas] is PokeDaisy's (GitHub pre-releases); the server has none. */
+    fun check(current: String, @Suppress("UNUSED_PARAMETER") betas: Boolean = false): Release? = ServerUpdates.check(current)
 
-    /** The highest-versioned published, non-pre-release release with an APK in [releases] (GitHub's JSON). */
-    fun newest(releases: JSONArray): Release? {
+    /** The highest-versioned published release with an APK in [releases] (GitHub's JSON): pre-releases count only
+     *  with [betas], and then a release still outranks its own betas (1.6.2 > 1.6.2-rc.2). */
+    fun newest(releases: JSONArray, betas: Boolean = false): Release? {
         val found = (0 until releases.length()).mapNotNull { i ->
             val r = releases.getJSONObject(i)
-            if (r.optBoolean("draft") || r.optBoolean("prerelease")) return@mapNotNull null
+            if (r.optBoolean("draft") || (r.optBoolean("prerelease") && !betas)) return@mapNotNull null
             val assets = r.optJSONArray("assets") ?: return@mapNotNull null
             val apk = (0 until assets.length()).map { assets.getJSONObject(it) }
                 .firstOrNull { it.optString("name").endsWith(".apk", ignoreCase = true) } ?: return@mapNotNull null

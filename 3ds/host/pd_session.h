@@ -8,7 +8,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "pd_draw_pace.h"
 #include "../../linux/fly.h"
+#include "../../linux/flight.h"
+#include "pd_rom_options.h"
+#include "../core/pd_nuzlocke.h"
 #include "../../linux/hud.h"
 #include "../../linux/quick_menu.h"
 #include "../core/pd_binput.h"
@@ -17,10 +21,13 @@
 #include "../core/pd_snapshot.h"
 #include "../core/pd_ui.h"
 #include "pd_items.h"
+#include "pd_refresh.h"
 
 struct mCore;
 
-// How often the companion reads the game (frames).
+// Cosmetic companion data: at most about 3 Hz in wall time, also at fast-forward.
+#define PD_SNAPSHOT_INTERVAL_MS 334
+// Gameplay tracking retains its existing cadence while Nuzlocke is enabled.
 #define PD_SNAPSHOT_EVERY 10
 // The top screen, where the overlay (QUICK MENU, HUD, notices) and EXPAND's window go.
 #define PD_TOP_W 400
@@ -33,6 +40,11 @@ struct pd_input {
     bool quickMenu;  // QUICK MENU: pressed this loop
     bool ffHeld;     // FF HOLD
     int stickAngle;  // the left stick aims the ring: degrees clockwise from up, -1 = centred
+    // Frames run undrawn before this loop's own, at 1x only: an Old 3DS that fell a refresh or two behind catches up, so
+    // the game and its sound keep their speed while the picture skips (gpSP 3D's frame skip). 0 = none.
+    int catchUp;
+    // How this loop's frame is drawn (pd_draw_pace.h's plan, gpSP on an Old 3DS); applied at 1x only.
+    enum pd_draw_plan drawPlan;
 };
 
 // What the host does for the session.
@@ -45,16 +57,28 @@ struct pd_session_host {
     // The game's .cheats file (mGBA's format), by the ROM's CRC32; NULL = none here.
     void (*cheatPath)(void* ctx, uint32_t crc, char* path, size_t len);
     void* ctx;
-    // EXPAND's drawing on a thread of its own: pk_wide_finish starts there, and join waits for it. NULL: drawn in place.
+    // EXPAND's drawing on a thread of its own: pd_session_wide_finish starts there, and join waits for it. NULL: drawn in place.
     void (*wideGo)(void);
     void (*wideJoin)(void);
     // The dev build's clock, for where a frame goes (pd_session_prof); NULL: not counted.
     uint64_t (*clock)(void);
+    // FLIGHT AREA's file for one save of a ROM (by its CRC32 and flight_save_key); NULL = kept for this run only.
+    void (*flightAreaPath)(void* ctx, uint32_t crc, uint32_t key, char* path, size_t len);
+    // NUZLOCKE's file for a ROM (by its CRC32: whether it's on and its run); NULL = kept for this run only.
+    void (*nuzlockePath)(void* ctx, uint32_t crc, char* path, size_t len);
+    // Nonzero: background companion reads use this wall-time interval.
+    // Old 3DS uses 334 ms; zero preserves the original frame-based cadence.
+    unsigned companionIntervalMs;
 };
 
-// Clock ticks spent since the host last zeroed it: in the core, waiting for its renderer, in EXPAND, reading the snapshot.
+// Clock ticks spent since the host last zeroed it: in the core, waiting for its renderer, in EXPAND, reading the snapshot,
+// FREE FLIGHT's step and its drawing.
 struct pd_session_prof {
-    uint64_t run, wait, wide, snap;
+    uint64_t run, wait, wide, snap, flightTick, flightDraw;
+    // pd_session_start's steps (with a host clock): their names and ticks, for the host's log.
+    const char* startName[16];
+    uint64_t startTicks[16];
+    int startSteps;
 };
 
 enum pd_job { PD_JOB_NONE, PD_JOB_GB_TAKEN, PD_JOB_PC, PD_JOB_REPEL, PD_JOB_BIKE, PD_JOB_BIKE_WAIT, PD_JOB_BIKE_RESTORE };
@@ -85,16 +109,25 @@ struct pd_session {
     const uint32_t* video; // the core's frame, PD_GAME_STRIDE wide
     unsigned frame;
     bool redraw;
+    // Only a list moved under the stylus since the last draw (pd_ui.touchScrollOnly): pd_session_draw redraws its box alone
+    // while [redraw] stays false.
+    bool redrawScroll;
+    bool redrawUrgent, snapshotRequested;
+    uint64_t companionMs;
+    struct pd_refresh_timer snapshotTimer;
     bool ffToggled, ff;
     bool leave;
     bool wasBusy;
     int speedDebt; // quarters of a frame owed at GAME SPEED
+    unsigned catchUpFrames; // pd_input.catchUp's frames run so far (the dev build's stat)
+    enum pd_draw_plan drawPlan; // the plan this loop's frame ran with: PD_DRAW_NOW where the speed or a scene ruled it out
 
     // The field read (pk_field_state) and EXPAND.
     uint32_t romCrc;
     bool fieldKnown, wideKnown;
     uint32_t wildSwitch;
     int fieldFlags;
+    bool menuLatched;     // the last scene looked at was a menu screen (pd_session.c's menu_screen)
     bool wideReady;       // this frame shows EXPAND's window
     struct pd_wide_hole wideHole;
     const uint32_t* nextVideo;
@@ -107,6 +140,7 @@ struct pd_session {
 
     // The QUICK MENU.
     bool quickOpen;
+    uint32_t quickHeld; // buttons pressed in the menu, kept from the game until let go (the app's menuHeld)
     int quickSel, quickCount;
     struct quick_item quick[QUICK_COUNT];
     char repelWhy[32];
@@ -121,7 +155,42 @@ struct pd_session {
     char repelRows[3][48];
     const char* repelNames[3];
     const struct pd_config* flyCfg;
+    const struct pd_config* flashCfg; // FLASH from the quick menu (linux/flash.c), where the ROM has its code
+    int flashAsk;                     // 1+ = FLASH picked, run between two frames
+    const struct pd_config* tmCfg;    // USE on a TM / HM (linux/tm_teach.c), where the ROM has its code
+    int tmStage, tmWait, tmItem;      // 1 = the fade's on its way to the game's TM screen
+    uint32_t tmCallback;
     bool itemsOk, pcOk, bikeOk;
+
+    // FREE FLIGHT, FLIGHT AREA and the scenic FLY (linux/flight.c over the app's pk_flight.c): NULL where the game can't.
+    const struct pd_config* flightCfg;
+    int flightAsk;           // 1+ = TAKE OFF / LAND picked, run between two frames
+    int flightState;         // pk_flight_state() after the last frame
+    int flightVehicle;       // FLY ON the words were last given with
+    bool flightDrawn;        // the flight's shadow went into the last frame shown
+    uint32_t flightKeysWas;  // flight_one_way: last frame's keys, and which way of two held flies
+    bool flightVertical;
+    bool uiWarm;             // pd_ui_warm done (the first draw)
+    bool flightPending;      // ... and goes into this one once it's whole (frame_whole)
+
+    // REUSABLE TMS / INSTANT TEXT: their writes for this ROM (pd_rom_options), and whether they're in.
+    struct pd_rom_write tmWrites[PD_TM_SITES_MAX], textWrites[PD_TEXT_WRITES_MAX];
+    int tmCount, textCount;
+    bool tmApplied, textApplied;
+
+    // TRADE EVOS: the config's functions checked in this ROM; EVOLVE asked (run between frames).
+    bool tradeEvoOk, evolveAsk;
+
+    // NUZLOCKE: this game's tracker, whether it's on, where it's kept.
+    struct pd_nuz_tracker nuz;
+    bool nuzOn, nuzSupported;
+    char nuzPath[300];
+    bool scenic;             // the flight up there is the scenic FLY's (the trip runs faster)
+    int scenicAsk;           // 1+ = FLY STYLE SCENIC to scenicMapsec, routed between two frames
+    int scenicMapsec;
+    bool flightAreaAnywhere; // pk_flight was told ANYWHERE
+    int flightAreaTold;      // the frame FLIGHT AREA's edge was last explained
+    struct flight_area flightArea;
 
     // USE / GIVE / TAKE, each run between frames.
     int itemAsk;   // 1 = pick wanted, 2 = apply, 3 = take
@@ -145,10 +214,12 @@ struct pd_session {
     // BOXES.
     struct pd_boxes boxes;
     int boxAsk; // the PC's move asked: enum pd_action
+    bool swapAsk; // the summary's SWITCH asked: ui.switchFrom / switchTo
 
     // What the overlay shows.
     char notice[64];
     int noticeFrames;
+    int lastAspect; // VIEW: a move to EXPAND 1x shows that it's experimental
     uint32_t overlayKey;
     bool overlayShown, overlayDirty, overlayDim;
 
@@ -175,6 +246,8 @@ bool pd_session_can_focus(const struct pd_session* s);
 void pd_session_set_focus(struct pd_session* s, bool on);
 // Draws the companion on the bottom canvas.
 void pd_session_draw(struct pd_session* s, struct pd_canvas* bottom);
+// A Game Boy / Color game (160x144): its picture is pillarboxed in white, never stretched.
+bool pd_session_game_boy(const struct pd_session* s);
 // The last frame stays on screen (the battle's switch drives the game's party menu behind it).
 bool pd_session_holds_frame(const struct pd_session* s);
 // The overlay's canvas (PD_TOP_W x PD_TOP_H, alpha in the top byte); redrawn when overlayDirty.
@@ -187,6 +260,9 @@ int pd_session_screen(const struct pd_session* s);
 const uint32_t* pd_session_perf(unsigned fpsTenths, unsigned cpuPercent, int* w);
 // EXPAND's window, s->wideW x s->wideH pixels, when s->wideReady.
 const uint32_t* pd_session_wide(const struct pd_session* s);
+// EXPAND's deferred drawing (pk_wide_finish) and then FREE FLIGHT's clouds over its margins: the host's wideGo thread runs
+// this (it's called in place without one).
+void pd_session_wide_finish(void);
 // STATES: the slot's file and picture; the save state of the session's game.
 bool pd_session_save_state(struct pd_session* s, int slot);
 bool pd_session_load_state(struct pd_session* s, int slot);

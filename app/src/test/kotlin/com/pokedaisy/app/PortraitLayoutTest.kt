@@ -1,5 +1,6 @@
 package com.pokedaisy.app
 
+import com.pokedaisy.app.companion.data.CoreKey
 import com.pokedaisy.app.companion.ui.PortraitLayout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +34,49 @@ class PortraitLayoutTest {
         assertEquals(PortraitLayout.DEFAULT_RATIO, PortraitLayout.next(w, h, game, PortraitLayout.MIN_RATIO), 0f)
         assertEquals(max, PortraitLayout.next(w, h, game, PortraitLayout.DEFAULT_RATIO), 0f)
         assertEquals(PortraitLayout.MIN_RATIO, PortraitLayout.next(w, h, game, max), 0f)
+    }
+
+    /**
+     * The companion's height after each of [n] taps on the grip from [start], 0 while it's hidden, the way
+     * PortraitPanel.stepSize taps: a hidden companion comes back at its size, a shown one goes by [PortraitLayout.tap].
+     */
+    private fun taps(n: Int, start: Float, reserve: Int = 0, canHide: Boolean = true): List<Int> {
+        var ratio = start
+        var hidden = false
+        return List(n) {
+            if (hidden) {
+                hidden = false
+            } else {
+                val shown = PortraitLayout.companionHeight(w, h, game, ratio, reserve).toFloat() / w
+                val tap = PortraitLayout.tap(w, h, game, shown, reserve, canHide)
+                ratio = tap.ratio
+                hidden = tap.hide
+            }
+            if (hidden) 0 else PortraitLayout.companionHeight(w, h, game, ratio, reserve)
+        }
+    }
+
+    @Test
+    fun tapsGoRoundTheSizesThenHide() {
+        val small = PortraitLayout.companionHeight(w, h, game, PortraitLayout.MIN_RATIO)
+        val default = PortraitLayout.companionHeight(w, h, game, PortraitLayout.DEFAULT_RATIO)
+        val full = h - game
+        assertEquals(listOf(default, full, 0, small, default, full), taps(6, PortraitLayout.MIN_RATIO))
+    }
+
+    @Test
+    fun tapsHideWhenOnlyTheSmallestSizeFits() {
+        // The room under the game (here the touch controls' strip takes most of it) is less than the smallest size, so
+        // every size is drawn the same height: the taps go between shown and hidden.
+        val reserve = 1200
+        val small = PortraitLayout.companionHeight(w, h, game, PortraitLayout.MIN_RATIO, reserve)
+        assertEquals(listOf(0, small, 0, small), taps(4, PortraitLayout.DEFAULT_RATIO, reserve))
+    }
+
+    @Test
+    fun aDsTouchScreenNeverHides() {
+        assertFalse(taps(6, PortraitLayout.MIN_RATIO, canHide = false).contains(0))
+        assertFalse(taps(4, PortraitLayout.DEFAULT_RATIO, reserve = 1200, canHide = false).contains(0))
     }
 
     @Test
@@ -105,6 +149,32 @@ class PortraitLayoutTest {
         val full = PortraitLayout.arrange(w, h, game, grip, 10f, underGame = true)
         assertEquals(h - game - grip, full.companionHeight)
         assertEquals(h - grip, full.gripTop)
+        // With the controls showing, their strip stays free even at full height.
+        val fullPad = PortraitLayout.arrange(w, h, game, grip, 10f, underGame = true, padStrip = 400)
+        assertEquals(h - 400, fullPad.padTop)
+        assertEquals(h - 400 - grip, fullPad.gripTop)
+    }
+
+    @Test
+    fun underTheGameWithNoGapTheControlsStillGetTheBottom() {
+        // A 16:10 tablet with a DS game's 4:3 (900 tall): the companion under the game left no gap, and the controls
+        // lay over the game. Their strip is kept at the bottom; the companion gives way first, then the game.
+        val tw = 1200
+        val th = 1920
+        val ds = 900
+        val grip = 63
+        val strip = 450
+        val a = PortraitLayout.arrange(tw, th, ds, grip, PortraitLayout.DEFAULT_RATIO, underGame = true, padStrip = strip)
+        assertEquals(th - strip, a.padTop)
+        assertEquals(th, a.padBottom)
+        assertEquals(a.padTop, a.gripTop + grip)
+        assertEquals(a.gameBottom, a.companionTop)
+        assertTrue(a.companionHeight >= (tw * PortraitLayout.MIN_RATIO).toInt())
+        assertTrue(a.gameBottom <= ds)
+        // No controls: as before (nothing reserved).
+        val none = PortraitLayout.arrange(tw, th, ds, grip, PortraitLayout.DEFAULT_RATIO, underGame = true)
+        assertEquals(0, none.padTop)
+        assertEquals(none.gameBottom, none.padBottom)
     }
 
     @Test
@@ -129,7 +199,7 @@ class PortraitLayoutTest {
     fun diagonalKeysPressBothDirections() {
         val input = GbaInput()
         input.onKey(android.view.KeyEvent.KEYCODE_DPAD_UP_LEFT, true)
-        assertEquals(MgbaCore.Key.UP or MgbaCore.Key.LEFT, input.mask)
+        assertEquals(CoreKey.UP or CoreKey.LEFT, input.mask)
         input.onKey(android.view.KeyEvent.KEYCODE_DPAD_UP_LEFT, false)
         assertEquals(0, input.mask)
     }

@@ -6,96 +6,116 @@ change to any of the places listed under "Where it's decided" updates its rows h
 
 ✅ yes · ◐ partly (see the note) · — no · n/a doesn't apply
 
-| Game | Version | EXPAND | Battle buttons | One-press picks | POKéMON switch | Field items | FLY | Trainer card | Field reads | Bike / surf | Wild encounters | PC anywhere | Reusable TMs | Player look | Shiny odds | TMs from the bag | FLASH |
-| ---- | ------- | :----: | :------------: | :-------------: | :------------: | :---------: | :-: | :----------: | :---------: | :---------: | :-------------: | :---------: | :----------: | :---------: | :--------: | :--------------: | :---: |
-| Yellow (GB) | USA/Europe | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — |
-| Yellow (GB) | DE / FR / IT / ES | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — |
-| Yellow Legacy (GB) | 1.0.10 | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — |
-| Red / Blue (GB) | USA/Europe | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — |
-| PureRed / PureBlue (GB) | 2.7.6 | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — |
-| Gold / Silver (GBC) | USA/Europe | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | — | n/a | — | — | — |
-| Crystal (GBC) | USA, USA/Europe rev 1, AU | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | — | — | — |
-| Crystal Legacy (GBC) | 1.3.1 | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | — | — | — |
-| Crystal Clear (GBC) | 2.5.11, 2.6.0 (4 builds) | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | — | n/a | — | — | — |
-| Prism (GBC) | 0.95 build 254 | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | ✅ ¹⁶ | n/a | — | — | — |
-| Polished Crystal (GBC) | 3.2.0 - 3.2.3 (16 builds) | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | ✅ ¹⁶ | n/a | — | — | — |
-| FireRed | USA/Europe rev 1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| FireRed | USA/Europe rev 0 | ✅ | ✅ | — | — | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| FireRed | ES | ✅ | ✅ | ◐ ² | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| FireRed | DE / FR / IT / JP | ✅ | ✅ | — | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| LeafGreen | USA/Europe rev 0 and 1 | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| LeafGreen | ES / DE / FR / IT / JP | ✅ | ✅ | — | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Emerald | USA/Europe | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Emerald | ES / DE / FR / IT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Emerald | JP | ✅ | ✅ | — | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| FireRed, randomized (UPR ZX 4.6.1) | USA/Europe rev 1 | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| FireRed, randomized (UPR ZX 4.6.1) | USA/Europe rev 0 | ✅ ²³ | ✅ | — | — | ✅ ²³ | ✅ ²³ | — | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Emerald, randomized (UPR ZX 4.6.1) | USA/Europe | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Ruby / Sapphire | USA rev 1 and 2 | ✅ | ✅ | ✅ | — | ✅ | ✅ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ |
-| Ruby / Sapphire | USA rev 0, ES / DE / FR / IT | ✅ | ✅ | ✅ | — | ✅ | ✅ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ |
-| Ruby / Sapphire | JP | ✅ | ✅ | ✅ | — | ✅ | ✅ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ |
-| Platinum (DS) | USA rev 1 | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| Platinum (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| Platinum (DS) | Spain rev 0 ³¹ | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ³¹ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| HeartGold (DS) | USA | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| HeartGold (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| HeartGold (DS) | Spain, Italy, Japan, Korea rev 0; Europe rev 10 ³¹ | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| SoulSilver (DS) | USA | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| SoulSilver (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| SoulSilver (DS) | Spain, Italy, Japan, Korea rev 0; Europe rev 10 ³¹ | ✅ ¹⁴ | ✅ ²⁴ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| HeartGold (DS) | Germany rev 0 | ✅ ¹⁴ | ✅ ²⁵ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| SoulSilver (DS) | Germany rev 0 | ✅ ¹⁴ | ✅ ²⁵ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | — | n/a | — | — | — |
-| Black (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| Black (DS) | France | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| Black (DS) | Germany, Spain, Italy, Japan, Korea ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| White (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| White (DS) | France | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| White (DS) | Germany, Spain, Italy, Japan, Korea ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| Black 2 (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| Black 2 (DS) | France, Germany, Spain, Italy, Korea; Japan rev 1 ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| White 2 (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| White 2 (DS) | France, Germany, Spain, Italy, Korea; Japan rev 1 ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — |
-| Origin HeartGold (DS) | 4.0.3 English 1.0.0 | ✅ ¹⁴ | — ²⁹ | — | — | — | ✅ ²⁹ | — | ✅ ²⁹ | ✅ ¹⁴ | ✅ ²⁹ | ✅ ²⁹ | — | n/a | — | — | — |
-| Renegade Platinum (DS) | 1.3.0, 1.3.0 Classic, 1.2.0 | ✅ ³² | ✅ ³² | — | — | — | ✅ ³² | — | ✅ ³² | ◐ ³² | ◐ ³² | ✅ ³² | — | n/a | — | — | — |
-| Amethyst | 1.3.0, 1.4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — ³³ | ✅ ³³ |
-| Ash Gray | 4.5.3, Fork Bug Fix 1.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁹ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — | — | ✅ ¹⁹ | ✅ | — ³³ |
-| Celia's Stupid Romhack | 1.1.4 | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | ✅ ¹⁵ | — | — | — | — |
-| Dreamstone Mysteries | the one release | — | ✅ | ✅ | ✅ | — | — | — | — | — | — ²² | — | — | — | — | — | — |
-| Elite Redux | 2.65.3b, 2.65.4.1b | ✅ | ✅ ¹⁰ | ✅ ¹⁰ | ✅ | — | — | — | ✅ ¹⁰ | ✅ ¹⁰ | ✅ ¹⁰ | — ¹⁰ | n/a ¹⁵ | — | ✅ ¹⁹ | — | — |
-| Emerald Imperium | 1.3.1 | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ ³³ |
-| Emerald Kaizo | 2.0 | ✅ | ✅ | ✅ | ✅ | ✅ | — ⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Emerald Legacy | 1.1.4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ ³³ | ✅ ³³ |
-| Emerald Rogue | 2.2.1-EX | ✅ | — | — | — | — | — | — | ◐ ⁶ | — | — | — | — | — | — | — | — |
-| Emerald Seaglass | 3.0 | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | — | — | ✅ ¹⁹ | — | — |
-| FireRed Rocket Edition | the one release | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁹ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ✅ ¹⁵ | — | ✅ ¹⁹ | ✅ | — ³³ |
-| Gaia | 3.2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Ghost Grey | 1.0.1, 1.0.2, 1.0.4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹¹ | — | ✅ ¹¹ | ✅ ¹¹ | ✅ ¹¹ | ✅ ¹¹ | — | — | — | ✅ | ✅ ³³ |
-| Let's Go Pikachu / Eevee | English, Translation Only (4 builds) | ✅ ²⁸ | ✅ | ✅ ²⁸ | ✅ ²⁸ | ✅ ²⁸ | ✅ ²⁸ | — | ✅ ²⁸ | ◐ ²⁸ | ◐ ²⁸ | ✅ ²⁸ | — | — | — | ✅ | ✅ ³³ |
-| Glazed | 9.2.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁷ | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| GS Chronicles | 2.7.6 | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁹ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Heart and Soul | 2.0.6 | ✅ | ✅ | ✅ | ✅ | — | ✅ | — | ◐ ⁶ | — | ✅ | ✅ | — | — | — | — | ✅ ³³ |
-| Lazarus | 2.0 | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — | ✅ ³³ |
-| Modern Emerald | 3.6 | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — |
-| Monomyth | 1.0, 1.1 | ✅ ²³ | ✅ | ✅ | ✅ | — | — | — | ✅ ²³ | — | — ²³ | ✅ ²³ | — | — | — | — | — |
-| Odyssey | 4.1.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Orange Islands | Beta 5.7, an older beta | ◐ ³ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | — | ✅ ¹⁹ ²⁰ | ✅ | ✅ ³³ |
-| Quetzal | English / Spanish Alpha 9 v0 | ◐ ³ | ✅ | ✅ | ✅ | — | — | — | ◐ ⁶ | — | — | — | — | — | — | — | — |
-| Quetzal | English / Spanish Alpha 9 v1 | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — |
-| Quetzal, Moemon Quetzal | English / Spanish Alpha 0.8.4 (+ Hotfix) | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — |
-| R.O.W.E. | 2.1.9.1 Experimental | ◐ ³ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | — | — | ✅ ¹⁹ | — | — |
-| Radical Red | 4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Recharged Emerald | 2.2.5, 2.2.8, Rebalanced 2.2.8 | — | ✅ | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | ✅ ¹⁹ | ✅ ³³ | ✅ ³³ |
-| Recharged Yellow | 1.8.0, 1.9.0, 1.9.4, 1.9.7 | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ ¹⁹ | — | — |
-| SoulGold | 1.1.4, 1.2 (3 builds), 1.2.1 (2 builds) | ✅ | ✅ | ✅ | ✅ | ◐ ¹⁷ | ✅ | ✅ | ◐ ⁶ | — | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | — | ✅ ³³ |
-| Super Mariomon | 1.2.1-1.3, 1.5.1, 1.5.2 | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | — | — | ✅ ¹⁹ | — | — |
-| Sword and Shield Ultimate Plus | 1.2.1.2 + its 3 patches | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Team Rocket Dragonsden | 1.5 | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | ✅ ¹⁹ | — | — |
-| Team Rocket Dragonsden | 2026 3.0.9 (Spanish) | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — |
-| Too Many Types 2 | 1.5.2 | ✅ | ✅ | ✅ | ✅ | — | — | — | ◐ ⁶ | — | ✅ | — | — | — | ✅ ¹⁹ | — | — |
-| Ultra Violet | 1.22 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ |
-| Unbound | 2.1.1.1, 2.1.1.1 French | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | ✅ | ✅ ³³ |
-| Wishes of Tomorrow | 1.2.6 | — | ✅ ²¹ | ✅ ²¹ | ✅ ²¹ | — | — | — | — | — | — ²¹ | — | — | — | — | — | — |
-| Unknown FireRed / Emerald hacks edited in place | any (proven by code) | ◐ ³⁰ | ◐ ³⁰ | ◐ ³⁰ | ◐ ³⁰ | — | — | — | ◐ ³⁰ | ◐ ³⁰ | — | — | — | — | — | — | — |
+| Game | Version | EXPAND | Battle buttons | One-press picks | POKéMON switch | Field items | FLY | Trainer card | Field reads | Bike / surf | Wild encounters | PC anywhere | Reusable TMs | Player look | Shiny odds | TMs from the bag | FLASH | Area map |
+| ---- | ------- | :----: | :------------: | :-------------: | :------------: | :---------: | :-: | :----------: | :---------: | :---------: | :-------------: | :---------: | :----------: | :---------: | :--------: | :--------------: | :---: | :------: |
+| Yellow (GB) | USA/Europe | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | n/a | — | — | — ³⁶ |
+| Yellow (GB) | DE / FR / IT / ES | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | n/a | — | — | — ³⁶ |
+| Yellow Legacy (GB) | 1.0.10 | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | n/a | — | — | — ³⁶ |
+| Red / Blue (GB) | USA/Europe | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | n/a | — | — | — ³⁶ |
+| Red / Blue (GB) | DE (Rote Edition / Blaue Edition) | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — | — ³⁶ |
+| Red Gen II Graphics (GB) | 2.0 ⁵⁶ | — | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ⁵⁶ | — | n/a | n/a | ✅ ⁵⁶ | ✅ ⁵⁶ | — | n/a | n/a | — | — | — ³⁶ |
+| Yellow Gen II Graphics (GB) | 1.1 ⁵⁶ | — | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | — | — | — | n/a | n/a | — | — | — ³⁶ |
+| Brown (GB) | 6.0.1, 6.1.2 | — | ✅ ³⁸ | ✅ ³⁸ | ✅ ³⁸ | — | ✅ ³⁸ | — | n/a | n/a | ✅ ³⁸ | ✅ ³⁸ | ✅ ⁴⁸ | n/a | n/a | — | — | — ³⁶ |
+| PureRed / PureBlue (GB) | 2.7.6 | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | n/a | — | — | — ³⁶ |
+| Gold / Silver (GBC) | USA/Europe | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | ✅ ⁵⁵ | — | — | — ³⁶ |
+| Gold / Silver (GBC) | DE (Goldene Edition, Silberne Edition) | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | — | n/a | — | — | — | — ³⁶ |
+| Crystal (GBC) | USA, USA/Europe rev 1, AU | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | ✅ ⁵⁵ | — | — | — ³⁶ |
+| Crystal (GBC) | DE (Kristall) | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | — | n/a | — | — | — | — ³⁶ |
+| Crystal Legacy (GBC) | 1.3.1 | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | ✅ ¹³ | — | n/a | n/a | ✅ ¹³ | ✅ ¹³ | ✅ ⁴⁸ | n/a | — | — | — | — ³⁶ |
+| Crystal Clear (GBC) | 2.5.11, 2.6.0 (4 builds) | ✅ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | ✅ ⁴⁸ | n/a | — | — | — | — ³⁶ |
+| Prism (GBC) | 0.95 build 254 | n/a | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Polished Crystal (GBC) | 3.2.0 - 3.2.3 (16 builds) | ◐ ¹² | ✅ | ✅ ¹ | ✅ ⁸ | — | — | — | n/a | n/a | n/a | n/a | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| FireRed | USA/Europe rev 1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed | USA/Europe rev 0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed | ES | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ ⁴⁹ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed | DE / FR / IT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ ⁴⁹ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed | JP | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| LeafGreen | USA/Europe rev 0 and 1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| LeafGreen | ES / DE / FR / IT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ ⁴⁹ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| LeafGreen | JP | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Emerald | USA/Europe | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Emerald | ES / DE / FR / IT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ ⁴⁹ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Emerald | JP | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed, randomized (UPR ZX 4.6.1) | USA/Europe rev 1 | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ ³⁴ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| FireRed, randomized (UPR ZX 4.6.1) | USA/Europe rev 0 | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ ³⁴ | — | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Emerald, randomized (UPR ZX 4.6.1) | USA/Europe | ✅ ²³ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ ³⁴ | ✅ | ✅ ²³ | ✅ | ✅ ²³ | ✅ ²³ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Ruby / Sapphire | USA rev 1 and 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ ⁵³ | ✅ | ✅ |
+| Ruby / Sapphire | USA rev 0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ ⁵³ | ✅ | ✅ |
+| Ruby / Sapphire | ES / DE / FR / IT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ | ✅ |
+| Ruby / Sapphire | JP | ✅ | ✅ | ✅ | — | ✅ | ✅ ³⁴ | — | ◐ ⁵ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ | ✅ |
+| Platinum (DS) | USA rev 1 | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| Platinum (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| Platinum (DS) | Spain, Germany rev 0 ³¹ | ✅ ¹⁴ | ✅ ²⁶ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ³¹ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| HeartGold (DS) | USA | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| HeartGold (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| HeartGold (DS) | Spain, Italy, Japan, Korea rev 0; Europe rev 10 ³¹ | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | ◐ ⁵⁴ | — | — | — ³⁶ |
+| SoulSilver (DS) | USA | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| SoulSilver (DS) | France rev 0 | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| SoulSilver (DS) | Spain, Italy, Japan, Korea rev 0; Europe rev 10 ³¹ | ✅ ¹⁴ | ✅ ²⁴ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | ◐ ⁵⁴ | — | — | — ³⁶ |
+| HeartGold (DS) | Germany rev 0 | ✅ ¹⁴ | ✅ ²⁵ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| SoulSilver (DS) | Germany rev 0 | ✅ ¹⁴ | ✅ ²⁵ | — | ✅ ⁵⁰ | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ⁵² | n/a | — | — | — | — ³⁶ |
+| Black (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| Black (DS) | France | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Black (DS) | Germany, Spain, Italy, Japan, Korea ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| White (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| White (DS) | France | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| White (DS) | Germany, Spain, Italy, Japan, Korea ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Black 2 (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| Black 2 (DS) | France, Germany, Spain, Italy, Korea; Japan rev 1 ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| White 2 (DS) | USA/Europe | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | ✅ ⁵⁴ | — | — | — ³⁶ |
+| White 2 (DS) | France, Germany, Spain, Italy, Korea; Japan rev 1 ³¹ | ✅ ¹⁴ | ✅ ²⁷ | — | — | — | ✅ ¹⁴ | — | ✅ ¹⁴ | ◐ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁴ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Origin HeartGold (DS) | 4.0.3 English 1.0.0 | ✅ ¹⁴ | ✅ ²⁹ | — | — | — | ✅ ²⁹ | — | ✅ ²⁹ | ✅ ¹⁴ | ✅ ²⁹ | ✅ ²⁹ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Heartfelt Gold (DS) | 1.0.15 (+ Zoomed In) | ✅ ³⁷ | ✅ ³⁷ | — | — | — | ✅ ³⁷ | — | ✅ ³⁷ | — | ✅ ³⁷ | ✅ ³⁷ | — | n/a | — | — | — | — ³⁶ |
+| Sacred Gold (DS), Storm Silver (DS) | 1.05 (Sacred Gold's Classic too) | ✅ ⁴³ | ◐ ⁴³ | — | — | — | ◐ ⁴³ | — | ✅ ⁴³ | ◐ ⁴³ | ◐ ⁴³ | ◐ ⁴³ | — | n/a | — | — | — | — ³⁶ |
+| Renegade Platinum (DS) | 1.3.0 (+ Classic, shiny rate, Speed Up), 1.2.0 | ✅ ³² | ✅ ³² | — | — | — | ✅ ³² | — | ✅ ³² | ◐ ³² | ◐ ³² | ✅ ³² | — | n/a | — | — | — | — ³⁶ |
+| Blaze Black 2 Redux (DS) | 1.4.1, + Classic / EVless / Classic EVless | ✅ ³⁵ | ✅ ³⁵ | — | — | — | ✅ ³⁵ | — | ✅ ³⁵ | ◐ ¹⁴ | ✅ ³⁵ | ✅ ³⁵ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Volt White 2 Redux (DS) | 1.4.1, + Classic / EVless / Classic EVless | ✅ ³⁵ | ✅ ³⁵ | — | — | — | ✅ ³⁵ | — | ✅ ³⁵ | ◐ ¹⁴ | ✅ ³⁵ | ✅ ³⁵ | ✅ ¹⁶ | n/a | — | — | — | — ³⁶ |
+| Amethyst | 1.3.0, 1.4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — ³³ | ✅ ³³ | ✅ |
+| Ash Gray | 4.5.3, Fork Bug Fix 1.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — | — | ✅ ¹⁹ | ✅ | — ³³ | ✅ |
+| Celia's Stupid Romhack | 1.1.4 | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ | ✅ | ✅ | — | ✅ ¹⁵ | — | — | — | — | ✅ |
+| Dreamstone Mysteries | the one release | — | ✅ | ✅ | ✅ | — | — | — | — | — | — ²² | — | — | — | — | — | — | ✅ |
+| Elite Redux | 2.65.3b, 2.65.4.1b | ✅ | ✅ ¹⁰ | ✅ ¹⁰ | ✅ | — | — | — | ✅ ¹⁰ | ✅ ¹⁰ | ✅ ¹⁰ | — ¹⁰ | n/a ¹⁵ | — | ✅ ¹⁹ | — | — | ✅ |
+| Emerald Imperium | 1.3.1 | ✅ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ ¹⁸ | ✅ ¹⁹ | — | ✅ ³³ | ✅ |
+| Emerald Kaizo | 2.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ⁴ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Emerald Legacy | 1.1.4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ ³³ | ✅ ³³ | ✅ |
+| Emerald Rogue | 2.2.1-EX | ✅ | — | — | — | — | — | — | ◐ ⁶ | — | — | — | — | — | — | — | — | ✅ |
+| Emerald Seaglass | 3.0 | ✅ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — | — | ✅ |
+| FireRed Rocket Edition | the one release | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ✅ ¹⁵ | — | ✅ ¹⁹ | ✅ | — ³³ | ✅ |
+| Gaia | 3.2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ✅ |
+| Ghost Grey (blocked ¹¹) | 1.0.1, 1.0.2, 1.0.4 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹¹ ³⁴ | — | ✅ ¹¹ | ✅ ¹¹ | ✅ ¹¹ | ✅ ¹¹ | — | — | — | ✅ | ✅ ³³ | — ¹¹ |
+| Let's Go Pikachu / Eevee | English, Translation Only (4 builds) | ✅ ²⁸ | ✅ | ✅ ²⁸ | ✅ ²⁸ | ✅ ²⁸ | ✅ ²⁸ ³⁴ | — | ✅ ²⁸ | ◐ ²⁸ | ◐ ²⁸ | ✅ ²⁸ | — | — | — | ✅ | ✅ ³³ | ✅ |
+| Clover | 1.3.3 | ✅ ⁴¹ | ✅ | ✅ ⁴¹ | — | — ⁴¹ | — ⁴¹ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — ⁴¹ | — | — | — | — | — | ✅ |
+| Elysium (Part A), Elysium (Part B) | 2.5.0 | ✅ ⁴² | ✅ | ✅ ⁴² | — | ◐ ⁹ | ◐ ⁹ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — | — | — | — | — | ✅ |
+| Glazed | 9.2.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁷ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ✅ |
+| GS Chronicles | 2.7.6 | ✅ | ✅ | ✅ | ✅ | ✅ | ◐ ⁹ ³⁴ | — | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | ◐ ⁹ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ | — ³⁶ |
+| Rhythm | 1.4.0 | — | ✅ | ✅ ⁴⁴ | — | — | — | — | — | — | — | — | — | — | — | — | — | — ³⁶ |
+| Oops All Eevees! | 1.3.2 | — | ✅ | ✅ ⁴⁵ | — | — | — | — | — | — | — | — | — | — | — | — | — | — ³⁶ |
+| Ceruleum | 1.1.1 | — | ✅ ⁴⁶ | ✅ ⁴⁶ | ✅ ⁴⁶ | — | — | — | — | — | — ⁴⁶ | — | — | — | — | — | — | — ³⁶ |
+| RecordKeepers | 1.2.1 | — | — ⁴⁷ | — ⁴⁷ | — ⁴⁷ | — | — | — | — | — | — | — | — | — | — | — | — | — ³⁶ |
+| Heart and Soul | 2.0.6 | ✅ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | — | ◐ ⁶ | — | ✅ | ✅ | — | — | — | — | ✅ ³³ | ✅ |
+| Lazarus | 2.0 | ✅ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — | ✅ ³³ | ✅ |
+| Modern Emerald | 3.6 | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| Epsilon Emerald | 1.0.0 | ✅ ³⁹ | ✅ | ✅ | ✅ | — | ✅ ³⁹ | — | ✅ ³⁹ | — | ✅ ³⁹ | ✅ ³⁹ | — | — | — | — | — | — |
+| Monomyth | 1.0, 1.1, 1.2 | ✅ ²³ | ✅ | ✅ | ✅ | — | — | — | ✅ ²³ | — | — ²³ | ✅ ²³ | — | — | — | — | — | ✅ |
+| Odyssey | 4.1.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ✅ |
+| Orange Islands | Beta 5.7, an older beta | ◐ ³ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | — | ✅ ¹⁹ ²⁰ | ✅ | ✅ ³³ | ✅ |
+| Quetzal | English / Spanish Alpha 9 v0 | ◐ ³ | ✅ | ✅ | ✅ | — | ◐ ³⁴ | — | ◐ ⁶ | — | — | ✅ | — | — | — | — | — | — ³⁶ |
+| Quetzal | English / Spanish Alpha 9 v1 | — | ✅ | ✅ | ✅ | — | ◐ ³⁴ | — | — | — | — | ✅ | — | — | — | — | — | — ³⁶ |
+| Quetzal, Moemon Quetzal | English / Spanish Alpha 0.8.4 (+ Hotfix) | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — | ✅ |
+| R.O.W.E. | 2.1.9.1 Experimental | ✅ ³ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | — | — | ✅ |
+| Radical Red | 4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ✅ |
+| Recharged Emerald | 2.2.5, 2.2.8, Rebalanced 2.2.8 | — | ✅ | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | ✅ ¹⁹ | ✅ ³³ | ✅ ³³ | ✅ |
+| Recharged Yellow | 1.8.0, 1.9.0, 1.9.4, 1.9.7 | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ | ✅ | — | — | — | ✅ ¹⁹ | — | — | ✅ |
+| SoulGold | 1.1.4, 1.2 (3 builds), 1.2.1 (2 builds) | ✅ | ✅ | ✅ | ✅ | ◐ ¹⁷ | ✅ ³⁴ | ✅ | ◐ ⁶ | — | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | — | ✅ ³³ | ✅ |
+| Super Mariomon | 1.2.1-1.3, 1.5.1, 1.5.2 | ✅ | ✅ | ✅ | ✅ | — | ◐ ³⁴ | — | ✅ | ✅ | ✅ | ◐ | — | — | ✅ ¹⁹ | — | — | ✅ |
+| Sword and Shield Ultimate Plus | 1.2.1.2 + its 3 patches | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | — | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ◐ ³⁶ |
+| Team Rocket Dragonsden | 1.5 | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | ✅ ¹⁹ | — | — | — ³⁶ |
+| Team Rocket Dragonsden | 2026 3.0.9, 3.1 (Spanish) | — | ✅ | ✅ | ✅ | — | — | — | — | — | — | — | — | — | — | — | — | — ³⁶ |
+| Too Many Types 2 | 1.5.2 | ✅ | ✅ | ✅ | ✅ | — | ✅ ³⁴ | — | ◐ ⁶ | — | ✅ | — | — | — | ✅ ¹⁹ | — | — | ✅ |
+| Ultra Violet | 1.22 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ | — | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁵ | ✅ ¹⁸ | ✅ ¹⁹ | ✅ | ✅ | ✅ |
+| Unbound | 2.1.1.1, 2.1.1.1 French, 2.1.1.1 Italian (patch v7) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ³⁴ ⁴⁰ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ¹⁶ | — | ✅ ¹⁹ | ✅ | ✅ ³³ | ✅ |
+| Wishes of Tomorrow | 1.2.6 | — | ✅ ²¹ | ✅ ²¹ | ✅ ²¹ | — | — | — | — | — | — ²¹ | — | — | — | — | — | — | ◐ ³⁶ |
+| Unknown FireRed / Emerald hacks edited in place | any (proven by code) | ◐ ³⁰ | ◐ ³⁰ | ◐ ³⁰ | ◐ ³⁰ | — | — | — | ◐ ³⁰ | ◐ ³⁰ | — | — | — | — | — | — | — | — ³⁶ |
 
 1. Yellow's and Crystal's battle controls steer from the cursor they read off the screen (`readGen1BattleInput`,
    `readGen2BattleInput`: the menu's own cursor variables, checked against the filled ▶ on screen), not from addresses
@@ -112,21 +132,27 @@ change to any of the places listed under "Where it's decided" updates its rows h
    showed did nothing; a DOWN dropped as the move list opened used the wrong move), on Crystal rev 1 too: the Game Boy
    picks now steer on the menu read every frame (`GbPartySwitch.battleMenu`) and press again what was dropped, A
    included. A pick takes 15-31 frames.
+   German Crystal (Kristall) has Crystal's menus at its own columns (KMPF / PkMn / BEUTEL / FLUCHT from column 5, the
+   TAUSCH / STATUS / ZURÜCK menu at column 10: `Gen2Config.battleMenuLeft` / `switchMenuLeft`): reads checked on the
+   `crystal_de_battle*` fixtures, not yet through the controller against the running game.
    Gold / Silver have Crystal's battle menus (their own addresses, `GEN2_GOLD`): reads checked on the `gold_battle*` /
-   `silver_battle` fixtures, the controls' timing not run on them.
+   `silver_battle` fixtures, the controls' timing not run on them. German Gold / Silver (Goldene / Silberne Edition) have
+   them at Kristall's columns (`GEN2_GOLD_DE`): reads checked on the `gold_de_battle*` / `silver_de_battle` fixtures.
    Red / Blue have Yellow's battle menus and menu variables (at Yellow's addresses, the cursor columns 9 / 15): their
-   reads are checked on the `red_battle*` fixtures, the controls' timing wasn't run on them.
+   reads are checked on the `red_battle*` fixtures, the controls' timing wasn't run on them. German Red / Blue have German
+   Yellow's columns (KMPF / ITEM 7, PkMn / FLUCHT 12): reads checked on `red_de_battle*` / `blue_de_battle`.
    PureRed / PureBlue keep Red's battle menus at Red's places (FIGHT / ITEM column 9, PkMn / RUN 15, the move list at
    (5, 12)): reads checked on the `purered_battle*` / `pureblue_battle` fixtures, the controls' timing not run on them.
-2. Spanish FireRed's port copies English rev 1's config, cursors included. Its battle RAM matches English byte for
-   byte (gBattleStruct 0x02023FE8, gEnemyParty 0x0202402C, the cursors sit between them), but it was never checked
-   headless.
+2. (No longer used: Spanish FireRed's cursors were checked headless with the other ports, 2026-11-18.)
 3. Mapped and checked, but `pending` in `gen_wide_tables.py` (the middle isn't exact yet), so the app doesn't offer
-   EXPAND (the field reads use their rows anyway, `PK_FIELD_ONLY_ROMS`): Orange Islands (the top tile row once the walk turns north), Quetzal (its own engine), R.O.W.E. (an NPC's
-   sprite and one building's metatiles).
+   EXPAND (the field reads use their rows anyway, `PK_FIELD_ONLY_ROMS`): Orange Islands (the top tile row once the walk turns north) and Quetzal (its own engine).
+   R.O.W.E. was here until 2026-11-16: its gSprites, read off the symbol table its ROM carries, sat 58 entries past the
+   address found in dumps, so the player and an NPC weren't drawn; with it every map frame of the walk (430) and every
+   battle frame (978) is exact headless.
 4. Kaizo has Emerald's FLY code, but the shortcut crashed its map reload headless (on retail Emerald's save: the
-   first flight, or the fourth with the overworld's windows freed first), while its own Fly map flies fine: off
-   until it can be checked on a Kaizo save.
+   first flight, or the fourth with the overworld's windows freed first), while its own Fly map flies fine. So no
+   classic FLY there (`FieldItemFns.classicFly` false): FLY always goes over the map (the scenic way, ³⁴), which never
+   takes that warp, and a town with no way there over the map says so (`FlyResult.NO_ROUTE`).
 5. RUN INDOORS doesn't apply: Ruby / Sapphire tell indoor maps by the map's type, which flash, weather and the region
    map read too. TEXT SPEED and AUTO-RUN work.
 6. TEXT SPEED and RUN INDOORS work, but AUTO-RUN can't tell a bike from walking there (no player state found; the sprite
@@ -142,7 +168,8 @@ change to any of the places listed under "Where it's decided" updates its rows h
    Clear 2.5.11 share that RAM and code; Prism takes a menu press only if it spans two frames, so every switch press
    does. Gold / Silver have Crystal's party menus (CANCEL row, SWITCH menu, none after a faint): their reads are checked
    on the `gold_battle_*` fixtures and the faint's pick by pressing headless (an A on SWITCH took 6 frames after the ▶
-   showed), not through the controller. Polished Crystal's party menu is Crystal's (CANCEL row, A after a faint sends the
+   showed), not through the controller; German Gold's the same way on the `gold_de_battle_*` fixtures (A after the faint sent the
+   picked Pokemon in). Polished Crystal's party menu is Crystal's (CANCEL row, A after a faint sends the
    slot out) with its SWITCH / SUMMARY / CANCEL a column left (from (11, 12)); like Prism's it reads keys every other frame
    and its SWITCH menu takes A from 3 frames after its ▶ shows: reads checked on the `polished_crystal_battle_*` fixtures,
    and the switch run through the real controller against 3.2.3 (wild and trainer battles): from Bag's cell via PkMn
@@ -165,7 +192,8 @@ change to any of the places listed under "Where it's decided" updates its rows h
     (`fieldinfo`): free / text / battle, the MACH and ACRO BIKE and SURF from gPlayerAvatar. WILD ENCOUNTERS: 0x0203D214
     (2.65.3b) / 0x0203D21C (2.65.4.1b); off = no battle in 300 steps of Route 101's grass, 100 = one within ~24. No PC
     anywhere: its START menu has its own PC.
-11. Ghost Grey, checked headless on v1.0.4 and v1.0.1 with its own save (FireRed rev 0's table, `FIELD_ITEMS_PORTS["BPRE0"]`):
+11. **Blocked since 2026-11-12 at its developer's request** (`BlockedGames`, by SHA-1 and CRC32): it plays as a plain game, the
+    companion shows the reason and its Discord link, and nothing below runs. The code is kept, as it was. Ghost Grey, checked headless on v1.0.4 and v1.0.1 with its own save (FireRed rev 0's table, `FIELD_ITEMS_PORTS["BPRE0"]`):
     a RAGECANDYBAR through ExecuteTableBasedItemEffect healed the lead 85 -> 93; the PC script opened the PC in its cave;
     after a warp to Pewter City, DRIFBLIM taught FLY, the badge check, SetUpFieldMove_Fly and SetFlyWarpDestination flew it
     to Viridian's Pokémon Center, controls free after; `fieldinfo` read the field free / locked with text (START menu) /
@@ -181,8 +209,14 @@ change to any of the places listed under "Where it's decided" updates its rows h
     New Bark Town (its name sign up), in and out of a house, the START menu, OPTION, SAVE, a wild battle and RUN: every
     map frame exact but those the game wrote VRAM or a palette in mid-frame. Crystal Clear (all four builds) has the same
     over its own tables: palette maps a byte per tile, 256 blocks, its compressed connected maps, its own object sprites.
-    The other languages' Yellows, Red / Blue, Gold / Silver, Prism and Polished Crystal aren't mapped yet (—).
-13. FLY, WILD ENCOUNTERS and PC anywhere on Red / Blue, Yellow (all five languages) and Crystal (rev 0, rev 1, Australia)
+    Polished Crystal has it on 3.2.3's normal build only (CRC32 `f98367e4`; Keegan's profile, first in the libretro core, now
+    the app's too): its own structs and LZ (`pk_wide_gb_polished.inc`, addresses from the release's `.sym` by
+    `scripts/gen_polished_wide.py`). Checked headless on the new-game save: a walk round its route and grass, the START menu and OPTION
+    (2197 of 2265 map frames exact; the other 68 are a wild battle's wipe, which the camera now pulls in for, as on Crystal).
+    German Crystal (Kristall) is English's rebuild but for one ROM address (SpriteMovementData, 0x4276 in bank 1): a walk on
+    Route 29 and its grass, 777 map frames, every one exact.
+    The other languages' Yellows, Red / Blue, Gold / Silver, Prism and the other Polished Crystal builds aren't mapped yet (—).
+13. FLY, WILD ENCOUNTERS and PC anywhere on Red / Blue (English and German), Yellow (all five languages) and Crystal (rev 0, rev 1, Australia)
     are `GbField.kt`, each the game's own way in (pret/pokered's, pokeyellow's and pokecrystal's sources; the European
     Yellows' addresses mapped by scripts/port_gen1.py; each cart's code checked in it first: `GbFieldTest` finds every Gen 1
     cart's own config and no other's). Crystal queues a map script the overworld runs once the player stands free
@@ -191,13 +225,19 @@ change to any of the places listed under "Where it's decided" updates its rows h
     overworld loop through Bankswitch (`pk_gb_field.c`, `MgbaCore.pkGbCallAt`); FLY sets what the town map's A leaves
     (destination, BIT_FLY_WARP / BIT_USED_FLY, Yellow's Pikachu hidden); encounters are the map's wGrassRate / wWaterRate
     held at 0 and put back from its wild data. Checked headless with mgba_dump (`gbpoke`, `gbcallat`): every cart's PC (in
-    its own language) opened over the field and backed out of; flights to Pewter (all six Gen 1 configs, Blue on pret's
+    its own language) opened over the field and backed out of; flights to Pewter (every Gen 1 config, German Red / Blue too; Blue on pret's
     pokeblue.gbc) and Cherrygrove landing at their Pokémon Centers; Crystal's Route 29 grass with no battle in 100 steps
     (one within ~15 without), Yellow's Route 1 at a forced rate of 255 meeting one at once; then on the Thor: Crystal's PC
     from PACK, Yellow's FLY to Vermilion from MAP. The European Yellows and Red / Blue have no EXPAND scene, so their PC /
     FLY go by RAM alone (the walk counter, wFontLoaded's text box bit, the joypad and warp flags). FLY's list is the game's
     own (Gen 1: the visited towns in town map order; Crystal: the visited flypoints of the region the Fly map would show).
-    Gold / Silver and the Crystal hacks: not yet (their RAM moved).
+    German Crystal (Kristall, `GbField.CrystalDe`): English's RAM and scripts, RunMemScript and the Flypoints table moved;
+    headless on its own save its PC opened ("CHRIS schaltet den PC ein.") and FLY landed at Rosalia City's Pokémon Center.
+    Gold / Silver (USA / Europe, `GbField.Gold` / `.Silver`, 2026-11-18): Crystal's way in at pret/pokegold's addresses (its `symbols`
+    branch): PCScript in bank 0x40, wDefaultSpawnpoint in bank 0, the Kanto landmarks from 46, Silver's Fly script 2 bytes before
+    Gold's. Headless on the Gold / Silver save in Route 29: the PC opened ("GOLD turned on the PC.") and backed out of, FLY (the badge,
+    the move and Cherrygrove's spawn poked in) landed at Cherrygrove's Pokémon Center, 100 steps in the grass with the cooldown held met
+    nothing (one without). German Gold / Silver and the Crystal hacks: not yet (their ROM / RAM moved).
     PureRed / PureBlue (`GB_FIELD_PURE_RGB`, pureRGB's own source; both carts the same code): Red's ways in at its places -
     the PC routine in bank 0x33, called from 0x03D7 (its loop waits at OverworldLoop's `rst DelayFrame`), the wild data in
     bank 0x2C, the game state in WRAM bank 1 (read and written by bank). Checked headless on the converted Red save: the PC
@@ -249,7 +289,8 @@ change to any of the places listed under "Where it's decided" updates its rows h
 16. Built into the game: its own TMs never run out, so there's nothing to patch and the row shows ON, greyed
     (`ReusableTms.BUILT_IN`). Radical Red, Unbound and SoulGold checked headless on their saves (a TM taught, unpatched,
     stayed in the TM Case / bag: SoulGold v1.1.4 and v1.2's third build, the others share its code); Prism and Polished
-    Crystal keep a bit per TM, no count.
+    Crystal keep a bit per TM, no count. Origin HeartGold checked headless on a new game (TM01 taught from the bag, still
+    there with its count of 1); it runs as HEARTGOLD, so `ReusableTms.builtIn` checks its flag too.
 17. SoulGold: the Repels only (USE on the bag, the QUICK MENU's REPEL), its own item ids 114..116 and its expansion
     Repel rules (a Lure's bit 15 in VAR_REPEL_STEP_COUNT, VAR_LAST_REPEL_LURE_USED 0x40BD), every build
     (`scripts/find_field_items_soulgold.py`); checked headless on v1.2 with a player's save (GitHub #242: the bag 5 -> 4,
@@ -303,7 +344,7 @@ change to any of the places listed under "Where it's decided" updates its rows h
     Quetzal (it colours its Pokémon by personality: several plain ones drew a blue variant, and shiny value 0 drew
     plain with one low half and the shiny colours with another, so its rule is its own), Heart and Soul (no
     gEnemyParty), Emerald Rogue. RetroAchievements
-    pause while it's raised. Gen 1 has no shinies (n/a); Gen 2's are DVs, which change the stats (not done). The same
+    pause while it's raised. Gen 1 has no shinies (n/a); Gen 2's are DVs (note 55). The same
     retail check (`NativeConfig.shinyBelow`) gives the battle's SHINY marks and shiny icons on PARTY, the summary, the HUD
     and battle: the shared-palette icon recoloured through the species' normal / shiny battle palettes
     (`shinyIconPalette`; gMonShinyPaletteTable 0xDC0 past gMonPaletteTable, every entry's tag checked).
@@ -335,6 +376,10 @@ change to any of the places listed under "Where it's decided" updates its rows h
     on that save headless: the five handlers read live at their new addresses, the POKéMON switch (DOWN slot 0 -> 2, SHIFT
     sent slot 2 in), a written move cell + A (its PP 19 -> 18), BAG, the PC opened and closed (`FIELD_ITEMS_MONOMYTH_V1_1`),
     verify_wide.py (map 440/440, battle 1064/1064 exact). `ReusableTms.find` does read BPEE there, and finds no site.
+    v1.2 (`NATIVE_MONOMYTH_V1_2`, BPEE, released 2026-11-15) is v1.1 rebuilt with a word added before gMapHeader: the map, the
+    player's objects, the bag, the field lock and gPartyMenu sit 4 bytes later, the battle globals don't. v1.0's save loads in
+    it; the same checks headless (the handlers, the switch, a move's PP 19 -> 18, BAG, the PC through `FIELD_ITEMS_MONOMYTH_V1_2`,
+    verify_wide.py map 440/440, battle 1079/1079 exact). Its tables are v1.0's but LIFTOFF's power (150, `moveDataMonomythV1_2`).
 
 23. Retail FireRed / Emerald run through Universal Pokémon Randomizer ZX 4.6.1 (`RandomizedRetail.kt`, docs/DEVELOPMENT.md's
     "Randomized ROMs"): retail's code and RAM, so retail's row. EXPAND and the field reads look it up by retail's CRC
@@ -365,9 +410,24 @@ change to any of the places listed under "Where it's decided" updates its rows h
     one a fainted Pokémon forces, outside the command selection, which read as nothing), the bag, the move to forget for a
     new one and the naming screen after a catch all take BattleInput's block, whose first word is the BattleSystem only while
     the battle's own touch screen is up. Anything else there floats the touch screen in (`battleTouch`).
+    Double battles (GitHub #663, Renegade Platinum headless in a two-trainer battle, 2026-11-14): BattleContext's first
+    four bytes are each battler's selection step, and once battler 0 has chosen (14) the player's second, battler 2, has
+    its own (1 its commands, 3 / 4 its moves); the read follows it while BattleSystem.battleType (the word before the
+    BattleContext pointer) has BATTLE_TYPE_DOUBLES. Which foe to hit (steps 5 / 6) has no panel text (BattleInput +0x4D0
+    NULL) and no BATTLE BUTTONS of ours, so it floats the touch screen in. Before, both Pokemon's target choices floated
+    nothing (the player brought them up with L2). A single battle reads as it did. HeartGold's double battles weren't run.
     The new game's naming screen (the player's, the rival's) comes before any FieldSystem, so nothing the field read follows
     runs; it's known by engine A's DISPCNT, 0x00013710, the naming app's in both games and in a battle too
     (`pk_nds_field_screen_touch`, only while the read has nothing else: the title, the menu and Rowan's speech never show it).
+    HeartGold / SoulSilver's script menus on the touch screen (2026-11-14, a player's report: PC anywhere's DEPOSIT / WITHDRAW
+    never came up on one screen): scrcmd's MenuExec (the PC's list, a move tutor's) draws its list on the touch screen while
+    the field's own touch screen task (a SysTask at FieldSystem +0xD8: its data's first byte 3 while a script holds the touch
+    screen) has a sub task in state 7 / 8 (its data's first word; 1 for a text box). That floats it in like the X menu
+    (`pk_nds_field.cpp`'s `fieldScriptMenu`). Struct offsets only: checked headless with the PC job on the player's save in
+    US, Europe rev 10, German, French, Spanish, Italian and Japanese HeartGold, US, German and Japanese SoulSilver and Origin
+    HeartGold (its own save), each 1 / 8 / 1 at the text, the menu and the boxes. Korean wasn't (the save doesn't load
+    there). The yes / no prompt (scrcmd's YesNo) is drawn on the top screen (the main engine's BG3) and needs nothing. The
+    older multichoice (SCRIPTENV_MENU_WINDOW's) and the shops weren't reached.
 27. Black / White's battle panels (no decomp: headless in White's Route 1 wild battle on the player's save, frame by frame):
     client 0 -> btlv_core (+0x54) -> btlv_scd (+0x180) -> btlv_input (+0xB0); the panel's kind at input +0x58 (1 the
     commands, 2 the moves, 4 a prompt), its slide task at input +0x08 (a tap lands only once it's NULL: the moves 10 frames
@@ -378,6 +438,27 @@ change to any of the places listed under "Where it's decided" updates its rows h
     same, with btlv_scd at core +0x1C4, btlv_input at scd +0xBC and the opened screen at scd +0xA4 (headless in Black 2's wild
     battle: every button, each move card, the way back; the move panel's 3-frame gap too). White 2's battle wasn't reached
     headless: its structs are Black 2's, its chain from its own GameSystem. Their look is `DsLook.UNOVA2`.
+    Double and triple battles (GitHub #833, Black headless on the player's save, 2026-11-16: the Super Single Train's battle
+    with BATTLE_SETUP_PARAM's rule poked to 1 / 2 before it began): the target choice is panel 3, which read as nothing
+    (the player brought it up with L2); it floats the touch screen in now, for each Pokémon's turn. Any rule but 0 (single)
+    reads as a double (`Gen5Reader`), so a triple's (its SHIFT button) and a rotation's own panels float in instead of
+    BATTLE BUTTONS' strip; a rotation battle wasn't run. Black 2's panels weren't checked in a double.
+    A fifth move at a level-up (GitHub #916 / #1077, Black headless on the player's save with a PC CHARMELEON led out one
+    EXP point short of Lv 17, Route 1, 2026-11-18): FORGET / KEEP OLD MOVES! is panel 4 under command 8, and after FORGET the
+    moves are a screen of their own with the panel at 0 and btlv_input's resource pointer (+0x48) cleared until a move is
+    picked; it floats in right after that prompt, held over the 20 frames between them (`gen5ForgetAsked`, up to 48 field
+    reads: on KEEP OLD MOVES / give up it stays that long into the next message). Black 2's wasn't reached headless (its
+    btlv_input is read with Black's offsets, so the rule is the same there).
+    The way back from a battle (Black headless, 2026-11-18): about 5 frames of a closing overlay (92), then the field's
+    overlay 21 with no field map for ~95 frames while it loads. Both read as an app, so the touch screen floated in empty,
+    loading dots and all, after every battle (a player's report); they're the battle closing now (`gen5SinceBattle`: no
+    MENU / TOUCH until the field map is back, other overlays only for the first 16 reads), and the X menu right after
+    floats in as before.
+    A new game's intro (Black 2 / White 2 headless, 2026-11-19): there's no GameSystem yet, so nothing was read and the name
+    entry's keyboard never came up on one screen (a player's report). The running app's overlay is a static word there
+    (0x02141910, White 2 0x02141950; `PkNdsGen5Touch.introOverlay`): 31 on the player's and the rival's name entry, 21
+    through the rest, 0 from the field on, so 31 floats the touch screen in. Black / White's word isn't mapped (their
+    intros aren't laid out the same).
 28. Let's Go Pikachu / Eevee (FireRed rev 0 edited in place; all four builds share rev 0's RAM, code and tables for these),
     checked headless on Let's Go Pikachu with its new game's save (the `lets_go` fixtures' READMEs): EXPAND by `verify_wide.py`
     on all four (map 440/440, battle 895/895 exact); a written action cell 2 + A opened the party menu and a written move
@@ -394,10 +475,14 @@ change to any of the places listed under "Where it's decided" updates its rows h
     found through the US code that uses it (`pk_nds_field.cpp`'s `ORIGIN_HEARTGOLD`, `pk_nds_call.cpp`'s `ORIGIN_HEARTGOLD`).
     PC anywhere and FLY ran headless through its own script engine and flight task (landed in Pallet Town); WILD ENCOUNTERS'
     cart rates come from its map headers and encounter archive (`NdsArt.readOrigin`). Its battle engine is its own (a
-    manager at 0x02255BAC, no BattleSystem): the BATTLE tab reads its battle objects (`Gen4ManagedBattle`), but there are no
-    battle buttons (its panels aren't HeartGold's): DS LAYOUT floats the game's
-    touch screen in while its battle UI's input handler is set (+0x238 -> +0x10: the commands, the moves, the party), and
-    SMART FF slows down then. EXPAND and STEADY music work as HeartGold's (widecheck's overlap as US HeartGold's).
+    manager at 0x02255BAC, no BattleSystem): the BATTLE tab reads its battle objects (`Gen4ManagedBattle`). Its commands and
+    moves sit where HeartGold's do, so BATTLE BUTTONS press them with HeartGold's taps (`NdsBattleTaps.GEN4`): its battle
+    UI's input handler is set while it waits (+0x238 -> +0x10) and another UI object (+0x234) runs the waiting panel's
+    handler at +0x57C (0x02202445 the commands, 0x02202F4D the moves, 0x02202955 the bag, 0x0220270D the party;
+    `readManagedBattleInput`, `battleTouch`), checked headless in a wild and a trainer battle. Not the panel's id at
+    +0x580: the bag and the party share one, and on the way back to the commands after a turn it still reads the moves'
+    for a few frames while the commands' handler runs. The bag, the party and any other panel float the game's touch
+    screen in (DS LAYOUT), and SMART FF slows down while it waits. No POKéMON switch (its party panel isn't HeartGold's). EXPAND and STEADY music work as HeartGold's (widecheck's overlap as US HeartGold's).
 30. A FireRed (rev 0 / 1) or Emerald hack nothing knows by its hash, made by editing retail in place: `RetailEngine.kt`
     proves from its code that it kept retail's engine (every RAM global these features use is loaded by retail's code,
     unchanged, from a pool word still holding retail's address; docs/DEVELOPMENT.md's "Retail engine"). Proven, it gets
@@ -427,6 +512,9 @@ change to any of the places listed under "Where it's decided" updates its rows h
     so a new game was played headless in it (its own intro): the field read and PC anywhere checked on it, EXPAND drawn in the
     player's room. FLY (no badge or flyer that early) wasn't tried. The "5216" Japanese Black is No-Intro's cart with 512 bytes
     of overlay 12 changed; on the USA save it ran screen for screen as the No-Intro cart (title, CONTINUE, the field, PC).
+    German Platinum (rev 0, 2026-11-18): the same functions again, its globals and field overlays 0x40 below the French cart's.
+    A new game played headless in the USA cart loads in it: beside the USA cart with one script, the field bits, PC anywhere,
+    FLY's checks (no flyer: refused as on the USA cart), the X menu and EXPAND in the player's room came out the same.
 
 32. Renegade Platinum (Drayano's, 1.3.0) is US Platinum rev 1 edited in place: the same header (`CPUE` rev 1) and RAM,
     its ARM9 retail's but one word (the shiny odds), so the native side runs it as Platinum (`pk_nds_field.cpp` /
@@ -439,6 +527,10 @@ change to any of the places listed under "Where it's decided" updates its rows h
     and WILD ENCOUNTERS (not walked) are retail Platinum's code, untried here. Its Classic patch and v1.2.0 (2026-11-09) pass
     the same check: v1.2.0's ARM9 and every place read are v1.3.0's byte for byte (overlay 16 one data byte apart), its own
     species, moves, trainers and encounters in 12 data files the reader takes through the file system (`RenegadePlatinumTest`).
+    v1.3.0's other add-on patches (2026-11-15): ShinyRate_1_4096 / _1_8192 change one byte of the shiny check (cart 0x79E50),
+    SpeedUpPatch 21 bytes of the ARM9 (text, the HP / EXP bars, the 30 fps cap) and overlay 16; none is read or called by the
+    app, `matches` and the tables hold, and the Speed Up build boots and plays headless. The patches stack: a combination
+    reads the same, titled by its file name.
 33. TMs from the bag and FLASH on the hacks edited into retail's code: FireRed rev 0's tables (`tmFnsFor` /
     `flashFnsFor` by kind, `FIRERED_REV0_HACKS`) and Emerald's (Glazed, Kaizo), each checked by
     `scripts/verify_tm_flash.py` on the hack's own save (the TM screen opened and backed out of, the field back after;
@@ -464,6 +556,258 @@ change to any of the places listed under "Where it's decided" updates its rows h
     badge from isUnlocked or the party menu (Lazarus's switch asks badge 3, 0x869). Each lit a dark cave of its own map
     table headless.
 
+34. FREE FLIGHT and the scenic FLY (`Flight.kt`, `ScenicFly.kt`, `app/src/main/cpp/pk_flight.c`; `FieldItemFns.flight`,
+    `FLIGHT_FIRERED_REV1` from pret's pokefirered built as firered_rev1): TAKE OFF / LAND on the MAP tab, the QUICK MENU and
+    the FREE FLIGHT hotkey, and FLY STYLE > SCENIC. Retail FireRed rev 1 and Emerald (`FLIGHT_EMERALD`, from pret's
+    pokeemerald symbols; its rider a sprite of its own, the player's surfing graphics as its FLY seats them). Emerald was
+    flown headless on the user's save from Route 114: free flight both ways, B down on the nearest ground, a state saved in
+    the air loading back flying with its rider, and the scenic route to Fallarbor Town (its sign, the landing in front of
+    the Pokemon Center). FireRed was flown headless with mgba_dump's
+    `flighton` / `flight` / `flightroute` on the user's save: over Route 20's mountain and sea into Cinnabar Island, B landing
+    on the nearest sand, a state saved in the air loading back flying, and ScenicFly's route from Route 20 to Fuchsia City
+    (Route 19's and Fuchsia's map signs, the landing in front of its Pokemon Center). Saffron City has no map connection
+    (its gatehouses are warps), nor have the Sevii Islands to Kanto: FLY's classic way there.
+    Since 2026-11-10 also FireRed rev 0, LeafGreen rev 0 / 1 and Ruby / Sapphire rev 1 / 2 (`FLIGHT_FIRERED_REV0`,
+    `FLIGHT_LEAFGREEN_REV0` / `_REV1`, `FLIGHT_RUBY` / `FLIGHT_SAPPHIRE`: pret's symbols; Ruby / Sapphire ride as Emerald,
+    with the covering ground effects turned off for the hidden player and their own gSpriteCoordOffsetY), the randomized
+    retail builds (retail's code: retail's records, EXPAND by retail's CRC), and three hacks on retail code, each flown headless
+    on its save (free flight, then scenic routes with EXPAND on, every frame's margins matched): Radical Red and Unbound
+    (`FLIGHT_RADICAL_RED` / `FLIGHT_UNBOUND`: FireRed rev 0's addresses, CFRU's hooked DestroySprite / PlaySE CRCs, the bird's
+    palette from the loader CFRU's CreateFlyBirdSprite hook calls - `birdPalette` / `birdPaletteTag`; Unbound's gMapGroups
+    XORed, `mapGroupsXor`, and its FLY's fly spots as the landing places, from Frozen Heights to Dehara and over Borrius'
+    mainland to ten towns, the French build too) and Glazed (`FLIGHT_GLAZED`: Emerald's, its own map group sizes; seven Tunod
+    towns from its save's map). `flightAllowed` lets a game in by kind: retail FireRed / Emerald by the Poller's retail hash
+    (randomized included), the three hacks by their own hash.
+    Then every language: German, French, Italian, Spanish and Japanese FireRed, LeafGreen, Emerald, Ruby and Sapphire (40
+    carts), the English records mapped by `scripts/port_field_items.py`'s port_flight (the bird template through
+    gFieldEffectObjectTemplatePointers; MapGridGetCollisionAt placed at English's distance from MapGridGetElevationAt and
+    checked, since their first 32 bytes are the same), each flown headless: its save booted, free flight and a scenic route
+    with EXPAND matched every frame, and the mapped gSaveBlock1Ptr reading the right map. The hacks on FireRed rev 0's code
+    (`FLIGHT_ULTRA_VIOLET`, `_ORANGE_ISLANDS`, `_GHOST_GREY`, `_LETS_GO`, `_ODYSSEY`, `_GAIA`, `_AMETHYST(_V141)`,
+    `_SWORD_SHIELD`, `_GS_CHRONICLES`: rev 0's record with their own map groups, heal locations and DestroySprite CRCs) and
+    Emerald Legacy (`FLIGHT_EMERALD_LEGACY`, Emerald's mapped by code into its rebuild), each flown headless on its save the
+    same way. Ghost Grey blanked its bird's graphics: the flight carries the player in the air balloon there, drawn in the
+    game's greys (any vehicle in a game whose player palette is grey is). Orange Islands has no EXPAND, Odyssey's save town
+    joins no other map (free flight only from there). Rocket Edition and Ash Gray came later (below).
+    The pokeemerald-expansion hacks with FLY (`FLIGHT_IMPERIUM`, `_LAZARUS`, `_HEART_AND_SOUL`, `_SOULGOLD` and its four v1.2
+    builds): mapped from expansion 1.13's build by masked code and by shape (CreateSprite from CreateFlyBirdSprite's 0xFF /
+    0xB4 / 1 call, the palette loader after it taking the player's gender - `birdPaletteTag` 0xFFFF; ObjectEvent.spriteId at
+    +0x23, `objSpriteId`), Heart and Soul's and SoulGold's grid reads checked by calling them on known tiles (a mapped entry
+    two instructions past the start read tile 0,0 everywhere), the field's callback2 live; SoulGold's v1.2 builds from v1.1.4
+    by masked code and the matched functions' pool words. Lazarus, Heart and Soul and SoulGold have no rider graphics: the
+    player's own sprite sits on the bird. Their following Pokemon goes at take-off and comes back once down
+    (RemoveFollowingPokemon / UpdateFollowingPokemon, the calls round their return-to-field code's FieldCallback_UseFly check:
+    `followerRemove` / `followerUpdate`; left on the ground it was lost on the next map). Heart and Soul keeps the position at
+    SaveBlock1 +4 (`saveBlock1PosOff`) and nulls gMapGroups' groups past 30; SoulGold's metatile ids are 11 bits, its
+    undefined square 0x7FF (`mapGridUndefined`), its DestroySprite the inUse-less body gcc split off, its heal table 80 rows.
+    Each flown headless on its save: free flight, two scenic routes with EXPAND matched every frame, the follower walking
+    again after a landing. ScenicFly drops a town whose landing tile lies where two of the game's maps overlap in the layout
+    (a loop of connections that doesn't close: Heart and Soul's Violet side), and crosses a map edge only where the game's
+    first connection that way is the map the layout shows there.
+    Then Emerald Kaizo (`FLIGHT_EMERALD_KAIZO`: Emerald's record under its own name, flown on retail's save booted in it; its
+    FLY is the scenic one alone, note 4), Rocket Edition (`FLIGHT_ROCKET_EDITION`: rev 0's with its hooked DestroySprite's
+    CRC) and Ash Gray (`FLIGHT_ASH_GRAY`, both builds: its own gMapGroups, bigger lists, which is why rev 0's read no world
+    there). Rocket Edition had reset to its copyright screen on most long flights: the flight's fast movements start the
+    "go faster / fastest" step animations, which the player's own table doesn't have (FireRed's has 13), so the hidden
+    sprite's animation read EWRAM as commands and in time jumped through a bad pointer (traced headless instruction by
+    instruction into AnimateSprite). Retail had harmless bytes there. The player is now inanimate while up
+    (ObjectEvent.inanimate: no step animation starts), cleared on landing, in every game. Every route of both flown
+    headless, EXPAND matched every frame.
+    Then FLY itself and the flight for Emerald Seaglass (Lazarus's build of the expansion: Lazarus's whole verified table ported
+    by masked code, callers' BLs and pool words; PC anywhere came with it) and Too Many Types 2 (expansion 1.12.3, its code
+    unlike a plain build of the tag: each function matched by its instruction sequence against 1.12.3's build, then checked by
+    calls on known tiles, pool words and neighbours; FLY only). Both: Emerald's FLY rules (TMT2 adds map section 0x49 to heal
+    location 21), seated on the bird, flown headless on their saves, every route landing, the game's own FLY too.
+    Then R.O.W.E. and Super Mariomon (1.5.1 / 1.5.2; ◐: its 1.2.x / 1.3 builds, the other RAM layout, aren't mapped), both
+    pokeemerald forks: retail Emerald's verified table ported by masked code, callers and pool words (R.O.W.E.'s RAM landing on
+    its ROM's own symbol table). Both load the bird's palette before CreateSprite (index 0x1A; `birdPaletteTag` bit 16 keeps
+    the slot CreateSprite gives). R.O.W.E.'s CB_ExitFlyMap is a switch over map sections, decoded into `HealWarp.special`
+    (Kanto and Sevii past retail's 50 rows; FLAG_BADGE01_GET 0xCD7); Mariomon's has its own 168-row table and four special
+    towns, no gender case, and GetMonData two numbers past vanilla's. FLY, PC anywhere and the flight; flown headless.
+    Then Quetzal Alpha 9.0 / 9v1, English and Spanish (◐: Hoenn's towns; its other regions' FLY has handlers of its own): agbcc
+    pokeemerald grown into its own engine, so retail's table ported the same way. Its gate is the game's own: the party menu
+    checks the current region's badge for a field move through its own function (FLY's entry 0xD9), used as FLY's flag check;
+    its objects keep the sprite id at +0x23 (24 slots, 16-bit graphics ids); 9v1 creates the bird through a field-effect
+    helper of its own (template from that helper's table). Emerald Rogue: no FLY at all - its party menu refuses FLY, Dig,
+    Teleport and Secret Power always (party_menu.c's CursorCb_FieldMove), so no flight either.
+35. Blaze Black 2 Redux and Volt White 2 Redux (Drayano and AphexCubed's, 1.4.1, and their Classic, EVless and Classic
+    EVless patches) are US / Europe Black 2 and White 2 edited in place: the same headers (`IREO` / `IRDO` rev 0), RAM and
+    save, and the field code the native side calls, so it runs them as Black 2 / White 2. The app tells them apart by
+    battle overlay 167's load address in the overlay table (`Black2Redux.matches`: cart 0xA02E4 holds 0x02199740 /
+    0x02199780 where retail's holds 0x021998C0 / 0x02199900: they moved it to put an 18 x 18 type chart with Fairy at its start)
+    and reads their types, moves, categories, chart, TMs, icon palettes, item icons and the zones' wild rates from the cart
+    (`NdsArt.readRedux`; Fairy is Gen 5's 17, the app's 9). Checked headless on the player's retail Black 2 and White 2 saves,
+    which load in them: PC anywhere opened the storage system; FLY's job flew to Nuvema Town; EXPAND on Humilau City's
+    beach, `widecheck`'s overlap differences the same as retail Black 2's on the same walk; a wild battle on its water
+    (the command menu's input state read, FIGHT pressed through the touch screen); WILD ENCOUNTERS OFF: no battle in 120 steps of surfing, where one came within 16
+    with it on. All eight builds pass the same check and read their own species records (`Black2ReduxTest`).
+
+36. AREA maps (`AreaMap.kt`; docs/DEVELOPMENT.md's "AREA maps"): a cave's or a building's own map with its floors, on the MAP
+    tab and the HUD's minimap. Every GBA ROM in `gamedata/gen3/area_maps.toml`, by CRC32, written by `scripts/gen_area_maps.py
+    --scan` (gMapGroups from EXPAND's rows or a scan of the ROM, the rest read from it) and drawn by `AreaMapTest` for every
+    ROM on this machine. Monomyth LZ77-packs its indoor maps' grids (unpacked by their header); Heart and Soul mixes
+    Emerald-style layouts (MapLayout +0x18 = 0: 512 tiles / 512 metatiles / 6 palettes) with FireRed-style ones (640 / 640 /
+    7: the row's `alt*`). ◐: Sword and Shield Ultimate Plus draws a few magenta specks where the game loads its own palettes
+    at run time; Wishes of Tomorrow's maps draw, but haven't been looked at in the game. Not yet: GS Chronicles and Quetzal
+    Alpha 9 (where their secondary tiles start isn't clear: their tilesets are their own), Team Rocket Edition 2026 (its maps
+    come out scrambled: expansion 1.14 with tilesets of its own) and Team Rocket Dragonsden 1.5 (its gMapGroups wasn't found by its shape), the
+    hacks proven only by their code (no row: they'd need retail's, checked), and the Game Boy and DS games (other engines).
+37. Heartfelt Gold (1.0.15, and its Zoomed In camera patch; 2026-11-16) is hg-engine over the US HeartGold, its header the
+    retail cart's (`IPKE` rev 0), so the native side runs it as HeartGold: told apart by its header's ARM9 size and overlay
+    count (`HeartfeltGold.matches`). Its RAM is the US cart's (sSaveDataPtr, sFieldSysPtr), each column checked headless on
+    the player's save with `nds_dump`: the field read; PC anywhere opened the storage system; EXPAND's middle matches the
+    game's picture but for its two edge columns (x 0 and 255), which its own picture draws dark (its edge marking, on as
+    in retail, where polygons meet the screen's edge; retail HeartGold's frames have none there): the wider picture has
+    no edge there to outline (both builds, walking outdoors and indoors; its battles carried as HeartGold's); FLY landed in New Bark Town and
+    Violet City, whose arrival set retail's flypoint flag (2482), so the list read from those flags holds; the battle
+    buttons' taps at HeartGold's places (`NdsBattleTaps.GEN4`) opened its move panel and used the move; WILD ENCOUNTERS
+    OFF walked 160 steps of Route 29's grass with no battle, ON met one, and its maps' own rates (`HeartfeltGold.Data.wildRates`,
+    its map headers' banks into its own `/a/0/3/7`) are what it puts back. Bike / surf weren't tried. Its battles are
+    HeartGold's own battle system, read by the companion (a wild battle, headless).
+38. Pokémon Brown (6.1.2, 6.0.1; 2026-11-16) is a 2 MB hack of Red with Red's RAM (`GEN1_BROWN`) and Red's battle menus and
+    party menus at Red's places. Its controls were run through the app's own `BattleInputController` against the running
+    game (`BrownLiveControlsTest`, mgba_dump's `gbwram` read every frame; opt-in, POKEDAISY_GB_LIVE=1): FIGHT and a move from
+    the battle menu (that move's PP down, the others not), a move from the move list, RUN, the POKéMON switch from the
+    battle menu (237 frames, the frame held throughout) and the pick after a faint (one A, no SWITCH menu), on 6.1.2, and a
+    move and the switch on 6.0.1. PC anywhere, FLY and WILD ENCOUNTERS are `GB_FIELD_BROWN`: Red's PC routine, Bankswitch,
+    RAM and wild data code, but its own town map's Fly list (BuildFlyLocationsList, 1D:6BE0: 14 places from
+    wTownVisitedFlag in an order of its own, SENECA CAVERNS flying to map 0x21) and its own outside check for FLY (4:792C).
+    Checked headless with mgba_dump on the player's saves: the PC opened over the field and backed out of (both versions);
+    flights to GRAVEL TOWN, map 0x21 and 0xCA, its own Fly menu listing the same places in the same order; Route 67's path
+    counted as grass (wGrassTile) met a battle on the second step at a rate of 255, at step 21 at the map's own 25, and none
+    in 100 steps held at 0.
+39. Epsilon Emerald (1.0.0, a closed gcc pokeemerald; 2026-11-16), each checked headless on retail Emerald's save, which
+    it loads as it is. EXPAND and the field reads: its own family (`PK_WIDE_FAMILY_EX32`: Emerald's maps and expansion's
+    objects, but FireRed's u32 metatile attributes, the layer type in bits 29-30, and 6-byte subsprites: s16 x / y, a tile
+    byte, a shape / size / priority byte), verify_wide.py map 440/440, battle 1133/1133, two more towns 440/440 each (Petalburg's
+    door, opening as you walk in, is drawn shut, as on retail Emerald); no far-off people (its graphics records are 0x20
+    bytes). The field lock is a byte (0x03000F2C). WILD ENCOUNTERS: 0x020398E0, OFF walked 180 steps of Route 101's grass
+    with no battle. PC anywhere (gSpecials[63], the storage alone) and FLY (`FIELD_ITEMS_EPSILON_EMERALD`, found through
+    the game's own callers): flown to Rustboro, Fortree, Littleroot and Route 101 (it flies to the routes you've been to,
+    as the remakes do). No bag USE / GIVE / TAKE: its bag is packed its own way. Bike / surf, FREE FLIGHT and the AREA map
+    weren't tried.
+40. Unbound's FLY and FREE FLIGHT (2026-11-17) go by its own party menu's rule (`FlyFns.withoutMove`, CFRU's
+    ONLY_CHECK_ITEM_FOR_HM_USAGE, read off its code at 0x08A03522, the same in the French build): a Pokémon that knows Fly
+    first, else any Pokémon once flag 0x152D (the bought device) or 0x16E4 (sandbox mode) is set, else with HM02 (item
+    438) in the bag one that CanMonLearnTMTutor (0x089F3B6C) says can learn it. Before, the quick menu said "No one in your
+    party knows FLY" while the game offered Fly (Discord). Checked headless on the user's save: HM02 given, then a Pidgey
+    lead can learn it (0), a Pikachu can't (1); the flags read 0 there (no save with the device bought to try).
+41. Clover (1.3.3, 2026-11-18) is FireRed 1.0 edited in place, but its cart header says BPEE: it's found by its hash and
+    runs on FireRed's engine. Checked headless on retail FireRed's save booted in it: EXPAND exact (`verify_wide.py`), a
+    written move cell + A picked that move, a written POKéMON cell + A opened its party menu (FireRed's list; the switch
+    isn't hooked up yet). The field items, PC and FLY go by the header's code and turn themselves off (Emerald's tables
+    don't match its code); they'd need FireRed rev 0's tables picked by its hash.
+42. Elysium (2.5.0, its two parts, 2026-11-18): FireRed 1.0 edited in place, checked headless on a save of each (Part A deletes
+    retail FireRed's save, so its own new game played headless; Part B keeps retail FireRed's): EXPAND exact on both
+    (`verify_wide.py`), a written move cell + A used that move (Part A), a written POKéMON cell + A opened the party (Part B).
+    Part B's people graphics table sits at an odd address the far-off people can't be read from: EXPAND draws none there.
+43. Sacred Gold / Storm Silver (1.05, Drayano's; 2026-11-18) are the US HeartGold / SoulSilver edited in place: their RAM, save
+    and field are the retail carts' (the player's HeartGold / SoulSilver saves boot in them, `fieldinfo` reads the field as
+    retail's), so the native side runs them as HeartGold / SoulSilver. Checked headless: EXPAND's overlap check gives the
+    same counts as retail HeartGold's on the same save and walk. WILD ENCOUNTERS puts back their own maps' rates
+    (`SacredGold.Data.wildRates`, the reader proven on retail HeartGold against pokeheartgold's data); the rest (battle
+    buttons, FLY, PC, the bike) is HeartGold's code but wasn't run on them yet. Storm Silver's Classic patch didn't rebuild to
+    its own target MD5 from the user's SoulSilver dump, so it's left out.
+44. Rhythm (1.4.0, a CFRU hack; 2026-11-18): FireRed rev 0's RAM on a new game played headless (it deletes retail FireRed's
+    save). A written move cell + A used that move, so one-press picks are on; the switch, field items, FLY, EXPAND and the
+    rest weren't mapped yet.
+45. Oops All Eevees! (1.3.2, a CFRU hack with DPE; 2026-11-18): FireRed rev 0's RAM on a new game played headless (it deletes
+    retail FireRed's save). A written move cell + A used that move, so one-press picks are on; the switch, field items, FLY,
+    EXPAND and the rest weren't mapped yet.
+46. Ceruleum (1.1.1, pokeemerald-expansion 1.13.2, `NATIVE_CERULEUM`; 2026-11-18), checked headless on its new-game save:
+    the five battle handlers read live (the target one in a double battle), a written move cell + A used that move, and
+    the POKéMON switch (a two-column grid) sent party slot 2 in. Its wild-encounter switch, field reads, EXPAND, FLY and
+    the rest weren't mapped yet.
+47. RecordKeepers (1.2.1, a roguelike on pokeemerald-expansion, `NATIVE_RECORDKEEPERS`; 2026-11-18): its battle screen is
+    its own (the moves shown at once, L / R switch the active battler), so the companion reads battles (INFO) but doesn't
+    press anything there. Field reads, EXPAND, FLY and the rest weren't mapped yet.
+48. The Game Boy's game options (`GbGamePatches.kt`, 2026-11-18): INSTANT TEXT (PrintLetterDelay returns at once), REUSABLE TMS (Gen 1:
+    ItemUseTMHM's `ret c` made a `ret`; Gen 2: TeachTMHM's `call ConsumeTM` three `nop`s) and LOW HP BEEP off (the HUD's `set 7, [hl]` on
+    the alarm two `nop`s), each found by its code's shape and unique in the cart, patched through `pk_cheats_patch`'s Game Boy branch
+    (`PK_GB_ROM_TAG` + the cart offset, mGBA's GBPatch8; the cart's bytes overlaid for the Poller's hash). Played headless (mgba_dump
+    `rompatch`): Yellow (the nurse's line whole at once, TM01 taught and still in the bag, the alarm byte 0 at 5 HP) and Crystal (TM10
+    taught and kept, the alarm byte 0). Found in every retail Red / Blue / Yellow / Gold / Silver / Crystal here and Brown, Yellow Legacy,
+    Crystal Clear, Crystal Legacy; PureRed / PureBlue get the beep only. FIELD POISON off: Gen 1's ApplyOutOfBattlePoisonDamage `jp nz`
+    (every fourth step) made a `jp`, Gen 2's DoPoisonStep `jr z, .no_faint` made a `jr`; walked headless with a poisoned lead: Yellow
+    182 HP -> 178 without, 182 with; Crystal (a repel on) 19 -> 14 without, 19 with.
+    EXP SHARE: Gen 1's DivideExpDataByNumMonsGainingExp / Gen 2's .EvenlyDivideExpAmongParticipants load the participants byte
+    (wPartyGainExpFlags / wBattleParticipantsNotFainted, read from that load) and skip the division on `cp 2; ret c`: SPLIT sets the
+    party's bits each frame (fainted ones left out: Gen 1 counts every bit), FULL makes the `cp` a `ret`. Yellow headless (a Lv 2
+    Rattata, 16 EXP): the others got 0 / 2 / 16 with OFF / SPLIT / FULL; Crystal and Gold / Silver's places match pret's symbols.
+    Every retail cart here, Brown, Yellow Legacy, Crystal Clear, PureRed / PureBlue (not Crystal Legacy, Polished, Prism).
+
+49. The European FireRed / LeafGreen / Emerald carts' TRAINER CARD (2026-11-18, `CardStyle.KANTO_DE` ... `HOENN_ES`): English's save
+    offsets, each cart's own card tiles (their words are drawn in them), FONT_NORMAL, widths and redrawn tilemaps (found by mapping
+    English's blobs through the card code's literal pools; `gen_rom_art_sigs.py`'s FIRERED_EU_CARD / EMERALD_EU_CARD) and its
+    strings, read from the cart as one more blob (`*_CARD_TEXT`, no game text in the app). FireRed's builds moved a few lines (the
+    ID's x, the money's sign after the number, the back's name and wins): `TrainerCardArt.EURO_KANTO`; Emerald's are worked out
+    from the strings. All twelve rendered against the game's own card headless, front and back, pixel for pixel
+    (`TrainerCardTest`). Japanese: not yet.
+
+50. The DS POKéMON switch (2026-11-18, HeartGold / SoulSilver, single battles): the companion's pick tapped on the game's touch screen
+    (`NdsBattleTaps.switchTo`): POKéMON, the party screen's panel where the battle shows that Pokémon (BattleContext.partyOrder at
+    +0x312C, the battle's party index of its personality: `gen4SwitchSlot`), its SHIFT. The party screen drops touches while it
+    fades in (a panel 45 frames after POKéMON did nothing, 60 did): the panel waits 60 frames after the screen is reported up, and
+    a screen still up a second after SHIFT gets the panel and SHIFT once more. Played headless on the player's HeartGold (a wild
+    PIDGEY by `WildBattle`; the order and the slot read back after each switch). After a faint the game's controller isn't
+    waiting on the player's selection (command 22), so that screen stays the player's. Platinum: the same structs, its party
+    screen not seen yet, so not offered.
+
+51. INSTANT TEXT on the Gen 4 DS games (2026-11-18, `DsInstantText.kt`, `scripts/ds_instant_text.s`): the text printer task's one
+    `bl RenderFont` (text.c's RunTextPrinter) pointed at a routine of ours in the spare ITCM (0x01FFF000), which renders on
+    after each letter (the letter delay zeroed) until a wait, a scroll, a pause or the end, so a page comes up whole at any
+    text speed. Code into the game through `pk_nds_code_write` (main RAM or ITCM, melonDS's JIT told); found in RAM by the
+    switch around the call, one place in every HeartGold / SoulSilver / Platinum cart (and Diamond's); checked twice a second,
+    so a state from the other setting is set right. Headless: HeartGold's battle openings whole in a frame; Platinum's intro
+    at MID, every page whole with its arrow, in order. DSperate: no (no code of ours runs there).
+
+52. REUSABLE TMS on the Gen 4 DS games (2026-11-18, `DsReusableTms.kt`): LearnMoveToSlot's `if (!MoveIsHM(move)) Bag_TakeItem(...)`,
+    its `bne` past the call made a `b` (`pk_nds_code_write`, checked twice a second like INSTANT TEXT's). In the static ARM9 of every
+    HeartGold / SoulSilver / Platinum cart, one place each. Headless on HeartGold: the function called on the lead with TM01 and the
+    real bag: with the `b` the move is written and TM01 stays at 1; without it the code goes on into Bag_TakeItem.
+
+53. TMs from the bag on Ruby / Sapphire (2026-11-18, English rev 0 / 1 / 2; `TM_RUBY*` / `TM_SAPPHIRE*` in
+    `gamedata/gen3/records/ruby_sapphire.toml`, from pret's pokeruby symbols): their party menu's exit is a fixed
+    `SetMainCallback2(sub_80A5B40)` back to the bag, so the TM screen is opened the bag's way (gPokemonItemUseType 0,
+    gPokemonItemUseCallback = TeachMonTMMove, sub_808B020) and, a frame at a time while it runs, that callback is swapped for
+    CB2_ReturnToField before the bag runs (`tmBagReturnWatch`; it's set for 8 frames before the bag's own). POKéMON CENTER's
+    RELEARN keeps the Fallarbor tutor's script there. Headless on Ruby rev 1: "Teach which POKéMON?" with ABLE / NOT ABLE /
+    LEARNED for HM01, B, and the field back (CB2_Overworld, the controls free). The other languages: not mapped yet.
+
+54. SHINY ODDS on the DS (`ShinyOdds.DsRoller`, `DsTarget`; 2026-11-14): a wild foe made shiny in the frames between the
+    battle being handed its setup and copying the parties. Gen 4 (pret's pokeplatinum / pokeheartgold): the field's child
+    ApplicationManager / OverlayManager is the battle's (its template's init word, `Gen4Battle.battleTemplate`) with its data
+    still NULL - its init does nothing and Battle_Main's first step only makes a heap, so the BattleSystem (and its copy of
+    `FieldBattleDTO` / `BattleSetup.parties[1]`) comes two frames later; wild battle types only (not TRAINER / LINK / TAG /
+    FRONTIER / ROAMER - rebuilt from its stored personality at each meeting, so a shiny one that fled came back plain -
+    / PAL_PARK / TUTORIAL / DEBUG). Gen 5: the GameSystem's running proc is the battle overlay's with its work
+    (the main module) NULL, ~14 frames; `BATTLE_SETUP_PARAM` competitor 0 (wild), foe party at +0x28. The record's
+    personality is swapped for a shiny one (the Pokémon's own OT ID, a wild one's the player's) keeping the nature (Gen 4's
+    is the personality's), the low byte (gender, ability bit), Gen 5's ability bit 16 and wild bit 31, WURMPLE's branch;
+    its blocks re-shuffled and encrypted again with the same checksum, its party fields with the new personality
+    (`gen4WithPersonality`). Checked headless on every cart of `ShinyOdds.DS_VERIFIED` - Platinum USA rev 1 and HG / SS USA
+    on new games (a field script: give a Pokémon, StartWildBattle / WildBattle), HG / SS Europe rev 10 on HG's save, Black /
+    White / Black 2 / White 2 USA on the player's saves in grass - the foe drawn in its shiny colours beside the same battle
+    left alone, the battle's own copy carrying the new personality. ◐: Europe rev 10 only; the other language ports, the
+    French carts, Origin HeartGold, Renegade Platinum and the Redux builds aren't on the list (not checked, or rules of their
+    own). Fixtures `platinum_shiny_window`, `heartgold_shiny_window`, `black2_shiny_window` (`DsShinyOddsTest`).
+
+55. SHINY ODDS on Gold / Silver / Crystal (`ShinyOdds.GbRoller`, `GbTarget`; 2026-11-14): Gen 2's shininess is the DVs
+    (Defense, Speed, Special 10, Attack 2 / 3 / 6 / 7 / 10 / 11 / 14 / 15), with no OT check, so the foe gets new DVs. pret's
+    LoadEnemyMon makes a wild foe after the battle transition, all in one frame (DVs, CalcMonStats with no stat experience, full
+    HP, the wEnemyStats copy), and InitBattleDisplay only reads the DVs for the sparkle and the colours after its slide-in.
+    In that window, once wEnemyMon reads the same two frames running, a new foe that isn't shiny gets shiny DVs of the same
+    gender (GetGender: female when Attack DV << 4 | Speed DV is at or under the ratio, so a female of a 12.5% species stays
+    plain) and its stats worked out again from wBaseStats (only while wBaseDexNo is its species, and only when the game's
+    own stats are what that formula gives), into wEnemyMon and wEnemyStats. Wild battle types only: NORMAL, FISH, CONTEST,
+    TREE, TRAP, FORCEITEM, Crystal's CELEBI / SUICUNE (not CANLOSE, TUTORIAL, DEBUG, ROAMING - the beasts keep their DVs in
+    their own struct - or FORCESHINY), never in a link; never UNOWN (its letter is the DVs). Forcing BATTLETYPE_FORCESHINY
+    instead was turned down: it also stops RUN and Roar. Addresses from pokecrystal / pokegold built with rgbds (every Crystal
+    release's .sym agrees: rev 0, rev 1, AU; Gold's and Silver's do). Checked headless in Crystal rev 1, Gold and Silver from
+    the `crystal` / `gold` fixtures' saves (`scripts/gen2_save_from_fixture.py`): a wild Lv3 grass foe, the game's stats
+    equal to the formula's, the rewrite still in place after the battle started, the foe sliding in shiny with the game's own
+    sparkle beside the same battle left plain (`GbShinyOddsTest`). The German carts keep RAM of their own: not checked.
+
 ## What each column is
 
 - **EXPAND**: ASPECT > EXPAND, the overworld rebuilt past the GBA's edges (`pk_wide.c`; a Game Boy game's past its
@@ -471,11 +815,14 @@ change to any of the places listed under "Where it's decided" updates its rows h
 - **Battle buttons**: the BATTLE tab's FIGHT / BAG / POKéMON / RUN and the move buttons press the game's own menus
   (`BattleInputController`). Without them the battle panes are information only.
 - **One-press picks**: a FIGHT / move tap writes the menu's cursor and presses A once (GitHub #33). Without it a tap
-  walks the cursor blind, 46-90 frames a tap (the "taps take a while" report).
+  walks the cursor blind, 46-90 frames a tap (the "taps take a while" report). Retail English FireRed rev 0 and LeafGreen
+  rev 0 / 1 (2026-11-14): FireRed rev 1's cursors, checked headless on each retail cart, on configs of their own
+  (`firered_rev0_retail`, `leafgreen_rev*_retail`) the Poller picks on a retail hash only - the bases carry the hacks and
+  the language ports.
 - **POKéMON switch**: the battle POKéMON pane switches the tapped party slot in (the closed loop on gPartyMenu, or on
   a Game Boy game's own party menu).
 - **Field items**: ITEMS' USE (Repels, medicine, PP items) and GIVE / TAKE on a Pokémon (`FieldItems.kt`).
-- **FLY**: the MAP tab's FLY button (`Fly.kt`).
+- **FLY**: the MAP tab's FLY button (`Fly.kt`); ³⁴ marks FREE FLIGHT and the scenic FLY too (`Flight.kt`).
 - **Trainer card**: the CARD tab (`TrainerCard.kt`).
 - **AUTO-RUN**: never while surfing or diving (B surfaces: `TrySetupDiveEmergeScript`, GitHub #338; Ruby / Sapphire by the map's type). SoulGold's Autorun option and Odyssey's L are their own, on by default, so the row is ON and greyed there (`GAMES_WITH_OWN_AUTO_RUN`): our flip of B made them walk. Other hacks have one that starts off (Unbound, Radical Red, Lazarus, Seaglass, Imperium, Quetzal, R.O.W.E., Heart and Soul, Elite Redux, the Recharged games): with both on, B flips back.
 - **Field reads**: SCENE SPEEDS' TEXT SPEED, CONTROLS > AUTO-RUN and RUN INDOORS (`pk_field_state`). BATTLE / MENU
@@ -485,11 +832,26 @@ change to any of the places listed under "Where it's decided" updates its rows h
 - **PC anywhere**: the BAG's `PC` button (`Pc.kt`).
 - **Instant text**: GAMEPLAY > INSTANT TEXT, a text box's words at once, nothing else sped up (`InstantText.kt`). FireRed / LeafGreen / Emerald in every language and the hacks on agbcc's build of their text code: RenderFont rewritten in its own 40 bytes; Ruby / Sapphire: one branch in UpdateWindowText. gcc builds (expansion, Recharged) show N/A. Played headless with `rompatch` on FireRed, Emerald and Ruby: pages, scrolling, a wild battle's messages.
 - **Reusable TMs**: GAMEPLAY > REUSABLE TMS, a TM kept in the bag after it teaches a move (`ReusableTms.kt`).
+- **No HMs needed**: GAMEPLAY > NO HMS NEEDED, the field moves (Cut, Surf, Strength, Rock Smash, Waterfall, Dive) with the badge alone, the first Pokémon that isn't an egg doing them when nobody knows the move; the companion's FLY / FREE FLIGHT / FLASH follow it (`HmFree.kt`). ScrCmd_checkpartymove rewritten in its own 124 bytes (`scripts/hm_free.s`) and PartyHasMonWithSurf's `beq` made a `nop`, both found by agbcc's code: retail FireRed / LeafGreen / Emerald / Ruby / Sapphire in every language and revision and the hacks on that code (Unbound, Radical Red, the other CFRU hacks, Glazed, Kaizo, Emerald Legacy, Ultra Violet, Orange Islands, Rocket Edition, Ash Gray, Ghost Grey, Let's Go, Team Rocket Edition 1.5); gcc builds and Celia (Surf's check rebuilt) show N/A. Played headless with `rompatch`: FireRed rev 1 (Cut, nobody knowing it; Surf with and without a Pokémon knowing it), Emerald (Rock Smash), Ruby rev 1 (the command and Surf's check called directly; Secret Power keeps the game's rule).
+- **Exp share**: GAMEPLAY > EXP SHARE, OFF / SPLIT / FULL EXP (`ExpShare.kt`): getexp's gSentPokesToOpponent set to the party's non-egg slots every frame (only getexp reads it), and for FULL EXP its two divisions by the count `nop`ed. Found by agbcc's Cmd_getexp, only where the game runs it (`ExpShare.getexp`: its address in a battle script command table the code loads): FireRed / LeafGreen / Emerald in every language and the hacks on that code (Gaia, Glazed, Kaizo, Emerald Legacy, Ultra Violet, Orange Islands, Rocket Edition, Ash Gray, Ghost Grey, the randomized builds). Ruby / Sapphire too (2026-11-18: their own build of it, `ExpShare.GETEXP_RS`, every language; played headless on Ruby rev 1: OFF nothing past the Lv 100 lead, SPLIT +454 to each of the three below 100, FULL EXP +2731 each). Not Odyssey and Let's Go (one division left), or the CFRU hacks (Radical Red, Unbound, Amethyst, Sword and Shield, GS Chronicles: they keep the old getexp but run their own). Pauses RetroAchievements. Played headless: a wild battle on FireRed rev 1 and Emerald, every party Pokémon's EXP read before and after, each mode.
+  The DS: Platinum US rev 1, HeartGold / SoulSilver US, on melonDS (`ExpShare.dsFind`; `pk_nds_exp_share_tick` in `pk_nds_field.cpp`, run after every frame by `pk_nds.cpp` and `nds_dump`'s `expshare`). BtlCmd_CalcExpGain (Platinum 0x02241D34, HG / SS 0x0223E6A0, in the battle's overlay) counts the standing Pokémon with their bit in BattleContext.sideGetExpMask (+0xA4) and gives each `gainedExp` (+0x9C) = the EXP over that count, or with an Exp. Share held half of it over the count and the other half over the holders (`sharedExp`, +0xA0). SPLIT sets both sides' masks to the non-egg party slots every frame of a battle; FULL EXP patches three halfwords at +0x102 / +0x104 / +0x142 (the count -> 1, the halved EXP -> the whole on the item's path), all three or none, only over the expected bytes, put back when FULL goes, so with the item everyone gets the whole EXP and a holder its half on top. Gen 5 (Black / White / Black 2 / White 2, `IRBO` / `IRAO` / `IREO` / `IRDO`; no decomp: the battle overlay's EXP routine - Black 0x021CB2D4 in overlay 93, Black 2 0x021AEE0C in overlay 167; White / White 2 the same code 0x20 / 0x40 higher - found by the traded bonus's fx32 0x1B33 and read in Ghidra) keeps who fought each foe on the foe's BTL_POKEPARAM (+0xD0 a count, +0xD1 the ids, up to 24), counts the standing ones and divides by them, after halving for an Exp. Share (item 216) held. The EXP routine reads the server's BTL_POKECON (the main module's second, +0xC8 + 0xE8; the clients' at +0xC8), so SPLIT fills every foe's list in both with the party's non-egg places; FULL EXP is two halfwords: the halving's `subs r1, r1, r0` -> `nop`, the count -> 1. Played headless on all four the same six ways (Black 2 gains 34 / 17 + 17 / 34 + 34; held 17 + 17, 9 + 26, 34 + 51), FULL off and on mid-battle putting the bytes back. Not on DSperate (a code patch its recompiler wouldn't see), Renegade Platinum or the Redux builds (retail's headers, their battle code not checked), or the other languages. Played headless on all three Gen 4 carts: the same wild battle won with OFF / SPLIT / FULL, and again with the second Pokémon holding the item (Platinum 24 / 12 + 12 / 24 + 24; held: 12 + 12, 6 + 18, 24 + 36; the fainted third nothing), and FULL turned off and on mid-battle putting the game's bytes back.
+  The Game Boy (GbGamePatches' `EXP1` / `EXP2`): the participants byte is written only while the game's battle byte says a wild (1) or trainer (2) battle is on (`ExpShare.mark`): outside one, Gen 2's wBattleParticipantsNotFainted shares its RAM with wSurroundingTiles and the PC's wBoxPartialData (pokecrystal's `SECTION UNION`). Gen 1's battle byte is wIsInBattle, the byte before wPartyGainExpFlags in every pokered build (`GbExpShareGateTest`); Gen 2's the config's wBattleMode. While a party Pokémon holds the Exp. Share (0x39) Gen 2 marks nothing: its holders' pass sets the byte itself. The mark used to stop at `GameRuntime.sampled`'s GBA-only return, so until 2026-11-19 it never reached a Game Boy game.
+- **Level cap**: GAMEPLAY > LEVEL CAP, no Pokémon past the top level of the first boss NEXT BOSS has ahead (`LevelCap.kt`): getexp's two `cmp r0, #100` (before the EXP message, and before each one-level step of Task_GiveExpToMon's) become `cmp r0, #cap` with `bcc` / `bcs`, so a Pokémon at the cap gets nothing and one that reaches it mid-win stops with that level's EXP. Re-patched as the cap moves (worked out off the emu thread from the save's flags and the ROM's trainer table, every 2 s at most). Same getexp as EXP SHARE, so the same games (Ruby / Sapphire too: capped at 56 on Ruby rev 1 nobody gained, at 57 only its Lv 56) plus Let's Go, less Gaia (its first check was rewritten); N/A in a game without a NEXT BOSS list. Doesn't pause RetroAchievements. Played headless: a Lv 100 wild foe at 1 HP with the whole party sharing, FireRed rev 1 capped at 8 and Emerald at 12 (the Lv 7 / Lv 11 stopped at exactly the cap's EXP, everyone at or past it unchanged).
+- **Auto refill**: GAMEPLAY > AUTO REFILL (`RepelRefill.kt`): while a REPEL has 1..20 steps left (the companion samples once a second; a bike covers ~15 steps in that), one more of the kind working (else the smallest the bag has) goes on top of them, so the game's "wore off" never comes. GBA: `refillRepel`, the field items' VarGet / VarSet / RemoveBagItem past the game's "still working" check, wherever the bag's REPEL USE works (SoulGold too); DS: `useGen4Repel` / `useGen5Repel` with `topUp` (the step byte capped at 255) in Platinum, HG / SS, Black / White and their sequels. Field only, controls free, no battle. Played headless on FireRed rev 1 and Emerald (3 steps left + a REPEL: 100 left three steps on, no message; without: the game's own box); the DS top-up not yet.
+- **Shiny alert**: GAMEPLAY > SHINY ALERT (`ShinyHunt.kt`): counts wild battles per game and, on a shiny foe, turns FF off, lets go of turbo, plays the fanfare and says so on the game screen. Where battlers read shiny (the configs SHINY ODDS marks: retail FireRed / LeafGreen / Ruby / Sapphire / Emerald and the hacks in its list), and (2026-11-18) the Game Boy Color and DS games by their own rules (`shinyAlertWorks`): Gen 2's DVs (`gen2Shiny`: Gold / Silver, Crystal and its hacks, not Polished Crystal's own bit), Gen 4 / 5's trainer and secret IDs against the personality (`gen45Shiny`; a hack with other odds, Renegade Platinum's shiny-rate build, is read at the retail rule); else N/A. Checked on the `firered_shiny_battle` / `emerald_shiny_battle` fixtures (`ShinyHuntTest`) and the rules alone (`GbDsShinyTest`); no Game Boy / DS shiny battle fixture yet.
+- **Last ball**: the BATTLE tab's ball button (COMPANION > LAST BALL, `BattleBall.kt`): BAG picked, then the player's controller caught at `OpenBagAndChooseItem` before the bag opens: RemoveBagItem (the bag's own ItemUseInBattle_PokeBall does it), the ball into `gSpecialVar_ItemId`, the controller on `CompleteWhenChoseItem`, the fade's active bit cleared and `BeginNormalPaletteFade(all, 0, 0, 0)`. The functions come from the ROM through the config's `completeWhenChoseItem` / `battlerControllerFuncs` (agbcc's shape), RemoveBagItem from the field items' table; shown only in a wild battle with one foe and room for a catch, GEN 4 look. Played headless: FireRed rev 1 (a POKé BALL, through "Gotcha!" and the nickname question, the bag's last one gone) and Emerald (an ULTRA BALL); then (2026-11-18) Japanese Emerald (an ULTRA BALL) and German FireRed (a POKé BALL), and `BattleBallTest` reads the functions from every retail FireRed / LeafGreen / Emerald / Ruby / Sapphire cart in every language (Ruby / Sapphire's OpenBagAndChooseItem is 0x38 before CompleteWhenChoseItem, not 0x3C); Ruby rev 1 caught a PIKACHU with an ULTRA BALL headless.
+- **Boss retry**: GAMEPLAY > BOSS RETRY (`updateBattleRetry`, `SaveStates.retryFile`): a state on the first sample of a trainer battle (`isTrainerBattle`), and after a battle that ended with the whole party fainted the TIP-style card (`BattleRetryAsk`); RETRY loads it like a slot (undoable). Wherever the reader says trainer or wild: the Gen 3 GBA reads, Black / White / Black 2 / White 2, and (2026-11-18) the Game Boy games (wIsInBattle / wBattleMode: 1 wild, 2 trainer) and HeartGold / SoulSilver / Platinum and the hacks on them (the battle type's trainer bit), checked on the `gold_trainer`, `origin_heartgold_trainer` and wild fixtures. Not played on a device yet.
+- **Low HP beep / field poison**: GAMEPLAY > LOW HP BEEP / FIELD POISON, OFF = a game-option patch each (`QuietPatches.kt`): HandleLowHpMusicChange's `bl PlaySE` (SE_LOW_HEALTH 83 FireRed family / 90 Emerald family: the one call of that id whose target the m4aSongNumStop ones don't share) becomes two `nop`s; UpdatePoisonStepCounter's `bl DoPoisonFieldEffect` (after the SECRET_BASE map type check, before its switch) becomes `movs r0, #0`. Every retail FireRed / LeafGreen / Emerald / Ruby / Sapphire cart (`QuietPatchesTest`) and the hacks on that code. Played headless on FireRed rev 1: a poisoned lead walking ten steps, 127 HP -> 125 without, 127 with.
+- **POKéMON CENTER**: the summary's CENTER (heal, relearn, forget a move, nickname) and the QUICK MENU's HEAL (`PokemonCenter.kt`): the game's own specials - HealPlayerParty, TeachMoveRelearnerMove's screen, MoveDeleterForgetMove, ChangePokemonNickname - found in gSpecials by agbcc's code, run by a few script commands in free EWRAM (0x0203FFD8). Every retail FireRed / LeafGreen / Emerald / Ruby / Sapphire (all languages) and most binary hacks; CFRU rewrote ChangePokemonNickname (no NICKNAME there); RELEARN needs a TM screen table (`tmFnsFor`) and the learnsets; Ruby / Sapphire, with no TM screen table, run the Fallarbor tutor's own script instead (`centerRelearnScript`: `special DisplayMoveTutorMenu`, which fades, opens the screen and hands the field back by itself; Ruby rev 1 headless, 2026-11-18). FireRed's relearner needs LoadStdWindowFrameGfx first: its words use the message box's palette, which the recap after a loaded save replaces. Played headless on FireRed rev 1 (all four, the relearner right after loading), Emerald (relearner) and Ruby (the move checks).
 - **Shiny odds**: GAMEPLAY > SHINY ODDS, a new wild foe made shiny at the odds picked (`ShinyOdds.kt`).
 - **Player look**: MAKEOVER > PLAYER LOOK, the player as another game's hero (`PlayerLook.kt`); RIVAL LOOK dresses the rival too (Emerald, Ruby, Sapphire).
+- **Area map**: the MAP tab's and the HUD minimap's AREA map, a cave's or a building's own map with its floors (`AreaMap.kt`).
 
 ## Where it's decided
 
+- **Area map**: `gamedata/gen3/area_maps.toml` by ROM CRC32 (`AreaMapTablesGen.kt`), written by `scripts/gen_area_maps.py
+  --scan <ROM folder>` from EXPAND's rows and the ROMs; a ROM it can't do is listed at the file's end with why. Check with
+  `make test-quick T='*AreaMapTest'` (every row against its ROM, drawn).
 - **EXPAND**: `app/src/main/cpp/pk_wide_games.h`, generated by `scripts/gen_wide_tables.py` (retail by SHA-1, the
   hacks in its `HACKS`; `pending` ones only in `verify_wide.py`'s build). Check with `scripts/verify_wide.py`. A
   randomized retail ROM goes by retail's CRC (`WideScreen.tablesCrc`, `RandomizedRetail`), the field reads too. An
@@ -500,7 +862,24 @@ change to any of the places listed under "Where it's decided" updates its rows h
   its `HEADLESS` table) and checked by `verify_ports.py` (action, FIGHT, BAG and POKéMON handlers on every port). One-press
   picks walked and written headless on English Sapphire rev 1 (`sapphire_rev1_battle`), German Sapphire rev 1 and
   Japanese Sapphire rev 1; the other ports' cursors are mapped through the literal pools (English's RAM in the Western
-  ones). No POKéMON switch there: R / S's party menu keeps its cursor in a sprite's data, not in a gPartyMenu.
+  ones). The POKéMON switch (2026-11-18): R / S's party menu keeps its cursor in a sprite's data, not in a gPartyMenu - the one in-use,
+  invisible sprite whose callback is SpriteCallbackDummy (`SwitchAddrs.cursorSpriteCallback`), checked headless on English and French
+  Ruby rev 1 (DOWN, A, SHIFT sent slot 1 in; gPlayerParty in battle order while the menu is up, as FireRed's); not Japanese R / S.
+- **Hide battle menu** (two screens; not a column: it follows the battle buttons): `PokeDaisyActivity.battleMenuHideSupported`
+  (a BPR / BPG / BPE header, or Ultra Violet's PUVV, running as FireRed / Emerald with the battle buttons' addresses and the one-press picks' cursors:
+  the D-pad steers the hidden action menu by writing gActionSelectionCursor, `HiddenMenuSteer`), the menus found on screen by
+  `pk_wide.c`'s `menuHideBegin` (no address of its own; gBattleTypeFlags keeps doubles' and the Safari Zone's). Checked
+  headless on English FireRed rev 1 and Emerald (mgba_dump `battlemenu`), then (2026-11-15) a wild battle in every covered
+  game, both menus hidden with the sign drawn (`battlemenuinfo`): FireRed rev 0 / 1, LeafGreen rev 0 / 1, Emerald, German / Spanish /
+  French / Italian Emerald, Spanish FireRed / LeafGreen, Emerald Kaizo, Emerald Legacy, randomized FireRed rev 0 / 1 and Emerald,
+  Modern Emerald, Recharged Emerald (three builds: its message box is a band with no right edge), Rocket Edition, Ash Gray and its
+  fork, Ghost Grey v1.0.1 / v1.0.4 (white on black text with no shadow colour), Let's Go Pikachu / Eevee; then (2026-11-18, once their
+  cursors were mapped) German / French / Italian / Japanese FireRed and LeafGreen and Japanese Emerald. The Japanese boxes draw an inner
+  edge with the frame's T + 6 tile, so the plain middle is T + 7 (the Western ones' too). Ruby / Sapphire too (2026-11-18): their cursor is
+  sprites (menu_cursor.c), hidden for the frame with the menu (the shown OBJ entries whose top is inside the box), and their empty
+  message box has no text tiles of its own, so the sign borrows the hidden menu's (off screen that frame); both menus hidden with the
+  sign drawn on English Ruby rev 1. Ultra Violet too (2026-11-24): FireRed rev 0 under its own code PUVV, which the check now takes;
+  both menus hidden with the sign drawn on its own save.
 - **One-press picks**: `NativeConfig.actionCursor` / `moveCursor`, handed out only for a hash-verified ROM
   (`TelemetrySampler.knownCursorAddrs`; a randomized retail ROM's masked hash counts, `RandomizedRetail`), or for a hack
   whose code proves retail's engine (`RetailEngine`, note 30). Configs made with `.copy()` inherit them: zero them where the RAM moved.
@@ -588,11 +967,7 @@ change to any of the places listed under "Where it's decided" updates its rows h
 
 ## Next up (from the table)
 
-- One-press picks for the retail releases that still walk blind: English LeafGreen, FireRed rev 0, Japanese Emerald
-  and the other-language FireRed / LeafGreen (each needs its gActionSelectionCursor / gMoveSelectionCursor checked
-  headless, as `unbound_battle`'s README describes).
-- The POKéMON switch for English LeafGreen and FireRed rev 0.
-- Battle buttons for Emerald Rogue; the POKéMON switch for Ruby / Sapphire (their party cursor lives in a sprite).
+- Battle buttons for Emerald Rogue; the POKéMON switch for Japanese Ruby / Sapphire.
 
 ## Linux / 3DS companion: tabs read per hack
 
@@ -618,7 +993,7 @@ against the app's recorded cards (`make -C 3ds test-card`), the GUIDE's boss tea
 | Wishes of Tomorrow, Team Rocket Edition, Elite Redux | ✅ | — | ◐ ³⁰ |
 | R.O.W.E., Emerald Rogue (EX) | ✅ | — | — |
 | Celia's Stupid Romhack | ◐ ²⁵ | — | ✅ |
-| Ghost Grey | ✅ | — | ✅ ²⁷ |
+| Ghost Grey (blocked ¹¹) | ✅ | — | ✅ ²⁷ |
 
 ²³ Checked against a screenshot of the game's own card (0 pixels differ), not the app's recorded output.
 ²⁴ No reference render of Imperium's card exists to check against, so the tab stays off.
@@ -663,3 +1038,25 @@ Violet) or their engine's retail names (Kaizo, Seaglass, Too Many Types 2, Recha
 other-language retail carts use their own language's names. `make -C 3ds test-roms` checks every ROM names at least 20 sections.
 
 Hacks that are not in the table have no DEX, CARD or GUIDE yet. The MAP tab draws the FireRed 1.0 hacks' own region maps from their ROM, as the app's RomRegionMap (Unbound, Odyssey, Gaia, Amethyst, Radical Red, GS Chronicles, Sword and Shield, Orange Islands, Ash Gray, Ghost Grey; `make -C 3ds test-roms` checks them against the app's pins), and elsewhere a region map where the ROM's art is found by fingerprint (Rocket Edition, Recharged Yellow, Ultra Violet, Kaizo, Emerald Legacy, Quetzal, Emerald Rogue, Too Many Types 2); else it says "NO MAP".
+
+56. Red and Yellow with the Gen II Graphics patch (Red V2.0, Yellow V1.1; marthinmooy's PR #802, 2026-11-19): retail's RAM
+    and save untouched, so they run on Red's / Yellow's configs (`GEN1_RED_GEN2_GRAPHICS`, `GEN1_YELLOW_GEN2_GRAPHICS`), found
+    by hash. The patch redraws the Pokémon, trainers and tiles, so their art goes to files of their own (`gen1Gen2Graphics`,
+    `Gen1Art.*_GEN2_GRAPHICS_*`) and their Pokédex pictures take each species' bank from byte 27 of its base stats
+    (`picBankOffset`). Checked 2026-11-20 on the patches from their PokeCommunity threads (Red's graphics-only IPS: its
+    GFX & Music one is another hash, not supported) applied to retail: both carts booted headless from retail's saves read
+    exactly as retail's fixtures (`Gen2GraphicsDecodeTest`, fixtures `red_gen2_graphics` / `yellow_gen2_graphics`), all 151
+    pictures decode in both (`RedBlueArtTest`), and STEADY's song plays and loops as retail's from each cart's PlayMusic and
+    park (Yellow's bank 0 moved 0x12 from 0x1400 on: 0x21FF / 0x1745). Red's bank 0 is retail's where GbField looks, so its
+    PC, FLY and WILD are Red's (`GbFieldTest`; the PC opened headless); Yellow's matches no field config, so its stay off.
+    EXPAND and the bag's patches aren't tried here.
+
+57. RUNNING SHOES on the Game Boy (2026-11-19, from marthinmooy's PR #1171, ported to `GbGamePatches.run`): B held while
+    walking gives the bike's speed. Red / Blue hook .moveAhead2's bike check (0x05CC), Yellow DoBikeSpeedup's (0x049D),
+    Gold / Silver / Crystal DoPlayerMovement's .BikeCheck (04:43CA / 20:43CA), each by its shape with its RAM and joypad
+    operands read from the cart's own code; the trampoline (21 / 16 / 18 bytes) at the end of the hook's bank in the cart's
+    padding, which its write checks. Only walking speeds up: the bike and the skates keep the game's own answer, and every
+    other state (surfing) is "not the bike". Found in English Red, Blue, Yellow, Gold, Silver, Crystal (rev 0, rev 1, AU),
+    Italian Yellow and Crystal Legacy (not played); N/A in the Spanish / German / French Yellows (12 to 14 bytes of bank 0
+    padding for a 16-byte trampoline), Brown, PureRed / PureBlue, Yellow Legacy, Crystal Clear (1 byte), Prism (27 bytes,
+    under the 64 kept) and Polished Crystal (no .GetDPad). `GbRunningShoesTest`.

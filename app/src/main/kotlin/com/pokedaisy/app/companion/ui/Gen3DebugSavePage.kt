@@ -61,7 +61,7 @@ internal fun Gen3DebugSavePage(
     saving: Boolean,
     generate: (Int, Int) -> ByteArray,
 ) {
-    val format = state.data.format
+    val format = (state.gen3 ?: return).data.format
     val badges = remember(format) { format.badges() }
     val story = remember(format) { format.storyFlags() }
     var query by remember { mutableStateOf("") }
@@ -140,13 +140,13 @@ internal fun Gen3DebugSavePage(
 
 @Composable
 private fun EventFlagRows(state: PcBoxesState, flags: List<Pair<Int, String>>, m: GbaTextMetrics, busy: Boolean) {
-    val data = state.data
+    val data = state.gen3?.data ?: return
     OptionListWindow(m, Modifier.fillMaxWidth()) {
         Column {
             flags.forEach { (id, label) ->
                 val enabled = data.eventFlag(id)
                 OptionLine(label, if (enabled) tr("ON") else tr("OFF"), false, m, labelWeight = 0.8f, enabled = !busy) {
-                    state.edit { setEventFlag(id, !enabled) }
+                    state.edit { (this as com.pokedaisy.app.companion.data.save.Gen3SaveEditor).setEventFlag(id, !enabled) }
                 }
             }
         }

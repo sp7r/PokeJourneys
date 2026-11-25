@@ -67,6 +67,21 @@ object PortraitLayout {
         return stops.firstOrNull { it > ratio + 0.01f } ?: stops.first()
     }
 
+    /** What a tap on the grip does to a shown companion: its next size, and whether it goes away. */
+    data class Tap(val ratio: Float, val hide: Boolean)
+
+    /**
+     * A tap on the grip of a companion shown at [ratio]: the next size, hiding it first when it's already as tall as it
+     * gets ([canHide]: a DS game's touch screen never hides). That goes by the height it's drawn at, not by the sizes'
+     * order: when the room under the game is no more than the smallest size, every size is drawn the same height,
+     * [next] never comes round to a smaller one, and a rule waiting for that never hid it.
+     */
+    fun tap(w: Int, h: Int, gameH: Int, ratio: Float, reserve: Int = 0, canHide: Boolean = true): Tap {
+        val shown = companionHeight(w, h, gameH, ratio, reserve)
+        val tallest = companionHeight(w, h, gameH, maxRatio(w, h, gameH, reserve), reserve)
+        return Tap(next(w, h, gameH, ratio, reserve), canHide && shown >= tallest - w * 0.01f)
+    }
+
     /** The touch controls fit in a [gap]-tall strip on a [w]-wide screen. */
     fun padInGap(w: Int, gap: Int): Boolean = gap >= w * PAD_GAP_RATIO
 
@@ -124,17 +139,21 @@ object PortraitLayout {
             return Arrangement(gripTop, gripTop, companionTop, c, Grip.ABOVE, gripTop, stripTop, h)
         }
         @Suppress("NAME_SHADOWING") val underGame = underGame && !expand
-        val c = companionHeight(w, h, gameH, ratio, gripH)
         if (underGame) {
-            val gameBottom = minOf(gameH, h - c - gripH)
+            // The controls' strip ([padStrip], when they're shown) is kept free at the bottom whatever's above it: on a
+            // screen with no gap left under the companion (a tablet, a DS game's 4:3) they lay over the game instead.
+            val strip = if (padStrip > 0) minOf(padStrip, h / 3) else 0
+            val c = companionHeight(w, h, gameH, ratio, gripH + strip)
+            val gameBottom = minOf(gameH, h - c - gripH - strip)
             val gripTop = gameBottom + c
             val below = gripTop + gripH
-            val inGap = padInGap(w, h - below)
+            val inGap = strip > 0 || padInGap(w, h - below)
             return Arrangement(
                 gameBottom, gameBottom, gameBottom, c, Grip.BELOW, gripTop,
                 if (inGap) below else 0, if (inGap) h else gameBottom,
             )
         }
+        val c = companionHeight(w, h, gameH, ratio, gripH)
         val companionTop = h - c
         val gameBottom = minOf(gameH, companionTop)
         val inside = companionTop - gameBottom < gripH
@@ -160,7 +179,7 @@ val LocalCompanionTopInset = compositionLocalOf { 0 }
  * The grip on the portrait companion: a white title-window tab with arrows up and
  * down, running into the companion from above ([PortraitLayout.Grip.ABOVE]) or
  * below ([PortraitLayout.Grip.BELOW]), or whole inside its top. Dragging it
- * (handled by the view around it, in screen coordinates) resizes the companion; a
+ * (handled by [PanelResizeHandle]) resizes the companion; a
  * tap steps through the sizes ([PortraitLayout.next]).
  */
 @Composable

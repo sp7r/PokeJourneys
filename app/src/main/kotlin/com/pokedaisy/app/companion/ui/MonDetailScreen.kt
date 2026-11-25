@@ -1,16 +1,20 @@
 package com.pokedaisy.app.companion.ui
 
+import kotlinx.coroutines.IO
+
 import androidx.compose.ui.graphics.RectangleShape
 import com.pokedaisy.app.companion.i18n.tk
 import com.pokedaisy.app.companion.i18n.tr
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -39,25 +43,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import com.pokedaisy.app.companion.ui.theme.gbaFocusRing
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.zIndex
 import com.pokedaisy.app.companion.data.GENDER_SYMBOL_FEMALE
 import com.pokedaisy.app.companion.data.GENDER_SYMBOL_MALE
+import com.pokedaisy.app.companion.data.MonStats
+import com.pokedaisy.app.companion.data.abilityForSlot
+import com.pokedaisy.app.companion.data.abilitySlotReadable
 import com.pokedaisy.app.companion.data.MonView
 import com.pokedaisy.app.companion.data.MoveView
+import com.pokedaisy.app.companion.data.PokedexSource
+import com.pokedaisy.app.companion.data.PokedexTables
 import com.pokedaisy.app.companion.data.TypeMatchup
+import com.pokedaisy.app.companion.data.eggHatchName
 import com.pokedaisy.app.companion.ui.theme.AppColors
 
 /**
@@ -83,6 +101,8 @@ fun MonDetailScreen(
     index: Int,
     onIndexChange: (Int) -> Unit,
     onBack: () -> Unit,
+    /** A second tap on the active party slot: open that Pokémon's dex entry. */
+    onOpenDex: ((Int) -> Unit)? = null,
     modifier: Modifier = Modifier,
     /** Open on the STATS page (screenshot tests). */
     initialShowStats: Boolean = false,
@@ -106,6 +126,10 @@ fun MonDetailScreen(
     partyOrder: Boolean = true,
     /** Open on SWITCH's party (screenshot tests). */
     initialSwitching: Boolean = false,
+    /** The running game's dex tables, for the STATS page's ABILITY row; null = no row. */
+    dexTables: PokedexTables? = null,
+    /** Open with the CENTER's list up (screenshot tests). */
+    initialCenterMenu: Boolean = false,
 ) {
     val m = rememberGbaTextMetrics()
     val small = rememberGbaTextMetrics(1f)
@@ -118,6 +142,8 @@ fun MonDetailScreen(
     // SWITCH: the party takes the summary's place and the Pokémon tapped there trades places with this one, as in the game's
     // party menu (the column beside the summary only steps through the Pokémon).
     val reorders = itemUse?.takeIf { partyOrder && it.canReorderParty() && party.size > 1 }
+    // MOVES: dragging one onto another changes the order in the game too (its own summary does the same).
+    val moveOrder = itemUse?.takeIf { partyOrder && it.canReorderMoves() }
     var switching by remember { mutableStateOf(initialSwitching) }
     // What each Pokémon holds, asked of the game whenever the party read changes (TAKE).
     val takes = itemUse?.takeIf { it.canTake() }
@@ -144,7 +170,31 @@ fun MonDetailScreen(
     LaunchedEffect(party, evolves != null) { evolves?.tradeEvolveTargets { tradeTargets = it } }
     val evoTarget = party.getOrNull(index)?.takeIf { !it.isEgg }?.let { tradeTargets[it.personality] }
     var evolveAsk by remember { mutableStateOf(initialEvolveAsk) }
+    // A tapped move's own page (its slot, 0..3), in the summary's window; null = the summary.
+    var openMove by remember { mutableStateOf<Int?>(null) }
     var evolveResult by remember { mutableStateOf<String?>(null) }
+    // The POKéMON CENTER (PokemonCenter.kt): its list, then FORGET's moves and its question.
+    val center = itemUse?.takeIf { partyOrder }?.center()
+    var centerMenu by remember { mutableStateOf(initialCenterMenu) }
+    var forgetPick by remember { mutableStateOf(false) }
+    var forgetAsk by remember { mutableStateOf<Int?>(null) }
+    val centerMon = party.getOrNull(index)?.takeIf { !it.isEgg && it.personality != 0L }
+    // What the Move Tutor would list for it (its level-up moves so far it doesn't know); null = not known here.
+    val relearnable by androidx.compose.runtime.produceState<List<Int>?>(null, centerMon?.species, centerMon?.level, centerMon?.moves, learn) {
+        val mon = centerMon
+        val l = learn
+        value = if (mon == null || l == null || center?.relearn != true) null
+        else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                com.pokedaisy.app.companion.data.relearnableMoves(l.tables, l.guide, mon.species, mon.level, mon.moves.map { it.id })
+            }.getOrNull()
+        }
+    }
+    fun centerDone(r: com.pokedaisy.app.companion.data.CenterResult, ok: String?) {
+        val name = centerMon?.name.orEmpty()
+        if (r == com.pokedaisy.app.companion.data.CenterResult.OK) { if (ok != null) notice = ItemNotice(0, ok) }
+        else notice = ItemNotice(0, centerMessage(r, name), ok = false)
+    }
     if (switching && reorders != null) {
         CompanionBackHandler { switching = false }
         Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -184,8 +234,13 @@ fun MonDetailScreen(
             if (mon != null) {
                 // One white window, split by separators: info over matchups
                 // on the left, the moves on the right.
-                OptionListWindow(m, Modifier.fillMaxSize(), fill = optionLook.titleFill) {
-                    Row(Modifier.fillMaxSize()) {
+                // A menu style: the window round blocks of cells with their own borders (the moves), a little more room
+                // inside its frame; the parts that aren't cells sit on the window as before.
+                val cells = OptionColors.cells?.takeIf { optionLook === OptionLook.Live }
+                OptionListWindow(m, Modifier.fillMaxSize(), fill = optionLook.titleFill, margin = if (cells != null) CELL_MARGIN else 0) {
+                    val moveOpen = openMove?.takeIf { !showLearn && mon.moves.getOrNull(it) != null }
+                    if (moveOpen != null) MoveDetailPage(mon, moveOpen, { openMove = it }, m, small)
+                    else Row(Modifier.fillMaxSize()) {
                         if (showLearn && canLearn) {
                             val options = rememberLearnOptions(learn!!, mon)
                             val pick = options?.firstOrNull { it.move == learnPick }
@@ -196,21 +251,43 @@ fun MonDetailScreen(
                                 Modifier.weight(0.5f).fillMaxHeight().padding(start = gap))
                         } else {
                             val heldItem = heldOf(i)
-                            SummaryLeftColumn(
-                                mon, m, small, gap, Modifier.weight(0.5f).fillMaxHeight().padding(end = gap),
-                                held = heldItem?.let { t ->
-                                    {
-                                        HeldItemLine(t.heldItem, small, onTake = if (t.verdict == com.pokedaisy.app.companion.data.SlotVerdict.OK) {
-                                            { takeResult = null; takeAsk = true }
-                                        } else null, bagFull = t.verdict == com.pokedaisy.app.companion.data.SlotVerdict.BAG_FULL)
+                            val held: (@Composable () -> Unit)? = heldItem?.let { t ->
+                                {
+                                    HeldItemLine(t.heldItem, small, onTake = if (t.verdict == com.pokedaisy.app.companion.data.SlotVerdict.OK) {
+                                        { takeResult = null; takeAsk = true }
+                                    } else null, bagFull = t.verdict == com.pokedaisy.app.companion.data.SlotVerdict.BAG_FULL)
+                                }
+                            }
+                            val u = m.u
+                            if (cells != null) {
+                                // A menu style: INFO and the moves / STATS each a block under a heading, where there's room.
+                                HeadedBlock(tr("INFO"), small, Modifier.weight(0.5f).fillMaxHeight().padding(end = gap), minBody = u * SUMMARY_INFO_MIN) { headed ->
+                                    SummaryLeftColumn(mon, m, small, gap, Modifier.fillMaxWidth().weight(1f).headedBody(headed, u), held = held)
+                                }
+                            } else {
+                                SummaryLeftColumn(mon, m, small, gap, Modifier.weight(0.5f).fillMaxHeight().padding(end = gap), held = held)
+                                Separator(m, Modifier.fillMaxHeight(), vertical = true)
+                            }
+                            val side = Modifier.weight(0.5f).fillMaxHeight().padding(start = gap)
+                            val stats = mon.stats
+                            if (showStats && stats != null) {
+                                if (cells != null) HeadedBlock(tr("STATS"), small, side, minBody = u * SUMMARY_STATS_MIN) { headed ->
+                                    MonStatsSection(stats, m, Modifier.fillMaxWidth().weight(1f).headedBody(headed, u), ability = individualAbility(mon, stats, dexTables))
+                                } else MonStatsSection(stats, m, side, ability = individualAbility(mon, stats, dexTables))
+                            } else MovesSection(
+                                mon, m, small, side, onMoveClick = { openMove = it },
+                                // Not an egg's: the game's summary doesn't move those either.
+                                reorderMoves = moveOrder?.takeIf { !mon.isEgg }?.let { use ->
+                                    { from, to, done ->
+                                        use.reorderMoves(i, mon.personality, from, to) { r ->
+                                            if (r != com.pokedaisy.app.companion.data.MoveOrderResult.REORDERED) {
+                                                notice = ItemNotice(0, moveOrderMessage(r), ok = false)
+                                            }
+                                            done(r)
+                                        }
                                     }
                                 },
                             )
-                            Separator(m, Modifier.fillMaxHeight(), vertical = true)
-                            val right = Modifier.weight(0.5f).fillMaxHeight().padding(start = gap)
-                            val stats = mon.stats
-                            if (showStats && stats != null) MonStatsSection(stats, m, small, right)
-                            else MovesSection(mon, m, small, right)
                         }
                     }
                 }
@@ -218,24 +295,28 @@ fun MonDetailScreen(
         }
 
         CompanionBackHandler(onBack = onBack)
+        // BACK on a move's page goes back to the summary (newer than the summary's own, so it wins).
+        if (openMove != null) CompanionBackHandler { openMove = null }
         // No up / down arrows (STATS needed the room): the column's slots pick the Pokémon.
         val stats = party.getOrNull(index)?.stats != null && !showLearn
         val learns = canLearn && party.getOrNull(index)?.isEgg == false
         val evolve = evolves != null && evoTarget != null && !showLearn
-        if (stats || learns || evolve || reorders != null || onDeposit != null || onWithdraw != null) {
+        val centers = center != null && centerMon != null && !showLearn
+        if (stats || learns || evolve || centers || reorders != null || onDeposit != null || onWithdraw != null) {
             Row(Modifier.height(SummaryButtonSize), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val size = SummaryButtonSize
                 if (stats) TextNavButton(if (showStats) tr("MOVES") else tr("STATS"), StatsPurple, StatsPurpleDark, size) { showStats = !showStats }
                 if (learns) TextNavButton(if (showLearn) tr("MOVES") else tr("LEARN"), SuggestGold, SuggestGoldDark, size) { showLearn = !showLearn; learnPick = 0 }
                 if (evolve) TextNavButton(tr("EVOLVE"), EvolveBlue, EvolveBlueDark, size) { evolveResult = null; evolveAsk = true }
                 if (reorders != null) TextNavButton(tr("SWITCH"), RunBlue, RunBlueDark, size) { switching = true }
+                if (centers) TextNavButton(tr("CENTER"), CenterPink, CenterPinkDark, size) { centerMenu = true }
                 if (onDeposit != null) TextNavButton(tr("DEPOSIT"), PcGreen, PcGreenDark, size, onClick = onDeposit)
                 if (onWithdraw != null) TextNavButton(tr("WITHDRAW"), PcGreen, PcGreenDark, size, onClick = onWithdraw)
             }
         }
     }
     Column(Modifier.width(SummaryButtonSize).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        PartyColumn(party, index, onIndexChange, small, Modifier.weight(1f).fillMaxWidth())
+        PartyColumn(party, index, onIndexChange, small, Modifier.weight(1f).fillMaxWidth(), onOpenDex = onOpenDex)
         BackNavButton(onBack, SummaryButtonSize)
     }
     }
@@ -279,6 +360,62 @@ fun MonDetailScreen(
                 tk("OK"), m, onConfirm = { evolveAsk = false }, onDismiss = { evolveAsk = false }, cancelLabel = null)
         }
     }
+    val cm = centerMon
+    if (center != null && cm != null) {
+        val i = index
+        val moves = cm.moves.filter { it.id != 0 }
+        if (centerMenu) {
+            // The services this Pokémon can have here, as the game's own NPCs would offer them.
+            val options = buildList {
+                if (center.heal) add(tk("HEAL THE PARTY"))
+                if (center.relearn && relearnable?.isNotEmpty() == true) add(tk("RELEARN A MOVE"))
+                if (center.forget && moves.size > 1) add(tk("FORGET A MOVE"))
+                if (center.nickname) add(tk("NICKNAME"))
+            }
+            OptionSelector(
+                title = tr("POKéMON CENTER"),
+                options = options,
+                selected = "",
+                label = { it },
+                m = m,
+                onPick = { o ->
+                    centerMenu = false
+                    when (o) {
+                        "HEAL THE PARTY" -> itemUse.centerHeal { r -> centerDone(r, tr("Your POKéMON are fully healed.")) }
+                        "RELEARN A MOVE" -> itemUse.centerRelearn(i, cm.personality) { r -> centerDone(r, null) }
+                        "FORGET A MOVE" -> forgetPick = true
+                        "NICKNAME" -> itemUse.centerNickname(i, cm.personality) { r -> centerDone(r, null) }
+                    }
+                },
+                onDismiss = { centerMenu = false },
+            )
+        }
+        if (forgetPick) {
+            OptionSelector(
+                title = tr("Forget which move?"),
+                options = moves.indices.toList(),
+                selected = -1,
+                label = { moves[it].name },
+                m = m,
+                onPick = { forgetPick = false; forgetAsk = it },
+                onDismiss = { forgetPick = false },
+            )
+        }
+        forgetAsk?.let { k ->
+            val move = moves.getOrNull(k)
+            if (move == null) forgetAsk = null
+            else OptionConfirm(
+                tk("FORGET A MOVE"), tr("{0} forgets {1}?", cm.name, move.name), tk("FORGET"), m,
+                onConfirm = {
+                    forgetAsk = null
+                    itemUse.centerForget(i, cm.personality, cm.moves.indexOf(move), move.id) { r ->
+                        centerDone(r, tr("{0} forgot {1}.", cm.name, move.name))
+                    }
+                },
+                onDismiss = { forgetAsk = null },
+            )
+        }
+    }
     androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         ItemNoticeHost(notice, m, Modifier.align(Alignment.TopCenter).padding(top = m.u * 6, start = m.u * 8, end = m.u * 8)) { notice = null }
     }
@@ -306,6 +443,15 @@ internal fun partySwapMessage(r: com.pokedaisy.app.companion.data.PartySwapResul
     com.pokedaisy.app.companion.data.PartySwapResult.FAILED -> tr("That didn't work")
 }
 
+/** Why a move drag didn't take, in the companion's words ([REORDERED] never shows one). */
+internal fun moveOrderMessage(r: com.pokedaisy.app.companion.data.MoveOrderResult): String = when (r) {
+    com.pokedaisy.app.companion.data.MoveOrderResult.REORDERED -> ""
+    com.pokedaisy.app.companion.data.MoveOrderResult.IN_BATTLE -> tr("Not during a battle")
+    com.pokedaisy.app.companion.data.MoveOrderResult.NOT_NOW -> tr("Not right now")
+    com.pokedaisy.app.companion.data.MoveOrderResult.CHANGED -> tr("The party has changed. Try again.")
+    com.pokedaisy.app.companion.data.MoveOrderResult.FAILED -> tr("That didn't work")
+}
+
 /** Why TRADE EVOLUTIONS didn't evolve [mon], in the companion's words. */
 internal fun tradeEvoMessage(r: com.pokedaisy.app.companion.data.TradeEvoResult, mon: String): String = when (r) {
     com.pokedaisy.app.companion.data.TradeEvoResult.NOT_NOW -> tr("Not now: it evolves on the field, with no menu, text or battle open.")
@@ -316,8 +462,9 @@ internal fun tradeEvoMessage(r: com.pokedaisy.app.companion.data.TradeEvoResult,
 
 /** What TAKE did, in the companion's words. */
 internal fun takeMessage(o: com.pokedaisy.app.companion.data.ItemUseOutcome, mon: String): String = when (o.result) {
-    com.pokedaisy.app.companion.data.ItemUseResult.TAKEN -> tr("Received {0} from {1}.", bagItemName(o.swapped), mon)
+    com.pokedaisy.app.companion.data.ItemUseResult.TAKEN -> takenMessage(o.swapped, mon)
     com.pokedaisy.app.companion.data.ItemUseResult.BAG_FULL -> tr("The bag is full: {0} can't go back in it.", bagItemName(o.swapped))
+    com.pokedaisy.app.companion.data.ItemUseResult.MAILBOX_FULL -> tr("The PC's mailbox is full.")
     com.pokedaisy.app.companion.data.ItemUseResult.NOT_NOW -> tr("Not now: close the game's menus and battles first.")
     com.pokedaisy.app.companion.data.ItemUseResult.IN_BATTLE -> tr("You can't do that during a battle.")
     com.pokedaisy.app.companion.data.ItemUseResult.PARTY_CHANGED -> tr("The party has changed. Try again.")
@@ -347,7 +494,7 @@ internal val NavButtonSize: androidx.compose.ui.unit.Dp
 /** The Pokémon summary's buttons (STATS / LEARN / the PC's, Back) and its party column: a little over a tab chip's height
  * (44 dp was a touch small to tap, the user's call, 2026-11-03; a short screen's stays 34, its STATS page has no width to
  * spare). The battle panes keep [NavButtonSize], whose bar holds the FOE TEAM's icons. */
-private val SummaryButtonSize: androidx.compose.ui.unit.Dp
+internal val SummaryButtonSize: androidx.compose.ui.unit.Dp
     @Composable get() = if (LocalShortCompanion.current) 34.dp else 48.dp
 
 @Composable
@@ -369,11 +516,33 @@ internal fun NavButton(
     ) { PixelIcon(icon, buttonContent, Modifier.size(size * 26 / 60)) }
 }
 
+/** [mon]'s own ability: Gen 3's aptitude bit picks one of its species' two, read from the dex tables off the UI thread. */
+@Composable
+private fun individualAbility(mon: MonView, stats: MonStats, tables: PokedexTables?): String? {
+    if (tables == null || mon.isEgg) return null
+    // Formats that don't read the bit (Elite Redux, R.O.W.E.) leave it null, and games with hidden abilities keep the
+    // slot elsewhere: say nothing rather than guess.
+    val slot = stats.abilityNum ?: return null
+    if (!abilitySlotReadable(tables)) return null
+    return rememberLoaded(
+        tables, mon.species, slot,
+        cached = { null },
+        load = {
+            val national = PokedexSource.nationalOf(tables, mon.species)
+            if (national > 0) PokedexSource.entry(tables, national)?.abilities?.let { abilityForSlot(it, slot) } else null
+        },
+    )
+}
+
 /** The party as a column of slots on the right, like battle INFO's foe team: the one shown framed in red, a tap on
  * another shows it. As big as the height allows (up to [SummaryButtonSize]). A PC box's (BOXES) shows six of its Pokémon at
  * a time, the one on show among them. */
 @Composable
-private fun PartyColumn(party: List<MonView>, index: Int, onPick: (Int) -> Unit, small: GbaTextMetrics, modifier: Modifier = Modifier) {
+private fun PartyColumn(
+    party: List<MonView>, index: Int, onPick: (Int) -> Unit, small: GbaTextMetrics, modifier: Modifier = Modifier,
+    /** A tap on the active slot again: open its dex entry. */
+    onOpenDex: ((Int) -> Unit)? = null,
+) {
     BoxWithConstraints(modifier, contentAlignment = Alignment.TopCenter) {
         val gap = 4.dp
         val first = (index - STRIP_MAX / 2).coerceIn(0, (party.size - STRIP_MAX).coerceAtLeast(0))
@@ -381,7 +550,9 @@ private fun PartyColumn(party: List<MonView>, index: Int, onPick: (Int) -> Unit,
         val n = shown.size.coerceAtLeast(1)
         val cell = minOf(SummaryButtonSize, (maxHeight - gap * (n - 1)) / n)
         Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-            shown.forEach { (i, mon) -> PartyColumnSlot(mon, current = i == index, small, cell) { onPick(i) } }
+            shown.forEach { (i, mon) -> PartyColumnSlot(mon, current = i == index, small, cell) {
+                if (i == index) onOpenDex?.invoke(i) else onPick(i)
+            } }
         }
     }
 }
@@ -407,12 +578,14 @@ private fun PartyColumnSlot(mon: MonView, current: Boolean, small: GbaTextMetric
             .soundClickable(interactionSource = noRipple, indication = null, onClick = onClick)
             .semantics { contentDescription = tr("{0} Lv {1}", mon.name, mon.level) },
     ) {
-        SpeciesIcon(mon.iconAsset, size = cell * 0.85f, modifier = Modifier.alpha(if (mon.hp == 0 && !mon.isEgg) 0.35f else 1f))
+        MonIcon(mon, size = cell * 0.85f, modifier = Modifier.alpha(if (mon.hp == 0 && !mon.isEgg) 0.35f else 1f), fit = true)
     }
 }
 
 /** The most Pokémon the summary's strip shows: a party. */
 private const val STRIP_MAX = 6
+/** A move card under the finger grows a little, so it reads as lifted off its row. */
+private const val DRAGGED_MOVE_SCALE = 1.04f
 
 /** A 1-GBA-pixel rule between the summary's sections, in the window frame's light grey. */
 @Composable
@@ -438,6 +611,22 @@ internal fun Separator(m: GbaTextMetrics, modifier: Modifier = Modifier, vertica
 /** TRADE EVOLUTIONS' EVOLVE button: the party menu's field-move blue. */
 private val EvolveBlue = Color(0xFF5878E8)
 private val EvolveBlueDark = Color(0xFF3152CD)
+
+/** The POKéMON CENTER's button: its roof's pink. */
+private val CenterPink = Color(0xFFE8687C)
+private val CenterPinkDark = Color(0xFFB03850)
+
+/** What a POKéMON CENTER service said instead of going ahead, in the companion's words. */
+fun centerMessage(r: com.pokedaisy.app.companion.data.CenterResult, mon: String): String = when (r) {
+    com.pokedaisy.app.companion.data.CenterResult.NOT_NOW -> tr("Not now: close the game's menus and battles first.")
+    com.pokedaisy.app.companion.data.CenterResult.IN_BATTLE -> tr("You can't do that during a battle.")
+    com.pokedaisy.app.companion.data.CenterResult.EGG -> tr("Not for an EGG.")
+    com.pokedaisy.app.companion.data.CenterResult.TRADED -> tr("Only the trainer who caught {0} can rename it.", mon)
+    com.pokedaisy.app.companion.data.CenterResult.LAST_MOVE -> tr("{0} knows only one move.", mon)
+    com.pokedaisy.app.companion.data.CenterResult.LAST_SURFER -> tr("{0} is the only one in your party that knows SURF.", mon)
+    com.pokedaisy.app.companion.data.CenterResult.PARTY_CHANGED -> tr("The party has changed. Try again.")
+    else -> tr("It can't be used here.")
+}
 
 /** The PC's DEPOSIT / WITHDRAW buttons: the party menu's HP green. */
 private val PcGreen = Color(0xFF58C060)
@@ -499,12 +688,14 @@ internal fun InfoSection(mon: MonView, m: GbaTextMetrics, small: GbaTextMetrics,
                 if (mon.shiny) ShinySparkle(m, Modifier.padding(start = u * 3))
                 // A nickname of the player's own: the species after it, like the game's summary.
                 if (mon.renamed) GbaText("/" + mon.name, optionLook.label, optionLook.labelShadow, small, Modifier.padding(start = u * 3))
+                // An egg: the hatch species after "EGG", in the same place.
+                mon.eggHatchName?.let { GbaText("/" + it, optionLook.label, optionLook.labelShadow, small, Modifier.padding(start = u * 3)) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // The 32px icon at a whole multiple of the frame's GBA pixel, so it stays crisp.
                 // A shiny one: in a gold frame, as on battle INFO.
-                Box(Modifier.monIconBox(u * 36, u, mon.shiny, optionLook.listFill), contentAlignment = Alignment.Center) {
-                    SpeciesIcon(mon.iconAsset, size = u * 32)
+                Box(Modifier.monIconBox(u * 36, u, mon.shiny, if (optionLook === OptionLook.Live) OptionColors.well else optionLook.listFill), contentAlignment = Alignment.Center) {
+                    MonIcon(mon, size = u * 32, fit = true)
                 }
                 Spacer(Modifier.width(u * 5))
                 if (!mon.isEgg) {
@@ -643,29 +834,145 @@ internal fun MatchupGroup(heading: String, list: List<TypeMatchup>, small: GbaTe
     }
 }
 
-/** The four moves, sharing out the column's height, separated by rules. */
+/** The four moves, sharing out the column's height, separated by rules. With [reorderMoves], a non-empty one can be
+ * dragged onto another slot: it and its PP move there, the moves between shifting, as in the game's own summary. */
 @Composable
-private fun MovesSection(mon: MonView, m: GbaTextMetrics, small: GbaTextMetrics, modifier: Modifier = Modifier, forget: Int = 0) {
+private fun MovesSection(
+    mon: MonView, m: GbaTextMetrics, small: GbaTextMetrics, modifier: Modifier = Modifier, forget: Int = 0,
+    /** A tap on a move opens its page ([MoveDetailPage]); null = the rows aren't buttons (LEARN's side). */
+    onMoveClick: ((Int) -> Unit)? = null,
+    /** A drag of a non-empty move: [from] goes to [to]; the game's answer comes back through [done]. Null = fixed. */
+    reorderMoves: ((from: Int, to: Int, done: (com.pokedaisy.app.companion.data.MoveOrderResult) -> Unit) -> Unit)? = null,
+) {
+    // What the player just dropped, shown while the game's read catches up.
+    var pending by remember(mon.personality) { mutableStateOf<List<MoveView>?>(null) }
+    LaunchedEffect(mon.moves) {
+        val p = pending ?: return@LaunchedEffect
+        if (mon.moves.map { it.id } == p.map { it.id }) pending = null
+    }
+    val moves = pending ?: mon.moves
+    val count = moves.size.coerceAtMost(4)
+    var dragFrom by remember(mon.personality) { mutableStateOf(-1) }
+    var dragBy by remember(mon.personality) { mutableStateOf(Offset.Zero) }
+    var dropOn by remember(mon.personality) { mutableStateOf(-1) }
+    // One game write at a time: a second drag waits for the first to answer.
+    var reordering by remember(mon.personality) { mutableStateOf(false) }
+    val places = remember(mon.personality) { arrayOfNulls<Rect>(4) }
+    val reorder by androidx.compose.runtime.rememberUpdatedState(reorderMoves)
+    val shownMoves by androidx.compose.runtime.rememberUpdatedState(moves)
+    val click = LocalClickSound.current
+    fun slotAt(i: Int): Int {
+        val centre = (places[i] ?: return -1).center + dragBy
+        return (0 until count).firstOrNull { it != i && places[it]?.contains(centre) == true } ?: -1
+    }
+
+    /** Row [i]'s tap (its page) and drag (a new order), shared by both looks. */
+    @Composable
+    fun Modifier.moveGestures(i: Int, mv: MoveView?): Modifier {
+        val lift by animateFloatAsState(if (dragFrom == i) DRAGGED_MOVE_SCALE else 1f, tween(120), label = "move-lift")
+        val tap = if (mv != null && onMoveClick != null) Modifier.testTag("move-$i").soundClickable { onMoveClick(i) } else Modifier
+        val drag = if (reorder != null && mv != null && i < count && !reordering) Modifier.pointerInput(i, count, mon.personality) {
+            detectDragGestures(
+                onDragStart = { dragFrom = i; dragBy = Offset.Zero; dropOn = -1 },
+                onDrag = { change, by ->
+                    change.consume()
+                    dragBy += by
+                    dropOn = slotAt(i)
+                },
+                onDragEnd = {
+                    val to = slotAt(i)
+                    dragFrom = -1; dropOn = -1
+                    if (to >= 0 && to != i) {
+                        // The companion's click (no haptics in the companion); the game makes no sound of its own here.
+                        click()
+                        val before = shownMoves
+                        pending = before.toMutableList().apply { add(to, removeAt(i)) }
+                        reordering = true
+                        reorder?.invoke(i, to) { r ->
+                            reordering = false
+                            if (r != com.pokedaisy.app.companion.data.MoveOrderResult.REORDERED) pending = null
+                        }
+                    }
+                },
+                onDragCancel = { dragFrom = -1; dropOn = -1 },
+            )
+        } else Modifier
+        return this
+            .onGloballyPositioned { places[i] = it.boundsInParent() }
+            .zIndex(if (dragFrom == i) 1f else 0f)
+            .graphicsLayer {
+                scaleX = lift
+                scaleY = lift
+                if (dragFrom == i) translationY = dragBy.y
+            }
+            .then(drag)
+            .then(tap)
+    }
+
+    val cells = OptionColors.cells?.takeIf { optionLook === OptionLook.Live }
+    if (cells != null) {
+        // A menu style: the four moves a block of connected cells, as HG / Black draw them, under MOVES where there's room.
+        HeadedBlock(tr("MOVES"), small, modifier, minBody = m.u * MOVES_BODY_MIN) { headed ->
+            for (i in 0 until 4) {
+                val mv = moves.getOrNull(i)
+                val target = dropOn == i
+                val line = optionLook.value
+                MoveCell(
+                    mv, m, small,
+                    cappedRow(m.u).fillMaxWidth().cell(if (i % 2 == 0) cells.a else cells.b, cells.line, m.u, top = i == 0 && !headed, bottom = i == 3)
+                        .drawWithContent {
+                            drawContent()
+                            // Where a dragged move would land: lines over and under the cell.
+                            if (target) {
+                                val w = 2 * m.u.toPx()
+                                drawRect(line, Offset(0f, 0f), Size(size.width, w))
+                                drawRect(line, Offset(0f, size.height - w), Size(size.width, w))
+                            }
+                        }
+                        .moveGestures(i, mv),
+                    forget = forget != 0 && mv?.id == forget,
+                ) { v -> if (v.vs.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) { v.vs.forEach { MultiplierChip(it.label, it.pct) } } else MoveKindIcon(v, m) }
+            }
+        }
+        return
+    }
     Column(modifier) {
         for (i in 0 until 4) {
             if (i > 0) Separator(m, Modifier.fillMaxWidth())
-            val mv = mon.moves.getOrNull(i)
-            MoveRow(mv, m, small, Modifier.weight(1f).fillMaxWidth(), forget = forget != 0 && mv?.id == forget)
+            val mv = moves.getOrNull(i)
+            MoveRow(
+                mv, m, small, cappedRow(m.u).fillMaxWidth().moveGestures(i, mv),
+                forget = forget != 0 && mv?.id == forget,
+                lifted = dragFrom == i,
+                dropTarget = dropOn == i,
+            )
         }
     }
 }
 
-/** One move: a type-colored stripe, then name, type badge, power and PP; [forget] tags it FORGET (LEARN's pick). */
+/** One move: a type-colored stripe, then name, type badge, power and PP; [forget] tags it FORGET (LEARN's pick).
+ * [lifted] = under the finger while dragged, [dropTarget] = a dragged move would land here. */
 @Composable
-private fun MoveRow(mv: MoveView?, m: GbaTextMetrics, small: GbaTextMetrics, modifier: Modifier = Modifier, forget: Boolean = false) {
+private fun MoveRow(
+    mv: MoveView?, m: GbaTextMetrics, small: GbaTextMetrics, modifier: Modifier = Modifier, forget: Boolean = false,
+    lifted: Boolean = false, dropTarget: Boolean = false,
+) {
     val u = m.u
-    val edge = mv?.let { AppColors.typeColors[it.type] } ?: optionLook.muted
+    val look = optionLook
+    val edge = mv?.let { AppColors.typeColors[it.type] } ?: look.muted
     // A short screen's two tight lines (below) take the row's whole height.
     val pad = if (LocalShortCompanion.current) 0.dp else u * 3
     Box(
         modifier
             .drawBehind {
                 val px = u.toPx()
+                if (lifted) drawLayeredBox(look.listLayers.inPx(px), look.titleFill, radius = 2 * px)
+                if (dropTarget) {
+                    drawRect(look.value.copy(alpha = 0.10f))
+                    val line = 2 * px
+                    drawRect(look.value, Offset(0f, 0f), Size(size.width, line))
+                    drawRect(look.value, Offset(0f, size.height - line), Size(size.width, line))
+                }
                 if (mv != null) {
                     // The type stripe down the left.
                     drawPixelRoundRect(edge, Offset(0f, 4 * px), Size(3 * px, size.height - 8 * px), radius = px, step = px)
@@ -755,11 +1062,18 @@ internal fun SummaryFrame(
     buttons: @Composable RowScope.() -> Unit = {},
     /** Fills the space between [buttons] and Back (e.g. a strip of icons). */
     middle: (@Composable () -> Unit)? = null,
+    /** The content is blocks of cells ([cell]): under a menu style a little more room round them inside the frame. */
+    cells: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     if (onBack != null) CompanionBackHandler(onBack = onBack)
-    Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OptionListWindow(m, Modifier.weight(1f).fillMaxWidth(), fill = optionLook.titleFill) { content() }
+    // A menu style's windows sit closer to the buttons under them.
+    Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(if (OptionColors.joined) 4.dp else 8.dp)) {
+        // A MENU STYLE fills it with its own window (its paper, its lines); the HUD's GLASS keeps its own.
+        val look = optionLook
+        val fill = if (look === OptionLook.Live && OptionColors.style != null) OptionColors.listFill else look.titleFill
+        OptionListWindow(m, Modifier.weight(1f).fillMaxWidth(), fill = fill,
+            margin = if (cells && look === OptionLook.Live && OptionColors.cells != null) CELL_MARGIN else 0) { content() }
         Row(
             Modifier.fillMaxWidth().height(NavButtonSize),
             verticalAlignment = Alignment.CenterVertically,
@@ -772,3 +1086,12 @@ internal fun SummaryFrame(
         }
     }
 }
+
+/** GBA pixels more room inside a window round blocks of cells (they have borders of their own). */
+internal const val CELL_MARGIN = 2
+
+/** What a summary block needs under its heading for the heading to show, in GBA pixels: the four moves at a readable
+ * height, the INFO side's name / level / HP and a line of matchups, the STATS table. */
+internal const val MOVES_BODY_MIN = 4 * 36
+internal const val SUMMARY_INFO_MIN = 150
+internal const val SUMMARY_STATS_MIN = 130

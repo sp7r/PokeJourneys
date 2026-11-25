@@ -108,7 +108,7 @@ class LinkActivity : ComponentActivity() {
         if (!JourneyRules.LINK_PLAY) { finish(); return }
         prefs = Prefs(this)
         com.pokedaisy.app.companion.i18n.L10n.apply(prefs.appLanguage, null)
-        input.setControls(GbaControls.load(getExternalFilesDir(null) ?: filesDir))
+        input.setControls(GbaControls.load(controlsDir))
         intent?.getStringExtra(EXTRA_ROM)?.let { File(it) }?.takeIf { it.isFile }?.let { slots.add(it) }
         thread { slots.forEach { label(it) } }
         setContent { AppTheme { com.pokedaisy.app.companion.ui.CompactTextOnSmallWindows { Root() } } }

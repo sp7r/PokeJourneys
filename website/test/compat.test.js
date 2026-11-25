@@ -107,13 +107,30 @@ test('DS: Renegade Platinum by its code word, retail Platinum by its header', ()
   assert.deepEqual(check(cart(0)), { status: 'supported', title: 'Pokémon Platinum', family: 'Nintendo DS' });
 });
 
+test('DS: Blaze Black 2 / Volt White 2 Redux by their code word, retail Black 2 / White 2 by the header', () => {
+  for (const [code, title, retail] of [['IREO', 'Pokémon Blaze Black 2 Redux', 'Pokémon Black 2'], ['IRDO', 'Pokémon Volt White 2 Redux', 'Pokémon White 2']]) {
+    const hack = data.dsHacks.find((h) => h.code === code);
+    const cart = (word) => {
+      const b = new Uint8Array(hack.offset + 4);
+      b.set(nds(code, 0));
+      new DataView(b.buffer).setUint32(hack.offset, word, true);
+      return b;
+    };
+    const check = (bytes) => verdict(data, { ...readHeader(bytes), size: bytes.length, sha1: '0'.repeat(40), dsHack: dsHackOf(data, readHeader(bytes), bytes) });
+    assert.deepEqual(check(cart(hack.word)), { status: 'supported', title, version: 'v1.4.1', family: 'Nintendo DS' });
+    assert.deepEqual(check(cart(0)), { status: 'supported', title: retail, family: 'Nintendo DS' });
+  }
+});
+
 test('Game Boy: Yellow only', () => {
   assert.equal(verdict(data, { platform: 'gb', sha1: 'cc7d03262ebfaf2f06772c1a480c7d9d5f4a38e1' }).title, 'Pokémon Yellow');
+  assert.equal(verdict(data, { platform: 'gb', sha1: '8e3d5a2b508ad832b86ae1dea72dd6d646b634c0' }).title, 'Pokémon Yellow (Gen II Graphics)');
   assert.equal(verdict(data, { platform: 'gb', sha1: '0'.repeat(40) }).reason, 'gb');
 });
 
 test('Game Boy: Red and Blue', () => {
   assert.equal(verdict(data, { platform: 'gb', sha1: 'ea9bcae617fdf159b045185467ae58b2e4a48b9a' }).title, 'Pokémon Red');
+  assert.equal(verdict(data, { platform: 'gb', sha1: 'ad1adc824456f593f5bdb4cbfeb0ec12b24abb6d' }).title, 'Pokémon Red (Gen II Graphics)');
   assert.equal(verdict(data, { platform: 'gb', sha1: 'd7037c83e1ae5b39bde3c30787637ba1d4c48ce2' }).title, 'Pokémon Blue');
 });
 
@@ -245,6 +262,7 @@ test('DS: the language ports, each at its own revision', () => {
   assert.equal(ds('IPKE', 5).reason, 'revision');
   assert.deepEqual(ds('IPKS', 0), { status: 'supported', title: 'Pokémon Edición Oro HeartGold', family: 'Nintendo DS' });
   assert.deepEqual(ds('CPUS', 0), { status: 'supported', title: 'Pokémon Edición Platino', family: 'Nintendo DS' });
+  assert.deepEqual(ds('CPUD', 0), { status: 'supported', title: 'Pokémon Platin-Edition', family: 'Nintendo DS' });
   assert.deepEqual(ds('IRBI', 0), { status: 'supported', title: 'Pokémon Versione Nera', family: 'Nintendo DS' });
   assert.deepEqual(ds('IRDD', 0), { status: 'supported', title: 'Pokémon Weiße Edition 2', family: 'Nintendo DS' });
   assert.deepEqual(ds('IREF', 1), { status: 'unsupported', reason: 'revision', base: 'Pokémon Version Noire 2' });

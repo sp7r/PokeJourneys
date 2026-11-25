@@ -1,6 +1,6 @@
 # PokeDaisy website
 
-A static [Astro](https://astro.build) site: the home page and the ROM check. Node 22.12+ (`nvm use`).
+A static [Astro](https://astro.build) site: the home page and the ROM check. Node 22.23.4+ (`nvm use`).
 
 ```sh
 npm install
@@ -25,7 +25,10 @@ The site comes in every language the app's own text does (English, Japanese, Kor
 Portuguese for Brazil and for Portugal), which covers every language a supported ROM comes in. English lives at
 the root (`/compatibility/`), the others under a prefix (`/fr/compatibility/`, `/pt-br/`, `/pt/`): each page's
 body is a view in `src/views/`, drawn once per language by `src/pages/` (English) and `src/pages/[lang]/`. The
-manual (`/docs/`) and the release notes stay English.
+manual (`/docs/`) and the release notes stay English, but for the few manual pages that have translations
+(`docs/manual/translations/<code>/<page>.md`, today the 3DS and Linux install guides): those are drawn at `/<code>/docs/<page>/`
+by `src/pages/[lang]/docs/[slug].astro`, link to each other (the page's language row, the picker, hreflang) and are
+checked like the manual (`test/docs.test.js`). The docs API and the app's HELP stay English.
 
 Text is looked up by its English, like the app's `tr()`: `const tr = trFor(Astro.url)`, then `tr('ROM CHECK')`, or
 `msg('...')` to mark a string kept in a table (`src/lib/gamePages.js`) that's translated where it's drawn. Each
@@ -69,7 +72,11 @@ for, or a game the two tables don't share (Emerald Kaizo is in the doc but not R
 Firebase Hosting, project `pokedaisy` → https://pokedaisy.com (`firebase.json`, `.firebaserc`).
 `.github/workflows/website.yml` deploys the live site only when an app version is released: publishing a
 GitHub release (not a pre-release) builds and deploys `website/` as it is at that release's tag, so the game
-table and ROM check always match the APK people can download. Pushes to `main` only test and build. Pull
+table and ROM check always match the APK people can download. Publishing a pre-release (a beta or rc) deploys
+the newest release's tag again: the build reads that beta's `compat.json` and `docs/ROM_FEATURES.md` from GitHub
+(`src/lib/betaRelease.js`) and lists what it supports on top, tagged BETA, in the games table, the builds list and
+the ROM check, each with a window on how to get the beta (`BetaModal.astro`). Once the release is out there's no
+beta, and those games are the release's own. Pushes to `main` only test and build. Pull
 requests from this repo get a temporary preview channel, linked in a PR comment. To redeploy or roll back,
 run the workflow by hand (Actions > Website > Run workflow) with a release tag, e.g. `v1.1.4`. It needs
 the repo secret `FIREBASE_SERVICE_ACCOUNT_POKEDAISY`: a service account JSON key with the
@@ -80,7 +87,7 @@ By hand (this skips the release rule - deploy from a release tag's checkout): `n
 ## Analytics
 
 Anonymous visit counts in the project's Google Analytics 4 (Firebase Analytics), all in `src/lib/analytics.js`:
-a `page_view` per page, and `download_apk` (`where`, `version`), `rom_check` (`verdict`, `reason`: never the file's
+a `page_view` per page, and `download_apk` (`where`, `version`, `platform`: android, linux or 3ds), `rom_check` (`verdict`, `reason`: never the file's
 name, code or hash), `feedback_sent` (`kind`, `ok`: nothing typed) and `link_click` (`to`: GitHub, Reddit, Discord,
 Ko-fi, Patreon, coffee). Anything else, and any value off each parameter's list, is dropped before sending
 (`test/analytics.test.js`). No cookies or stored ids (the language picker's choice is the one thing kept, in `localStorage`, and never sent; every page load is a new visit, so "users" count page loads),

@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -103,7 +102,7 @@ fun rememberGbaTextMetrics(textScale: Float = 1.25f, wholePixels: Boolean = true
     val density = LocalDensity.current
     // A game font with smaller letters than Pixel Operator's (Gen 1's 7px caps vs 9) is set larger -
     // except where a layout is sized to the line ([gameScaled] false: the tab chips, battle INFO).
-    val gameScale = if (gameScaled) com.pokedaisy.app.companion.ui.theme.LocalGameTextScale.current else 1f
+    val gameScale = if (gameScaled && com.pokedaisy.app.companion.ui.theme.AppFonts.current.pixel) com.pokedaisy.app.companion.ui.theme.LocalGameTextScale.current else 1f
     val step = LocalTextStep.current
     return remember(density, textScale, wholePixels, gameScale, step) {
         with(density) {
@@ -121,10 +120,11 @@ fun rememberGbaTextMetrics(textScale: Float = 1.25f, wholePixels: Boolean = true
 
 fun gbaTextStyle(font: FontFamily, m: GbaTextMetrics, scaleX: Float = 1f) = TextStyle(
     fontFamily = font,
-    fontSize = m.fontSize,
+    // SETTINGS > FONT's smooth fonts, else a skin's font, set to Pixel Operator's capital height; the line keeps its height.
+    fontSize = com.pokedaisy.app.companion.ui.theme.AppFonts.current.let { f -> if (!f.pixel) f.sizeScale else CompanionSkins.current.fontScale }
+        .let { k -> if (k == 1f) m.fontSize else m.fontSize * k },
     textGeometricTransform = if (scaleX == 1f) null else TextGeometricTransform(scaleX = scaleX),
     lineHeight = m.fontSize,
-    platformStyle = PlatformTextStyle(includeFontPadding = false),
     lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
 )
 
@@ -150,18 +150,33 @@ fun GbaText(
 ) {
     val scaleX = scaleX ?: gameFontScaleX(m)
     val style = gbaTextStyle(pixelFontFamily(), m, scaleX)
-    val k = m.fontPixel.roundToInt()
+    // The GBA's shadow is a whole font pixel; under a smooth font (SETTINGS > FONT) half of one, so it stays a shadow.
+    val k = if (com.pokedaisy.app.companion.ui.theme.AppFonts.current.pixel) m.fontPixel.roundToInt() else (m.fontPixel * 0.5f).roundToInt().coerceAtLeast(1)
     val b = if (bold) boldOffsetPx(m.fontPixel * scaleX) else 0
-    // The layout the text was given, for its copies; set before each draw (layout comes first), read only there.
+    // The layout the text was given, for its copies; set before each draw (layout comes first), read only there. Only the
+    // current text's: a label that changed in place at the same width (a tab chip when BATTLE takes a place in the bar) isn't
+    // laid out again, and its copies drew the old word under the new one (DEX over MAP).
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 0)
+    // Plain storage, not Compose state: it's written in layout and read in the draw right after, nothing to observe.
     val laid = remember { arrayOfNulls<androidx.compose.ui.text.TextLayoutResult>(1) }
     Box(modifier) {
         Text(
             text, color = color, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis,
             onTextLayout = { laid[0] = it },
             modifier = Modifier.drawBehind {
-                val layout = laid[0] ?: return@drawBehind
-                if (shadow.alpha > 0f) for ((dx, dy) in listOf(k to 0, 0 to k, k to k)) {
-                    drawText(layout, color = shadow, topLeft = Offset((dx + b).toFloat(), dy.toFloat()))
+                // A text that changed in place at the same size may not be laid out again (no onTextLayout): measure it here
+                // then, once, and keep it (GbaText is on every screen; measuring in every draw added up).
+                val layout = laid[0]?.takeIf { it.layoutInput.text.text == text } ?: measurer.measure(
+                    text, style, overflow = TextOverflow.Ellipsis, maxLines = maxLines,
+                    constraints = androidx.compose.ui.unit.Constraints(maxWidth = size.width.roundToInt().coerceAtLeast(0)),
+                ).also { laid[0] = it }
+                if (shadow.alpha > 0f) when (CompanionSkins.current.shadow) {
+                    SkinShadow.PIXEL -> for ((dx, dy) in listOf(k to 0, 0 to k, k to k)) {
+                        drawText(layout, color = shadow, topLeft = Offset((dx + b).toFloat(), dy.toFloat()))
+                    }
+                    // A skin's soft shadow: one copy, half a font pixel down-right.
+                    SkinShadow.SOFT -> drawText(layout, color = shadow.copy(alpha = shadow.alpha * 0.6f), topLeft = Offset(k / 2f + b, k / 2f))
+                    SkinShadow.NONE -> Unit
                 }
                 if (b > 0) drawText(layout, color = color, topLeft = Offset(b.toFloat(), 0f))
             },
@@ -204,7 +219,7 @@ fun boldOffsetPx(pixelWidthPx: Float): Int = (pixelWidthPx * 0.5f).roundToInt().
 
 /** Labels on tabs and buttons are bold in a thin game font (Gen 1's 1px strokes). */
 @Composable
-fun gameBoldLabels(): Boolean = com.pokedaisy.app.companion.ui.theme.LocalGameFont.current != null
+fun gameBoldLabels(): Boolean = com.pokedaisy.app.companion.ui.theme.LocalGameFont.current != null && com.pokedaisy.app.companion.ui.theme.AppFonts.current.pixel
 
 /**
  * [LocalGameFontWidth] at [m]'s size: on whole-pixel text, rounded so a font pixel is a whole
@@ -217,7 +232,7 @@ fun gameFontScaleX(m: GbaTextMetrics): Float = gameFontScaleX(m.fontPixel)
 @Composable
 fun gameFontScaleX(p: Float): Float {
     val w = com.pokedaisy.app.companion.ui.theme.LocalGameFontWidth.current
-    if (w >= 1f) return 1f
+    if (w >= 1f || !com.pokedaisy.app.companion.ui.theme.AppFonts.current.pixel) return 1f
     val whole = p.roundToInt()
     if (whole < 1 || kotlin.math.abs(p - whole) > 0.01f) return w
     return (whole * w).roundToInt().coerceAtLeast(1) / whole.toFloat()
@@ -268,6 +283,21 @@ fun DrawScope.drawLayeredBox(
     }
 }
 
+/**
+ * A [com.pokedaisy.app.companion.ui.theme.KeyColors] key filling the box: its outline, the [depth] edge along the bottom
+ * ([unit] px a GBA pixel; a pressed key's is one unit, else [depthUnits]) and the two-tone face over it. [radius] in px.
+ */
+fun DrawScope.drawKey(k: com.pokedaisy.app.companion.ui.theme.KeyColors, unit: Float, radius: Float, depthUnits: Int = 2, face: Color = k.face) {
+    val d = (if (k.pressed) 1 else depthUnits) * unit
+    drawPixelRoundRect(k.outline, radius = radius, step = unit)
+    val inner = Size(size.width - 2 * unit, size.height - 2 * unit)
+    val r = (radius - unit).coerceAtLeast(0f)
+    drawPixelRoundRect(k.depth, Offset(unit, unit), inner, r, step = unit)
+    val faceSize = Size(inner.width, inner.height - d)
+    drawTwoTone(face, k.low, unit) { c -> drawPixelRoundRect(c, Offset(unit, unit), faceSize, r, step = unit) }
+    k.shine?.let { drawRect(it, Offset(unit + r, unit * 2), Size((inner.width - 2 * r).coerceAtLeast(0f), unit)) }
+}
+
 /** A two-tone button's lower colour, for a window-coloured one: [fill] a step down, on a light or a dark look alike. */
 fun twoToneLow(fill: Color): Color = androidx.compose.ui.graphics.lerp(fill, Color(0xFF40485A), 0.3f)
 
@@ -277,6 +307,20 @@ fun twoToneLow(fill: Color): Color = androidx.compose.ui.graphics.lerp(fill, Col
  * corners stay the shape's.
  */
 fun DrawScope.drawTwoTone(top: Color, low: Color, line: Float, paint: DrawScope.(Color) -> Unit) {
+    // A skin with flat faces (CompanionSkin.flatFaces: the GBA games, Platinum): the top colour alone.
+    if (CompanionSkins.current.flatFaces) { paint(top); return }
+    // A skin's smooth faces (CompanionSkin.gradientFaces): the two colours blended top to bottom, in thin bands.
+    if (CompanionSkins.current.gradientFaces) {
+        val bands = 16
+        val lighter = androidx.compose.ui.graphics.lerp(top, Color.White, 0.35f)
+        for (i in 0 until bands) {
+            val t = i / (bands - 1f)
+            clipRect(top = size.height * i / bands, bottom = size.height * (i + 1) / bands + 1f) {
+                paint(androidx.compose.ui.graphics.lerp(lighter, low, t))
+            }
+        }
+        return
+    }
     val split = size.height * 0.47f
     paint(low)
     clipRect(bottom = split) { paint(top) }

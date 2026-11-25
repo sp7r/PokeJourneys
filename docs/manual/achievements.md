@@ -28,7 +28,7 @@ You sign in on the top screen because typing needs a keyboard, and the bottom sc
 
 RetroAchievements recognises a ROM by its exact contents, so only ROMs it knows have achievements. The retail games (FireRed, Emerald and the others) have sets, as do some popular hacks like Unbound. A patched or rebuilt ROM usually doesn't, even if it's based on a game that does.
 
-This works with any game, not only the ones the companion supports, and with Game Boy and DS games too.
+This works with any game, not only the ones the companion supports, and with Game Boy and DS games too. A DS game has the same achievements whether you keep its ROM loose or in an archive.
 
 To check a game before playing it, long-press it in the library and open `INFO`. Its RetroAchievements section says whether there's a set for that exact ROM and, when you're signed in, how many achievements you've unlocked in it. See [Library](library.md).
 
@@ -55,6 +55,8 @@ The funnel button opens a filter: `SHOW ALL`, `LOCKED ONLY` or `UNLOCKED ONLY`.
 
 If the tab says `NO ACHIEVEMENTS FOR THIS ROM`, RetroAchievements doesn't know this exact file. It shows the ROM's hash, which you can look up on the site.
 
+If it says `NO ACHIEVEMENTS YET`, RetroAchievements knows the game, but nobody has made achievements for it so far.
+
 ## Popups
 
 Achievement news pops up at the top of the companion, over whatever tab you're on:
@@ -62,7 +64,7 @@ Achievement news pops up at the top of the companion, over whatever tab you're o
 - `ACHIEVEMENT UNLOCKED`, with its badge and points, and the level-up fanfare from the games plays.
 - `GAME COMPLETE` when you've unlocked every achievement in the set.
 - How many you've unlocked so far, when a game starts.
-- `PROGRESS` when you get closer to one that counts something.
+- `PROGRESS` when you get further than before on one that counts something (a count that drops and comes back says nothing new).
 - `LEADERBOARD` when a leaderboard attempt starts or ends.
 - Connection notices, when the site can't be reached.
 
@@ -72,11 +74,18 @@ Tap an unlock or progress popup to open the ACHIEVEMENTS tab right on that achie
 
 When the companion isn't on screen (a DS game's touch screen in its place, or the companion closed on a one-screen handheld), popups show at the top of the game instead, and a tap there just closes them.
 
+### Turning popups off
+
+The top screen's Settings > RetroAchievements page has a `NOTIFICATIONS` section, and the companion's `SETTINGS` has the same two switches in its COMPANION group, so you can change them in game:
+
+- `ACHIEVEMENT POPUPS` (`ON` by default) turns every popup off, in the game and on the companion, and mutes the unlock fanfare. Achievements still unlock and count on your account, and the CHEEVOS tab still lists them.
+- `PROGRESS POPUPS` (`ON` by default) turns off only the progress notices (`PROGRESS`), while unlocks and the rest still show. It's greyed out while `ACHIEVEMENT POPUPS` is off.
+
 ## Leaderboards and challenges
 
 Some sets have leaderboards (fastest time, highest score). When the game has any, a `LEADERBOARDS` button appears on the ACHIEVEMENTS tab. Tap a board to see the top 10 and the players around your own entry, with your row highlighted.
 
-While a leaderboard attempt is running, its current value (a timer, a count) shows in the bottom-right corner of the companion. Some achievements are challenges you have to finish without breaking a rule; while one is active, its badge sits in that corner too, so you know it's still on. With the companion off screen, they sit in the game's bottom right corner.
+While a leaderboard attempt is running, its current value (a timer, a count) shows in the bottom-right corner of the companion. Some achievements are challenges you have to finish without breaking a rule; while one is active, its badge sits in that corner too, so you know it's still on. With the companion off screen, they sit in the game's bottom right corner. Rather not see them? Turn off `CHALLENGE ICONS` in SETTINGS (COMPANION group).
 
 ## Save states and achievement progress
 
@@ -86,8 +95,8 @@ Every save state keeps your achievement progress with it. Load a state and the p
 
 While any cheat is loaded, achievements are paused: nothing can unlock, and the ACHIEVEMENTS tab shows `PAUSED: CHEATS ON`. A popup tells you when cheats go on or off. Turn every cheat off and achievements pick up again. See [Cheats](cheats.md).
 
-Raising `SHINY ODDS` pauses them the same way, and the tab shows `PAUSED: SHINY ODDS` until you set it back to `NORMAL`. See [SHINY ODDS](controls.md#shiny-odds).
+Raising `SHINY ODDS` pauses them the same way, and the tab shows `PAUSED: SHINY ODDS` until you set it back to `NORMAL`. See [SHINY ODDS](controls.md#shiny-odds). So does `EXP SHARE` while it's on (`PAUSED: EXP SHARE`): see [EXP SHARE](controls.md#exp-share).
 
 ## When the site can't be reached
 
-If you're offline when a game starts, you stay signed in. The app keeps trying again by itself (more and more slowly, up to every few minutes), and the companion's tab says it can't reach RetroAchievements. Tap `TRY AGAIN` on the tab or in Settings to try right away.
+If you're offline when a game starts, you stay signed in. A notice says the achievements are off for now, so you know nothing unlocks until the site is back. The app keeps trying again by itself (more and more slowly, up to every few minutes) and turns them on once it gets through, and the companion's tab says it can't reach RetroAchievements. Tap `TRY AGAIN` on the tab or in Settings to try right away.

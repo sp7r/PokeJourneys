@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "pd_dex.h"
+#include "pd_tr.h"
 #include "pd_dex_details.h"
 #include "pd_gb.h"
 #include "pd_icon.h"
@@ -13,7 +14,7 @@
 
 #define TITLE_H 24
 #define LIST_Y (CONTENT_Y + TITLE_H + 4)
-#define DEX_ROW 18
+#define DEX_ROW pd_list_row(18)
 #define TOGGLE_W 78
 
 // Whether the National Dex shows: the player's pick, else the save's own.
@@ -58,14 +59,14 @@ static void title(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g
     int x = MARGIN, w = c->w - 2 * MARGIN - (one ? 0 : TOGGLE_W + 4);
     int f = pd_title_box(c, x, CONTENT_Y, w, TITLE_H, PD_TITLE_FILL);
     int ty = pd_text_y(CONTENT_Y, TITLE_H);
-    pd_text(c, x + f + 6, ty, "POKéDEX", PD_TITLE_TEXT, PD_TITLE_SHADOW);
+    pd_text(c, x + f + 6, ty, pd_tr("POKéDEX"), PD_TITLE_TEXT, PD_TITLE_SHADOW);
     int seen = ui->dexSource?ui->dexSource->seenCount:0, caught = ui->dexSource?ui->dexSource->caughtCount:0;
     for (int i = 0; !ui->dexSource && i < n; i++) {
         seen += pd_dex_seen(s, list[i]);
         caught += pd_dex_caught(s, list[i]);
     }
     char counts[40];
-    snprintf(counts, sizeof(counts), "SEEN %d  OWN %d", seen, caught);
+    snprintf(counts, sizeof(counts), pd_tr("SEEN %d  OWN %d"), seen, caught);
     pd_text_right(c, x + w - f - 6, ty, counts, PD_VALUE, PD_VALUE_SHADOW);
     // Which dex: tap for the other one (a Game Boy game has just the one).
     if (one) return;
@@ -78,8 +79,19 @@ static void title(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g
 // game at hand: the toggle flips what shows, up / down step through it.
 static int lastList[PD_DEX_BYTES * 8], lastCount;
 static bool lastNational;
+static int allList[PD_DEX_BYTES * 8], allCount; // before the filters
+
+// A species name's first letter, A-Z, else 0.
+static int dex_initial(const struct pd_game* g, int species) {
+    char buf[40];
+    const char* name = pd_species_name(g, species, buf, sizeof buf);
+    int ch = name ? (unsigned char) name[0] : 0;
+    if (ch >= 'a' && ch <= 'z') ch -= 32;
+    return ch >= 'A' && ch <= 'Z' ? ch : 0;
+}
 
 enum dex_filter { DEX_ALL, DEX_CAUGHT, DEX_SEEN, DEX_UNSEEN, DEX_FILTERS };
+static const struct pd_game* dexGame; // the game ui_dex_tab last drew (the filters' TYPE names)
 
 static int filter_of(const struct pd_snapshot* s,int national){
     if(pd_dex_caught(s,national))return DEX_CAUGHT;
@@ -92,56 +104,91 @@ int pd_ui_dex_filters(struct pd_ui* ui, struct pd_canvas* c, const int counts[4]
     const int w = (c->w - 3 * MARGIN) * 36 / 100;
     const int x = MARGIN, y = CONTENT_Y;
     const bool tall = c->h >= 252;
-    const int headingH = 46, rowH = tall ? 23 : 18;
+    // The 3DS's sidebar (PokedexScreen's left column): TYPE and NAME under the four, rows as dense as the lists'.
+    const bool extra = ui && !ui->handheldDex;
+    const int rowH = tall ? 23 : extra ? pd_list_row(18) : 18, lineStep = 16;
     int f = pd_title_box(c, x, y, w, TITLE_H, PD_TITLE_FILL);
-    pd_text(c, x + f + 5, pd_text_y(y, TITLE_H), "POKéDEX", PD_TITLE_TEXT, PD_TITLE_SHADOW);
-    const int countsY = y + TITLE_H + 3;
-    f = pd_list_box(c, x, countsY, w, headingH);
+    int lf = 0; // the list window's frame (thicker than the title's)
+    for (int i = 0; i < pd_cur->listCount; i++) lf += pd_cur->list[i].width;
+    int headingH = extra ? 2 * lf + rowH + 2 : 46; // the 3DS's: SEEN and OWN on one line
+    const int gap = extra ? 2 : 3, buttonH = 18;
+    // The 3DS's column: SEEN / OWNED only while everything fits over the tab bar (TEXT SIZE NORMAL's rows don't
+    // leave it room; ALL and CAUGHT still say the counts).
+    if (extra && y + TITLE_H + gap + headingH + gap + 2 * lf + 2 + (DEX_FILTERS + 2) * rowH + (region ? gap + buttonH : 0) > c->h - MARGIN)
+        headingH = 0;
+    pd_text(c, x + f + 5, pd_text_y(y, TITLE_H), pd_tr("POKéDEX"), PD_TITLE_TEXT, PD_TITLE_SHADOW);
+    const int countsY = y + TITLE_H + gap;
+    f = headingH ? pd_list_box(c, x, countsY, w, headingH) : lf;
     const int innerX = x + f, innerW = w - 2 * f;
     const int right = innerX + innerW - 4;
     char text[24];
-    for (int i = 0; i < 2; i++) {
-        const int line = countsY + f + 1 + i * 16;
-        pd_text(c, innerX + 3, line, i ? "OWNED" : "SEEN", PD_LABEL, PD_LABEL_SHADOW);
+    if (extra && headingH) {
+        const int line = pd_text_y(countsY + f + 1, rowH);
+        int tx = innerX + 3 + pd_text(c, innerX + 3, line, pd_tr("SEEN "), PD_LABEL, PD_LABEL_SHADOW);
+        snprintf(text, sizeof text, "%d", counts[DEX_CAUGHT] + counts[DEX_SEEN]);
+        pd_text(c, tx, line, text, PD_VALUE, PD_VALUE_SHADOW);
+        snprintf(text, sizeof text, "%d", counts[DEX_CAUGHT]);
+        pd_text_right(c, right, line, text, PD_VALUE, PD_VALUE_SHADOW);
+        pd_text_right(c, right - pd_text_width(text), line, pd_tr("OWN "), PD_LABEL, PD_LABEL_SHADOW);
+    }
+    for (int i = 0; headingH && !extra && i < 2; i++) {
+        const int line = extra ? pd_text_y(countsY + f + 1 + i * rowH, rowH) : countsY + f + 1 + i * lineStep;
+        pd_text(c, innerX + 3, line, i ? pd_tr("OWNED") : pd_tr("SEEN"), PD_LABEL, PD_LABEL_SHADOW);
         snprintf(text, sizeof text, "%d", i ? counts[DEX_CAUGHT] : counts[DEX_CAUGHT] + counts[DEX_SEEN]);
         pd_text_right(c, right, line, text, PD_VALUE, PD_VALUE_SHADOW);
     }
-    const int filterY = countsY + headingH + 4;
-    pd_list_box(c, x, filterY, w, c->h - filterY - MARGIN);
+    const int filterY = countsY + (headingH ? headingH + (extra ? gap : 4) : 0);
+    // The 3DS's: the box as tall as its rows, the region's button under it (PokedexScreen's).
+    const int filterH = extra ? 2 * f + 2 + (DEX_FILTERS + 2) * rowH : c->h - filterY - MARGIN;
+    pd_list_box(c, x, filterY, w, filterH);
     for (int i = 0; i < DEX_FILTERS; i++) {
         const int line = filterY + f + 1 + i * rowH, ty = pd_text_y(line, rowH);
         if (i == (focus < 0 ? active : focus)) pd_fill(c, innerX, line, innerW, rowH, PD_ROW_SELECTED);
         const uint32_t ink = i == active ? PD_VALUE : PD_LABEL;
         const uint32_t shadow = i == active ? PD_VALUE_SHADOW : PD_LABEL_SHADOW;
         snprintf(text, sizeof text, "%d", counts[i]);
-        pd_text_fit(c, innerX + 3, ty, innerW - pd_text_width(text) - 9, names[i], ink, shadow);
+        pd_text_fit(c, innerX + 3, ty, innerW - pd_text_width(text) - 9, pd_tr(names[i]), ink, shadow);
         pd_text_right(c, right, ty, text, ink, shadow);
         if (ui) ui_add_hit(ui, innerX, line, innerW, rowH, HIT_DEX_FILTER + i);
+        if (extra) ui_row_divider(c, innerX + 2, line + rowH - 1, innerW - 4);
     }
-    if (tall) pd_text_fit(c, innerX + 3, c->h - 47, innerW - 6, "SELECT  FILTER", PD_MUTED, PD_MUTED_SHADOW);
-    if (region) {
+    for (int i = 0; extra && i < 2; i++) {
+        const int line = filterY + f + 1 + (DEX_FILTERS + i) * rowH, ty = pd_text_y(line, rowH), id = i ? HIT_DEX_NAME : HIT_DEX_TYPE;
+        if (ui->pressedId == id) pd_fill(c, innerX, line, innerW, rowH, PD_ROW_SELECTED);
+        const bool on = i ? ui->dexLetter != 0 : ui->dexType != 0;
+        char letter[2] = { (char) ui->dexLetter, 0 };
+        const char* value = !on ? pd_tr("ALL") : i ? letter : pd_type_name(dexGame, ui->dexType - 1);
+        pd_text(c, innerX + 3, ty, i ? pd_tr("NAME") : pd_tr("TYPE"), PD_LABEL, PD_LABEL_SHADOW);
+        pd_text_right(c, right, ty, value, on ? PD_VALUE : PD_MUTED, on ? PD_VALUE_SHADOW : PD_MUTED_SHADOW);
+        ui_add_hit(ui, innerX, line, innerW, rowH, id);
+        if (!i) ui_row_divider(c, innerX + 2, line + rowH - 1, innerW - 4);
+    }
+    if (tall) pd_text_fit(c, innerX + 3, c->h - 47, innerW - 6, pd_tr("SELECT  FILTER"), PD_MUTED, PD_MUTED_SHADOW);
+    if (region && extra) {
+        ui_button(ui, c, x, filterY + filterH + gap, w, buttonH, region, HIT_DEX_TOGGLE);
+    } else if (region) {
         const int by = c->h - MARGIN - f - 25;
         if (ui) ui_button(ui, c, innerX + 1, by, innerW - 2, 22, region, HIT_DEX_TOGGLE);
         else {
             pd_title_box(c, innerX + 1, by, innerW - 2, 22, PD_TITLE_FILL);
-            pd_text_fit(c, innerX + 7, pd_text_y(by, 22), innerW - 14, region, PD_TITLE_TEXT, PD_TITLE_SHADOW);
+            pd_text_fit(c, innerX + 7, pd_text_y(by, 22), innerW - 14, pd_tr(region), PD_TITLE_TEXT, PD_TITLE_SHADOW);
         }
         if (focus == DEX_FILTERS) pd_fill(c, innerX + 5, by + 17, innerW - 10, 2, PD_VALUE);
-    } else {
-        pd_text_fit(c, innerX + 3, c->h - 27, innerW - 6, "NATIONAL DEX", PD_MUTED, PD_MUTED_SHADOW);
+    } else if (!extra) {
+        pd_text_fit(c, innerX + 3, c->h - 27, innerW - 6, pd_tr("NATIONAL DEX"), PD_MUTED, PD_MUTED_SHADOW);
     }
     return x + w + MARGIN;
 }
 
 void pd_ui_dex_list_row(struct pd_canvas* c, int x, int y, int w, int number, const char* name,
-                        bool seen, bool caught, bool selected, const uint32_t* icon, uint32_t clear) {
+                        bool seen, uint32_t mark, bool selected, const uint32_t* icon, uint32_t clear) {
     if (selected) pd_fill(c, x, y, w, DEX_ROW, PD_ROW_SELECTED);
     char no[16];
     snprintf(no, sizeof no, "No.%03d", number);
     pd_text(c, x + 4, y, no, PD_MUTED, PD_MUTED_SHADOW);
     pd_text_fit(c, x + 78, y, w - 92, seen ? name : "???", PD_LABEL, PD_LABEL_SHADOW);
     if (!seen) return;
-    pd_fill(c, x + w - 10, y + 7, 5, 5, caught ? PD_VALUE : PD_MUTED);
+    pd_fill(c, x + w - 10, y + 7, 5, 5, mark);
     if (icon)
         for (int iy = 0; iy < 16; iy++)
             for (int ix = 0; ix < 16; ix++) {
@@ -155,7 +202,7 @@ static void list_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_gam
     const int* list = lastList;
     int n = ui->dexSource?ui->dexSource->count:lastCount;
     bool national = ui->dexSource?true:lastNational;
-    const bool sidebar=ui->handheldDex && !ui->dexSource;
+    const bool sidebar = !ui->dexSource; // the filters down the left (PokedexScreen's), the list beside them
     int x=MARGIN, y=LIST_Y;
     if (sidebar) {
         const char* region = !g->cfg->gb && g->cfg->regionalCount > 0
@@ -187,7 +234,7 @@ static void list_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_gam
     }
     seenFocus = ui->focusId;
     ui->dexScroll = ui_clamp_scroll(ui->dexScroll, n * DEX_ROW, ih);
-    if((ui->dexSource || sidebar) && n==0)pd_text(c,ix+12,iy+4,"No matching entries.",PD_MUTED,PD_MUTED_SHADOW);
+    if((ui->dexSource || sidebar) && n==0)pd_text(c,ix+12,iy+4,pd_tr("No matching entries."),PD_MUTED,PD_MUTED_SHADOW);
     pd_clip(c, ix, iy, iw, ih);
     char buf[40], num[16];
     for (int i = ui->dexScroll / DEX_ROW; i < n; i++) {
@@ -198,12 +245,12 @@ static void list_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_gam
         bool caught = ui->dexSource?ui->dexSource->caught(ui->dexSource->ctx,nat):pd_dex_caught(s,nat);
         if (sidebar && caught) seen = true;
         const int number = shown_number(g, national, nat);
-        if (sidebar) {
+        if (sidebar && ui->handheldDex) {
             const int species = pd_dex_species(g, nat);
             const uint32_t* icon = seen ? pd_mon_icon_pixels(g, species, false) : NULL;
             const bool selected = ui->focusId == HIT_DEX_ROW + nat || ui->focusId == HIT_DEX_READ_ONLY + nat;
             pd_ui_dex_list_row(c, ix, ry, iw - 4, number, pd_species_name(g, species, buf, sizeof buf),
-                               seen, caught, selected, icon, 0xff000000u);
+                               seen, caught ? PD_VALUE : PD_MUTED, selected, icon, 0xff000000u);
         } else {
             if (ui->pressedId == HIT_DEX_ROW + nat) pd_fill(c, ix, ry, iw, DEX_ROW, PD_ROW_SELECTED);
             if (seen) ui_ball(c, ix + 6, ry + 4, caught);
@@ -212,11 +259,12 @@ static void list_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_gam
             pd_text(c, ix + 22, ty, num, PD_MUTED, PD_MUTED_SHADOW);
             const char* name = ui->dexSource ? (seen ? ui->dexSource->name(ui->dexSource->ctx, nat) : "???")
                                              : pd_species_name(g, pd_dex_species(g, nat), buf, sizeof buf);
-            pd_text(c, ix + 74, ty, name, seen ? PD_LABEL : PD_MUTED, seen ? PD_LABEL_SHADOW : PD_MUTED_SHADOW);
+            pd_text_fit(c, ix + 74, ty, iw - 80, name, seen ? PD_LABEL : PD_MUTED, seen ? PD_LABEL_SHADOW : PD_MUTED_SHADOW);
+            ui_row_divider(c, ix + 2, ry + DEX_ROW - 1, iw - 4);
         }
         int top = ry < iy ? iy : ry;
         int bottom = ry + DEX_ROW > iy + ih ? iy + ih : ry + DEX_ROW;
-        const bool canOpen = !ui->dexSource && (!g->cfg->gb || pd_gb_dex_pages(g) || sidebar) && (!sidebar || seen);
+        const bool canOpen = !ui->dexSource && (!g->cfg->gb || pd_gb_dex_pages(g) || ui->handheldDex) && (!ui->handheldDex || seen);
         if (canOpen || sidebar) {
             const int id = (canOpen ? HIT_DEX_ROW : HIT_DEX_READ_ONLY) + nat;
             ui_add_scroll_hit(ui, ix, top, iw, bottom - top, id);
@@ -224,7 +272,7 @@ static void list_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_gam
         }
     }
     pd_unclip(c);
-    ui_scroll_bar(c, ix + iw - 4, iy, ih, ui->dexScroll, n * DEX_ROW, PD_MUTED);
+    ui_list_rail(ui, c, ix + iw, iy, ih, ui->dexScroll, n * DEX_ROW);
 }
 
 static void draw_sprite(struct pd_canvas* c, int x, int y, const uint32_t* px) {
@@ -243,7 +291,7 @@ static void info_page(struct pd_canvas* c, const struct pd_dex_entry* e, int ix,
     char buf[8];
     for (int i = 0; i < e->statCount; i++) {
         int sx = ix + iw * i / e->statCount;
-        sx += pd_text(c, sx, dy, e->statCount == 5 ? STAT_GEN1[i] : STAT[i], PD_MUTED, PD_MUTED_SHADOW) + 3;
+        sx += pd_text(c, sx, dy, e->statCount == 5 ? pd_tr(STAT_GEN1[i]) : pd_tr(STAT[i]), PD_MUTED, PD_MUTED_SHADOW) + 3;
         snprintf(buf, sizeof(buf), "%d", e->stats[i]);
         pd_text(c, sx, dy, buf, PD_LABEL, PD_LABEL_SHADOW);
     }
@@ -254,10 +302,10 @@ static void info_page(struct pd_canvas* c, const struct pd_dex_entry* e, int ix,
         else snprintf(ab, sizeof(ab), "%s", e->ability1);
         dy += 15;
         lines--;
-        int aw = pd_text(c, ix, dy, "ABILITY", PD_MUTED, PD_MUTED_SHADOW);
+        int aw = pd_text(c, ix, dy, pd_tr("ABILITY"), PD_MUTED, PD_MUTED_SHADOW);
         pd_text_fit(c, ix + aw + 6, dy, iw - aw - 6, ab, PD_LABEL, PD_LABEL_SHADOW);
     }
-    pd_text_wrap(c, ix, dy + 16, iw, 15, lines - 1, e->description, PD_LABEL, PD_LABEL_SHADOW);
+    pd_text_wrap(c, ix, dy + 16, iw, pd_lh(15), lines - 1, e->description, PD_LABEL, PD_LABEL_SHADOW);
 }
 
 // A line of a section's page, kept to the page.
@@ -271,6 +319,9 @@ static void page_line(struct pd_canvas* c, int x, int* y, int top, int bottom, i
 
 static void section_page(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g, const struct pd_dex_entry* e, int x, int top, int w, int h) {
     char left[64], right[32];
+    // Room for the rail: always, so a page's first draw (before its height is known) doesn't put text under it.
+    const bool railed = true;
+    w -= 10;
     if (ui->dexPageScroll > ui->dexPageMax) ui->dexPageScroll = ui->dexPageMax;
     if (ui->dexPageScroll < 0) ui->dexPageScroll = 0;
     int bottom = top + h, y = top - ui->dexPageScroll;
@@ -279,7 +330,7 @@ static void section_page(struct pd_ui* ui, struct pd_canvas* c, const struct pd_
     if (ui->dexSection == 1) {
         struct pd_evo evos[PD_EVO_MAX];
         int n = pd_dex_family(g, e->species, evos, PD_EVO_MAX);
-        if (!n) page_line(c, x, &y, top, bottom, w, "Doesn't evolve.", NULL, false);
+        if (!n) page_line(c, x, &y, top, bottom, w, pd_tr("Doesn't evolve."), NULL, false);
         for (int i = 0; i < n; i++) {
             char a[24], b[24], how[56];
             snprintf(left, sizeof(left), "%s > %s", pd_species_name(g, evos[i].from, a, sizeof(a)), pd_species_name(g, evos[i].to, b, sizeof(b)));
@@ -292,9 +343,9 @@ static void section_page(struct pd_ui* ui, struct pd_canvas* c, const struct pd_
         static const char* const HOW[4] = { "GRASS", "SURF", "ROCK", "FISH" };
         struct pd_spot spots[PD_SPOTS_MAX];
         int n = pd_dex_spots(g, e->species, spots, PD_SPOTS_MAX);
-        if (!n) page_line(c, x, &y, top, bottom, w, "Not found in the wild.", NULL, false);
+        if (!n) page_line(c, x, &y, top, bottom, w, pd_tr("Not found in the wild."), NULL, false);
         for (int i = 0; i < n; i++) {
-            snprintf(right, sizeof(right), "%s LV%d-%d", HOW[spots[i].method], spots[i].minLevel, spots[i].maxLevel);
+            snprintf(right, sizeof(right), "%s LV%d-%d", pd_tr(HOW[spots[i].method]), spots[i].minLevel, spots[i].maxLevel);
             page_line(c, x, &y, top, bottom, w, pd_mapsec_name(g, spots[i].mapsec), right, false);
         }
     } else {
@@ -306,12 +357,13 @@ static void section_page(struct pd_ui* ui, struct pd_canvas* c, const struct pd_
             page_line(c, x, &y, top, bottom, w, pd_move_name(g, moves[i].move, left, sizeof(left)), right, false);
         }
         int t = pd_dex_tm_moves(g, e->species, tms, PD_TM_MOVES_MAX);
-        if (t) page_line(c, x, &y, top, bottom, w, "TM / HM", NULL, true);
+        if (t) page_line(c, x, &y, top, bottom, w, pd_tr("TM / HM"), NULL, true);
         for (int i = 0; i < t; i++) page_line(c, x, &y, top, bottom, w, pd_move_name(g, tms[i], left, sizeof(left)), NULL, false);
     }
     pd_unclip(c);
     ui->dexPageMax = y + ui->dexPageScroll - top - h;
     if (ui->dexPageMax < 0) ui->dexPageMax = 0;
+    ui_list_rail(ui, c, x + w + (railed ? 10 : 0), top, h, ui->dexPageScroll, ui->dexPageMax + h);
 }
 
 int pd_ui_dex_machine_row(int levels) {
@@ -332,11 +384,11 @@ void pd_ui_dex_moves(struct pd_canvas* c, int x, int y, int w, int h,
         const int ry = y + (i - first) * DEX_ROW;
         if (i == selected) pd_fill(c, x, ry, w, DEX_ROW, pd_dark_look ? PD_ROW_SELECTED : PD_LIST_FILL);
         if (i == 0 || i == machineRow) {
-            const char* heading = i == 0 ? "LEVEL-UP MOVES" : src->machinesLabel ? src->machinesLabel : "TM / HM";
+            const char* heading = pd_tr(i == 0 ? "LEVEL-UP MOVES" : src->machinesLabel ? src->machinesLabel : "TM / HM");
             const bool available = i == 0 ? src->hasLevels : src->machinesLabel != NULL;
             const int rows = i == 0 ? src->levels : src->machines;
             char label[44];
-            snprintf(label, sizeof label, "%s%s", heading, !available ? "  UNAVAILABLE" : !rows ? "  NONE" : "");
+            snprintf(label, sizeof label, "%s%s", heading, !available ? pd_tr("  UNAVAILABLE") : !rows ? pd_tr("  NONE") : "");
             pd_text_fit(c, x + 3, ry, w - 6, label, PD_MUTED, PD_MUTED_SHADOW);
             continue;
         }
@@ -346,7 +398,7 @@ void pd_ui_dex_moves(struct pd_canvas* c, int x, int y, int w, int h,
         char tag[16] = "";
         if (machine && row.number) snprintf(tag, sizeof tag, "%s%02d", row.hm ? "HM" : "TM", row.number);
         else if (row.number) snprintf(tag, sizeof tag, "Lv%d", row.number);
-        else if (!machine) snprintf(tag, sizeof tag, "EVO.");
+        else if (!machine) snprintf(tag, sizeof tag, "%s", pd_tr("EVO."));
         const int nameX = x + (*tag ? 47 : 3), nameW = x + w - 4 - nameX;
         if (*tag) pd_text(c, x + 3, ry, tag, PD_VALUE, PD_VALUE_SHADOW);
         pd_text_fit(c, nameX, ry, nameW, row.name, PD_LABEL, PD_LABEL_SHADOW);
@@ -359,7 +411,7 @@ void pd_ui_dex_moves(struct pd_canvas* c, int x, int y, int w, int h,
 static void dex_button(struct pd_ui* ui, struct pd_canvas* c, int x, int y, int w, const char* text,
                        int id, bool active, bool enabled) {
     pd_title_box(c, x, y, w, 23, PD_TITLE_FILL);
-    pd_text_fit(c, x + 4, y + 3, w - 8, text, enabled ? PD_TITLE_TEXT : PD_MUTED,
+    pd_text_fit(c, x + 4, y + 3, w - 8, pd_tr(text), enabled ? PD_TITLE_TEXT : PD_MUTED,
                 enabled ? PD_TITLE_SHADOW : PD_MUTED_SHADOW);
     if (active) pd_fill(c, x + 4, y + 19, w - 8, 2, PD_VALUE);
     if (ui && enabled) ui_add_hit(ui, x, y, w, 23, id);
@@ -370,7 +422,7 @@ struct pd_dex_pane pd_ui_dex_card(struct pd_ui* ui, struct pd_canvas* c, const s
     const int ph = h < 210 ? 67 : 100;
     pd_title_box(c, 4, 4, w, h, PD_TITLE_FILL);
     char label[64];
-    snprintf(label, sizeof label, "No.%03d  %s", v->number, v->caught ? "CAUGHT" : "SEEN");
+    snprintf(label, sizeof label, "No.%03d  %s", v->number, pd_tr(v->caught ? "CAUGHT" : "SEEN"));
     pd_text_fit(c, 12, 12, side - 16, label, PD_VALUE, PD_VALUE_SHADOW);
     pd_text_fit(c, 12, 31, side - 16, v->name, PD_LABEL, PD_LABEL_SHADOW);
     pd_list_box(c, 11, 46, side - 12, ph);
@@ -392,22 +444,22 @@ struct pd_dex_pane pd_ui_dex_card(struct pd_ui* ui, struct pd_canvas* c, const s
     if (v->category && ph + 98 <= h)
         pd_text_fit(c, 12, ph + 82, side - 16, v->category, PD_LABEL, PD_LABEL_SHADOW);
     if (v->page == PD_DEX_INFO && v->abilities && *v->abilities && ph + 130 <= h) {
-        pd_text(c, 12, ph + 98, "ABILITY", PD_MUTED, PD_MUTED_SHADOW);
+        pd_text(c, 12, ph + 98, pd_tr("ABILITY"), PD_MUTED, PD_MUTED_SHADOW);
         pd_text_fit(c, 12, ph + 114, side - 16, v->abilities, PD_LABEL, PD_LABEL_SHADOW);
     }
     pd_fill(c, side + 4, 12, 1, h - 15, PD_DIVIDER);
     static const char* const tabs[] = {"INFO", "EVOLVE", "AREA", "MOVES"};
     int ideal = 0;
-    for (int i = 0; i < PD_DEX_SECTIONS; i++) ideal += pd_text_width(tabs[i]) + 8;
+    for (int i = 0; i < PD_DEX_SECTIONS; i++) ideal += pd_text_width(pd_tr(tabs[i])) + 8;
     for (int i = 0, x = tx; i < PD_DEX_SECTIONS; i++) {
-        int width = pd_text_width(tabs[i]) + 8;
+        int width = pd_text_width(pd_tr(tabs[i])) + 8;
         if (ideal > tw - 9) width = width * (tw - 9) / ideal;
         dex_button(ui, c, x, 12, width, tabs[i], HIT_DEX_PAGE + i, i == (int)v->page, v->pages & (1u << i));
         x += width + 3;
     }
     const char* help = v->page == PD_DEX_MOVES ? "SELECT  TAB   A  JUMP" :
                        v->pages != (1u << PD_DEX_INFO) ? "SELECT  SWITCH" : "";
-    pd_text_fit(c, tx + 4, h - 15, tw - 8, help, PD_MUTED, PD_MUTED_SHADOW);
+    pd_text_fit(c, tx + 4, h - 15, tw - 8, pd_tr(help), PD_MUTED, PD_MUTED_SHADOW);
     const int by = c->h - 25, bw = c->w < 334 ? 72 : 86, ix = 15 + 2 * bw;
     dex_button(ui, c, 4, by, bw, "<  PREV", HIT_DEX_PREV, false, v->count > 1);
     dex_button(ui, c, 8 + bw, by, bw, ">  NEXT", HIT_DEX_NEXT, false, v->count > 1);
@@ -429,24 +481,24 @@ void pd_ui_dex_info(struct pd_canvas* c, struct pd_dex_pane body, const char* te
     if (lines < 1) lines = 1;
     if (lines > 6) lines = 6;
     if (text && *text) y += pd_text_wrap(c, x, y, w, step, lines, text, PD_LABEL, PD_LABEL_SHADOW) * step + 4;
-    else if (!stats) pd_text_wrap(c, x, y, w, step, 3, "Species details unavailable for this cartridge.", PD_MUTED, PD_MUTED_SHADOW);
+    else if (!stats) pd_text_wrap(c, x, y, w, step, 3, pd_tr("Species details unavailable for this cartridge."), PD_MUTED, PD_MUTED_SHADOW);
     if (!stats) return;
     pd_fill(c, x, y, w, 1, PD_DIVIDER);
-    pd_text(c, x, y + 3, "BASE STATS", PD_MUTED, PD_MUTED_SHADOW);
+    pd_text(c, x, y + 3, pd_tr("BASE STATS"), PD_MUTED, PD_MUTED_SHADOW);
     static const char* const labels[] = {"HP","ATK","DEF","SP. ATK","SP. DEF","SPEED"};
     static const char* const labels1[] = {"HP","ATK","DEF","SPEED","SPECIAL"};
     for (int i = 0; i < (gen1 ? 5 : 6); i++) {
         const int col = w / 2, cx = x + i / 3 * col, cy = y + 17 + i % 3 * 14;
         char value[12];
         snprintf(value, sizeof value, "%d", stats[i]);
-        pd_text_fit(c, cx, cy, col - 26, gen1 ? labels1[i] : labels[i], PD_LABEL, PD_LABEL_SHADOW);
+        pd_text_fit(c, cx, cy, col - 26, pd_tr(gen1 ? labels1[i] : labels[i]), PD_LABEL, PD_LABEL_SHADOW);
         pd_text_right(c, cx + col - 5, cy, value, PD_VALUE, PD_VALUE_SHADOW);
     }
 }
 
 void pd_ui_dex_links(struct pd_canvas* c, struct pd_dex_pane pane, const struct pd_dex_links* links, int selected) {
     if (!links->count) {
-        pd_text_fit(c, pane.x + 3, pane.y + 18, pane.w - 6, "No evolution links found.", PD_LABEL, PD_LABEL_SHADOW);
+        pd_text_fit(c, pane.x + 3, pane.y + 18, pane.w - 6, pd_tr("No evolution links found."), PD_LABEL, PD_LABEL_SHADOW);
         return;
     }
     const int height = 33, rows = pane.h / height;
@@ -473,7 +525,7 @@ static void cartridge_link_row(const void* data, int index, struct pd_dex_link_r
     const struct pd_dex_evolution link = source->links[index];
     const bool incoming = link.to == source->species;
     char scratch[48];
-    snprintf(row->name, sizeof row->name, "%s  %s", incoming ? "FROM" : "TO",
+    snprintf(row->name, sizeof row->name, "%s  %s", pd_tr(incoming ? "FROM|evolution" : "TO|evolution"),
              pd_species_name(source->game, incoming ? link.from : link.to, scratch, sizeof scratch));
     static const char* const special[] = {
         [1]="Level up with friendship", [2]="Friendship by day", [3]="Friendship by night",
@@ -485,13 +537,13 @@ static void cartridge_link_row(const void* data, int index, struct pd_dex_link_r
     };
     const int m = link.method;
     if (m == 6 || m == 7)
-        snprintf(row->requirement, sizeof row->requirement, "%s%s", m == 6 ? "Trade holding " : "Use ",
+        snprintf(row->requirement, sizeof row->requirement, "%s%s", pd_tr(m == 6 ? "Trade holding " : "Use "),
                  pd_item_name(source->game, link.parameter));
     else if (m < (int)(sizeof special / sizeof *special) && special[m])
-        snprintf(row->requirement, sizeof row->requirement, "%s", special[m]);
+        snprintf(row->requirement, sizeof row->requirement, "%s", pd_tr(special[m]));
     else {
         const char* note = m < (int)(sizeof levelNote / sizeof *levelNote) ? levelNote[m] : NULL;
-        snprintf(row->requirement, sizeof row->requirement, "Lv%d%s", link.parameter, note ? note : "");
+        snprintf(row->requirement, sizeof row->requirement, "Lv%d%s", link.parameter, note ? pd_tr(note) : "");
     }
 }
 
@@ -571,7 +623,7 @@ static void entry_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
             pd_dex_measures(g, &e, ht, sizeof ht, wt, sizeof wt);
             snprintf(size, sizeof size, "%s  %s", ht, wt);
         }
-        if (*e.category) snprintf(category, sizeof category, "%s Pokémon", e.category);
+        if (*e.category) snprintf(category, sizeof category, pd_tr("%s Pokémon"), e.category);
         snprintf(abilities, sizeof abilities, "%s%s%s", e.ability1, *e.ability2 ? " / " : "", e.ability2);
         int row = 0;
         for (int i = 0; i < lastCount; i++) if (lastList[i] == e.national) row = i;
@@ -594,13 +646,13 @@ static void entry_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
             static const char* const methods[] = {"GRASS", "SURF", "ROCK", "FISH"};
             const int rowH = 30, visible = pane.h / rowH;
             const int first = ui_clamp_scroll(ui->dexDetailRow - visible / 2, spotCount, visible);
-            if (!spotCount) pd_text_fit(c, pane.x + 3, pane.y + 12, pane.w - 6, "Not found in the wild.", PD_MUTED, PD_MUTED_SHADOW);
+            if (!spotCount) pd_text_fit(c, pane.x + 3, pane.y + 12, pane.w - 6, pd_tr("Not found in the wild."), PD_MUTED, PD_MUTED_SHADOW);
             for (int i = first; i < spotCount && i < first + visible; ++i) {
                 const struct pd_spot* spot = &spots[i];
                 const int y = pane.y + (i - first) * rowH;
                 if (i == ui->dexDetailRow) pd_fill(c, pane.x, y, pane.w, rowH - 1, PD_ROW_SELECTED);
                 pd_text_fit(c, pane.x + 3, y, pane.w - 6, pd_mapsec_name(g, spot->mapsec), PD_LABEL, PD_LABEL_SHADOW);
-                snprintf(buf, sizeof buf, "%s  LV%d-%d", methods[spot->method], spot->minLevel, spot->maxLevel);
+                snprintf(buf, sizeof buf, "%s  LV%d-%d", pd_tr(methods[spot->method]), spot->minLevel, spot->maxLevel);
                 pd_text_fit(c, pane.x + 3, y + 14, pane.w - 6, buf, PD_MUTED, PD_MUTED_SHADOW);
             }
         } else pd_ui_dex_info(c, pane, e.description, entryOk ? e.stats : NULL, e.gen1Stats);
@@ -633,7 +685,7 @@ static void entry_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
     pd_text(c, tx, top + 36, buf, PD_VALUE, PD_VALUE_SHADOW);
     char ht[16], wt[20];
     pd_dex_measures(g, &e, ht, sizeof(ht), wt, sizeof(wt));
-    snprintf(buf, sizeof(buf), "HT %s   WT %s", ht, wt);
+    snprintf(buf, sizeof(buf), pd_tr("HT %s   WT %s"), ht, wt);
     pd_text_fit(c, tx, top + 52, tw, buf, PD_LABEL, PD_LABEL_SHADOW);
 
     int dy = by + PD_SPRITE + 20;
@@ -645,8 +697,10 @@ static void entry_view(struct pd_ui* ui, struct pd_canvas* c, const struct pd_ga
         int cw = (iw - 3 * 2) / 4;
         for (int i = 0; i < 4; i++) {
             int cx = ix + i * (cw + 2);
-            pd_title_box(c, cx, dy, cw, 18, i == ui->dexSection ? PD_TITLE_FILL : PD_LIST_FILL);
-            pd_text(c, cx + (cw - pd_text_width(SECTIONS[i])) / 2, pd_text_y(dy, 18), SECTIONS[i],
+            // The tab bar's chips (two-tone), the open section white.
+            pd_layered_two_tone(c, cx, dy, cw, 18, 3, pd_cur->chip, pd_cur->chipCount,
+                                i == ui->dexSection ? pd_cur->tabSelectedFill : pd_cur->tabIdleFill, 0);
+            pd_text(c, cx + (cw - pd_text_width(pd_tr(SECTIONS[i]))) / 2, pd_text_y(dy, 18), pd_tr(SECTIONS[i]),
                     i == ui->dexSection ? PD_VALUE : PD_LABEL, i == ui->dexSection ? PD_VALUE_SHADOW : PD_LABEL_SHADOW);
             ui_add_hit(ui, cx, dy, cw, 18, HIT_DEX_SECTION + i);
         }
@@ -676,15 +730,28 @@ void ui_dex_tab(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g, 
     }
     lastNational = national_view(ui, s);
     lastCount = dex_list(g, lastNational, lastList);
+    dexGame = g;
     int counts[DEX_FILTERS]={lastCount};
-    if(ui->handheldDex){
+    // The whole dex, kept for the TYPE / NAME pickers' choices.
+    memcpy(allList, lastList, sizeof(int) * (size_t) lastCount);
+    allCount = lastCount;
+    {
         int matching=0;
         for(int i=0;i<lastCount;i++){
             const int id=lastList[i],filter=filter_of(s,id);
             counts[filter]++;
-            if((ui->dexOpen && filter!=DEX_UNSEEN && (ui->dexFilter==DEX_ALL || filter==ui->dexFilter)) ||
-               (!ui->dexOpen && (ui->dexFilter==DEX_ALL || filter==ui->dexFilter)))
-                lastList[matching++]=id;
+            // Opened from the list (Linux's handheld page), an unseen entry has nothing to show; the 3DS's page does.
+            const bool status = ui->dexFilter==DEX_ALL || filter==ui->dexFilter;
+            if (!status || (ui->handheldDex && ui->dexOpen && filter==DEX_UNSEEN)) continue;
+            // TYPE: known once seen, as in the games' own dex search; NAME: the species name's first letter.
+            const int species = pd_dex_species(g, id);
+            if (ui->dexType) {
+                int t1 = -1, t2 = -1;
+                pd_species_type_pair(g, species, &t1, &t2);
+                if (filter == DEX_UNSEEN || (t1 != ui->dexType - 1 && t2 != ui->dexType - 1)) continue;
+            }
+            if (ui->dexLetter && dex_initial(g, species) != ui->dexLetter) continue;
+            lastList[matching++]=id;
         }
         lastCount=matching;
     }
@@ -692,6 +759,76 @@ void ui_dex_tab(struct pd_ui* ui, struct pd_canvas* c, const struct pd_game* g, 
         entry_view(ui, c, g, s);
     } else {
         list_view(ui,c,g,s,counts);
+    }
+}
+
+// TYPE / NAME's choices: ALL, then the types of the entries seen (by name) or the letters names start with.
+static int pickValues[40], pickCount;
+
+static void pick_values(const struct pd_ui* ui) {
+    const struct pd_game* g = dexGame;
+    pickCount = 0;
+    pickValues[pickCount++] = 0;
+    if (!g) return;
+    if (ui->dexPickKind == 1) {
+        bool has[64] = { false };
+        const struct pd_snapshot* s = ui->drawn;
+        for (int i = 0; i < allCount; i++) {
+            if (!s || !pd_dex_seen(s, allList[i])) continue;
+            int t1 = -1, t2 = -1;
+            pd_species_type_pair(g, pd_dex_species(g, allList[i]), &t1, &t2);
+            if (t1 >= 0 && t1 < 64) has[t1] = true;
+            if (t2 >= 0 && t2 < 64) has[t2] = true;
+        }
+        int n = pd_type_count(g);
+        for (int t = 0; t < n && t < 64 && pickCount < 40; t++) {
+            if (!has[t]) continue;
+            // Sorted by name, as the app's.
+            int at = pickCount;
+            while (at > 1 && strcmp(pd_type_name(g, pickValues[at - 1] - 1), pd_type_name(g, t)) > 0) {
+                pickValues[at] = pickValues[at - 1];
+                at--;
+            }
+            pickValues[at] = t + 1;
+            pickCount++;
+        }
+    } else {
+        bool has[26] = { false };
+        for (int i = 0; i < allCount; i++) {
+            int ch = dex_initial(g, pd_dex_species(g, allList[i]));
+            if (ch) has[ch - 'A'] = true;
+        }
+        for (int k = 0; k < 26 && pickCount < 40; k++)
+            if (has[k]) pickValues[pickCount++] = 'A' + k;
+    }
+}
+
+// The TYPE / NAME pick: a grid of choices (types three a row, letters six), the current one lit.
+void ui_dex_pick_overlay(struct pd_ui* ui, struct pd_canvas* c) {
+    pick_values(ui);
+    pd_dim(c, 0xE6);
+    ui_add_hit(ui, 0, 0, c->w, c->h, HIT_SCRIM);
+    const bool type = ui->dexPickKind == 1;
+    const int current = type ? ui->dexType : ui->dexLetter;
+    int x = MARGIN, w = c->w - 2 * MARGIN, y = CONTENT_Y;
+    int f = pd_title_box(c, x, y, w, TITLE_H, PD_TITLE_FILL);
+    pd_text(c, x + f + 6, pd_text_y(y, TITLE_H), type ? pd_tr("TYPE") : pd_tr("NAME"), PD_TITLE_TEXT, PD_TITLE_SHADOW);
+    y += TITLE_H + 4;
+    const int cols = type ? 3 : 6, rows = (pickCount + cols - 1) / cols, cellH = pd_list_row(20);
+    int lf = pd_list_box(c, x, y, w, rows * cellH + 14);
+    const int ix = x + lf + 3, iw = w - 2 * (lf + 3), iy = y + lf + 2;
+    ui->startId = HIT_DEX_PICK;
+    for (int i = 0; i < pickCount; i++) {
+        const int cx = ix + (i % cols) * iw / cols, cw = ix + (i % cols + 1) * iw / cols - cx, cy = iy + (i / cols) * cellH;
+        const bool on = pickValues[i] == current;
+        if (on) ui->startId = HIT_DEX_PICK + i;
+        if (on || ui->pressedId == HIT_DEX_PICK + i) pd_fill(c, cx, cy, cw, cellH, PD_ROW_SELECTED);
+        char letter[2] = { (char) pickValues[i], 0 };
+        const char* label = !pickValues[i] ? pd_tr("ALL") : type ? pd_type_name(dexGame, pickValues[i] - 1) : letter;
+        pd_text(c, cx + (cw - pd_text_width(label)) / 2, pd_text_y(cy, cellH), label, on ? PD_VALUE : PD_LABEL,
+                on ? PD_VALUE_SHADOW : PD_LABEL_SHADOW);
+        ui_add_hit(ui, cx, cy, cw, cellH, HIT_DEX_PICK + i);
+        if (i % cols == 0 && i / cols < rows - 1) ui_row_divider(c, ix, cy + cellH - 1, iw);
     }
 }
 
@@ -705,8 +842,28 @@ bool ui_dex_act(struct pd_ui* ui, int id) {
         ui->dexPageScroll = 0;
         return true;
     }
+    if (ui->overlay == PD_OVERLAY_DEX_PICK) {
+        if (id >= HIT_DEX_PICK && id < HIT_DEX_PICK + pickCount) {
+            const int v = pickValues[id - HIT_DEX_PICK];
+            if (ui->dexPickKind == 1) ui->dexType = v;
+            else ui->dexLetter = v;
+            ui->dexScroll = 0;
+            ui->overlay = PD_OVERLAY_NONE;
+            return true;
+        }
+        if (id == HIT_SCRIM) {
+            ui->overlay = PD_OVERLAY_NONE;
+            return true;
+        }
+        return false;
+    }
     if (ui->tab != PD_TAB_DEX || ui->overlay != PD_OVERLAY_NONE) return false;
-    if (ui->handheldDex && id >= HIT_DEX_FILTER && id < HIT_DEX_FILTER+DEX_FILTERS) {
+    if (id == HIT_DEX_TYPE || id == HIT_DEX_NAME) {
+        ui->dexPickKind = id == HIT_DEX_TYPE ? 1 : 2;
+        ui->overlay = PD_OVERLAY_DEX_PICK;
+        return true;
+    }
+    if (id >= HIT_DEX_FILTER && id < HIT_DEX_FILTER+DEX_FILTERS) {
         ui->dexFilter=id-HIT_DEX_FILTER;
         ui->dexScroll=0;
         return true;

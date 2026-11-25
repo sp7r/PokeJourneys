@@ -1,5 +1,6 @@
 package com.pokedaisy.app.companion.ui
 
+import com.pokedaisy.app.companion.i18n.stripAccents
 import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.focusRequester
 import com.pokedaisy.app.companion.i18n.tr
@@ -44,6 +48,9 @@ class SettingRow(
     val label: String, val value: String?, val badge: String? = null, val header: Boolean = false,
     val enabled: Boolean = true, val labelBadge: String? = null,
     val labelIcon: (@Composable () -> Unit)? = null,
+    /** [labelIcon]'s size in GBA pixels, when it isn't a line high (the HUD's / QUICK MENU's 16-pixel icons): the row grows
+     * to fit it. 0 = a line high. */
+    val iconPixels: Int = 0,
     /** A line under the label saying what the row is for (English, translated where it's drawn). */
     val subtitle: String? = null,
     /** Hidden words Settings' search also matches (English, space-separated): the terms players use elsewhere. */
@@ -121,26 +128,31 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "COLORS" to "touch controls buttons colours color theme dark light indigo glacier spice kiwi fuchsia retro primary",
     "GBA SKIN" to "touch controls skin skins deltaskin delta controller picture",
     "IMPORT SKIN" to "touch controls skin skins deltaskin delta add install controller picture",
-    "GAME BUTTONS" to "key bindings keybinds keybinding controls remap remapping rebind mapping input controller gamepad buttons turbo start 2 select 2 x y ds nds game boy gba to companion",
+    "GAME BUTTONS" to "key bindings keybinds keybinding controls remap remapping rebind mapping input controller gamepad buttons turbo start 2 select 2 x y ds nds game boy gba to companion d-pad dpad directions up down left right arrows 8bitdo micro keyboard mode",
     "HOTKEYS" to "shortcuts combos save state load state slot rewind fast forward key bindings restart close quit exit app companion open panel window",
     "QUICK MENU" to "radial ring wheel circle grid style labels names icons only shortcut actions pc fly flash dark cave light repel super max bike bicycle get off dismount rod fishing wild encounters save load state fast forward l3 thumb stick",
     "STATUS BAR" to "clock time battery money location top bar",
+    "HIDE BATTLE MENU" to "hide battle menu buttons on screen fight bag pokemon run moves move list text box arrow dual screen two screens second screen bottom screen thor companion distracting clutter",
     "BATTLE BUTTONS" to "battle buttons moves fight switch run flee side touch single screen one screen expand widescreen",
     "HUD" to "field hud heads up display overlay party minimap mini map balls bag wild encounters overworld legends single screen",
     "ASPECT" to "stretch ratio fullscreen full screen size scale 3:2 wide widescreen 16:9 expand zoom",
     "ZOOM" to "expand wide zoom out see further map farther camera distance no right stick r3 touch",
     "AUTO ZOOM IN" to "expand wide zoom close-up closeup dialogue conversation sign menu text box pull in automatic",
+    "DS TOUCH SCREEN" to "bottom screen touch screen stretch fill full fullscreen bar black bar companion button game screen dual screen thor nintendo ds",
+    "DS CORE" to "emulator core engine melonds dsperate bananads banana bananaos weak slow slower old cheap low end budget performance speed faster lag laggy stutter 32-bit 32bit armv7 tablet retroid pocket duo lite anbernic rg ds nintendo ds heartgold soulsilver platinum black white",
     "DS CPU BOOST" to "overclock cpu clock speed boost faster lag slowdown slow stutter stuttering smooth smoother frame rate fps 30fps 60fps choppy laggy nintendo ds heartgold soulsilver platinum black white",
     "DS RESOLUTION" to "internal resolution upscale upscaling scale scaling hd high definition sharp sharper crisp 3d render renderer gpu opengl 2x 4x 6x 8x jaggies jagged blurry nintendo ds platinum heartgold soulsilver",
     "DS LAYOUT" to "screen layout screens dual screen two screens bottom screen touch screen touchscreen side by side stacked vertical hybrid picture in picture pip large small single screen one screen floating window popup nintendo ds heartgold soulsilver",
     "SHADERS" to "filter lcd crt scanlines grid gba colors color correction effects screen look smoothing xbr xbrz scalefx upscale hd edges unlit pixel transparency backlight",
+    "COMPANION LOOK" to "skin skins theme style look game heartgold soulsilver platinum black white firered leafgreen emerald ruby sapphire menus colors classic",
     "LIGHT COMPANION" to "lag laggy slow slowdown stutter performance weak device low end battery buttons late input delay unresponsive animations smooth",
     "UNLIT SCREEN" to "pixel transparency transparent backlight backlit no backlight unlit reflective backing shadow drop shadow original gba screen white",
     "SMOOTHING" to "xbr xbrz scalefx upscale upscaler hd edges smooth anti alias filter",
     "OVERLAY" to "overlay overlays border borders bezel bezels frame skin retroarch background wallpaper decoration",
     "COMPANION" to "portrait phone bottom position layout",
     "COMPANION VIEW" to "single screen one screen window modal popup middle center side panel docked layout",
-    "FOLD LAYOUT" to "foldable fold folding flip galaxy z fold pixel fold hinge tabletop flex mode book half open dual screen two screens",
+    "FOLD LAYOUT" to "foldable fold folding flip galaxy z fold pixel fold hinge tabletop flex mode book half open flat unfolded always dual screen two screens",
+    "TABLETOP CONTROLS" to "foldable fold tabletop laptop touch controls buttons dpad bottom half sides hinge flex mode",
     "COMPANION BUTTON" to "companion tab arrow edge tab open button hide white corner bottom right",
     "SWAP SCREENS" to "dual screen display switch top bottom tv cast mirror mirroring smart view hdmi external",
     "SINGLE SCREEN" to "one screen single screen dual screen multitask multitasking second screen free other apps window modal popup",
@@ -149,6 +161,7 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "THEME" to "colors colours look background skin style themes cherry rainbow ocean mint lavender sunset forest lemon holiday seasonal christmas halloween easter valentine lunar new year limited",
     "FPS / CPU" to "fps frame rate framerate cpu usage performance speed overlay counter 60",
     "DARK MODE" to "dark night black theme light colors appearance auto system",
+    "FONT" to "font text letters typeface readable reading pixel smooth bold system size small legible",
     "RESUME GAMES" to "auto resume continue launch boot",
     "FOLDERS" to "roms folder folders multiple add link saves directory path location storage retroarch syncthing save states backup backups restore",
     "COVER ART" to "box art boxart covers steamgriddb images thumbnails api key",
@@ -157,6 +170,7 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "RetroAchievements" to "achievements cheevos ra login account trophies",
     "LANGUAGE" to "language translation locale english japanese french german italian spanish portuguese português brazil brasil portugal idioma korean 한국어 언어",
     "VERSION" to "update upgrade check release about",
+    "BETA UPDATES" to "beta test testing tester pre-release prerelease release candidate rc early preview unstable update channel discord",
     "CRASH REPORTS" to "crash report bug crashlytics privacy diagnostics send",
     "LICENSES" to "license legal open source credits notices about",
     "RUN SETUP" to "setup onboarding wizard first time welcome",
@@ -164,7 +178,10 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "BATTLE HINTS" to "suggestions recommendations best move tips",
     "BATTLE STYLE" to "battle screen look theme gen 4 gen 5 platinum black white buttons design",
     "BATTLE INFO" to "hide battle info suggestions ratings effectiveness buttons only clean",
-    "BATTLE VIEW" to "battle tab default info buttons first opens",
+    "ACHIEVEMENT POPUPS" to "retroachievements cheevos achievements notifications notices popup unlock fanfare sound quiet hide",
+    "PROGRESS POPUPS" to "retroachievements cheevos achievements notifications notices popup progress counter quiet hide",
+    "CHALLENGE ICONS" to "retroachievements cheevos achievements leaderboard tracker badge badges corner hide icons overlay",
+    "BATTLE VIEW" to "battle tab default info buttons suggestions best picks first opens",
     "GAME NAMES" to "file name filename rom title library naming",
     "SUPPORTED ONLY" to "filter hide unsupported not supported compatible library",
     "LOOK AROUND" to "right stick freecam free camera look pan view",
@@ -178,6 +195,7 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "SCENE SPEEDS" to "battle speed text speed instant text fast text menu speed overworld speed faster battles quality of life qol bike speed surf speed faster bike faster surfing",
     "AUTO-RUN" to "auto run autorun running shoes run sprint dash always run hold b",
     "RUN INDOORS" to "run inside buildings indoor running shoes houses",
+    "RUNNING SHOES" to "running shoes run sprint dash hold b faster walking game boy red blue yellow gold silver crystal bike speed",
     "MAKEOVER" to "makeover look looks style customize customise appearance costume outfit skin dress up player rival",
     "FOLLOWER" to "follower following pokemon walking pokemon partner companion pet behind you lead heartgold soulsilver yellow pikachu",
     "DAY AND NIGHT" to "day and night daytime nighttime night time dusk dawn sunset evening clock time of day tint darker dark lighting dns",
@@ -187,14 +205,30 @@ val SETTING_KEYWORDS: Map<String, String> = mapOf(
     "NUZLOCKE" to "nuzlocke challenge hardcore run tracker encounter first catch per route area death dead faint permadeath graveyard dupes clause",
     "TRADE EVOS" to "trade evolutions trading evolve evolves evolution evolutions traded link cable friend second game without trading held item",
     "INSTANT TEXT" to "instant text speed fast dialogue dialog words letters message box skip immediately faster",
+    "RIDE ON" to "ride on bike bicycle motorcycle motorbike scooter vespa moped vehicle cycling replace bike look mach acro",
+    "FLY ON" to "fly on vehicle balloon hot air balloon helicopter zeppelin airship blimp plane airplane aeroplane propeller ride mount bird flight free flight take off",
+    "FLIGHT AREA" to "flight area where you've been where you have been anywhere visited seen places limit restrict progress story skip sequence break free flight take off fly over map achievements",
+    "FLY STYLE" to "fly style scenic classic flight animation flying over map travel town cutscene bird fly to",
+    "EXP SHARE" to "exp share experience all party team whole party level up faster grinding exp all split full bench",
+    "AUTO REFILL" to "auto refill repel repels super max keep away spray wild encounters avoid use another run out wore off again automatic",
+    "POKéMON PICTURES" to "pokemon pictures party pictures sprites front sprite icons party icons detailed pictures recognise recognize team images crystal",
+    "ITEM POPUPS" to "item popup obtained got received pickup found item gain toast notice card notification bag new item",
+    "LAST BALL" to "last ball throw ball catch quick ball button one tap poke ball pokeball great ultra repeat throw again catching capture",
+    "BOSS RETRY" to "boss retry try again redo rematch lost loss black out blackout white out whiteout gym leader trainer battle restart undo",
+    "LOW HP BEEP" to "low hp beep beeping alarm sound health red annoying noise mute silence",
+    "FIELD POISON" to "field poison overworld walking damage poisoned steps faint hurt outside battle",
+    "DESCRIPTIONS" to "descriptions subtitles explanations help text grey line under setting compact clean shorter list",
+    "GROUP TABS" to "group tabs side buttons rail categories left column sections hide tabs wider list",
+    "LEVEL CAP" to "level cap max level limit hard mode harder overlevel over leveled gym leader boss ace stop exp",
+    "NO HMS NEEDED" to "hm hms hidden machine machines free slave field moves cut surf strength rock smash waterfall dive fly flash without teaching badge only any pokemon",
     "REUSABLE TMS" to "reusable tm tms technical machine machines reuse infinite unlimited keep tm single use consumed used up teach moves",
+    "SHINY ALERT" to "shiny alert hunt hunting counter encounters count chain notify notification warn sparkle stop fast forward found",
     "SHINY ODDS" to "shiny shinies shiny odds shiny rate shiny hunting hunt shiny charm sparkle rare color colour chance",
     "TIPS" to "tips hints help popup pop up feature discovery introduce new features suggestions what can it do",
     "WILD ENCOUNTERS" to "wild encounters encounter rate random battles grass caves repel no encounters fewer battles",
 )
 
-private fun fold(s: String): String =
-    java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
+private fun fold(s: String): String = stripAccents(s.lowercase())
 
 /** A group's title row in [GroupedRows]. */
 fun groupTitle(label: String) = SettingRow(label, null, header = true) {}
@@ -231,7 +265,7 @@ fun GroupedRows(
     groupTabs: Boolean = false,
     footer: @Composable () -> Unit = {},
 ) {
-    val groups = if (groupTabs) rows.indices.filter { rows[it].header } else emptyList()
+    val groups = if (groupTabs && SettingsLook.tabs) rows.indices.filter { rows[it].header } else emptyList()
     // Inside [RailedWindow] the list draws the window itself, so the group tabs can stay out of it.
     val railed = LocalRailedWindow.current
     @Composable fun Card(content: @Composable () -> Unit) {
@@ -340,13 +374,20 @@ fun TabRail(
     /** The height to fill (SETTINGS' rail beside its window, the user's call): the tabs stretch to share it out where they fit,
      * else they keep their own height and the rail scrolls. */
     fill: androidx.compose.ui.unit.Dp? = null,
+    /** D-pad stops that pick their tab on focus (GUIDE's pages); SETTINGS' are touch only. */
+    focusable: Boolean = false,
+    /** The tabs' text size against a GBA pixel. */
+    textScale: Float = 1f,
     onSelect: (Int) -> Unit,
 ) {
-    val small = rememberGbaTextMetrics(1f)
-    val gap = m.u * if (fill != null) 3 else 2
+    val small = rememberGbaTextMetrics(textScale)
+    // A MENU STYLE: folder tabs on the window's left side, touching, the open one running into the window.
+    val folder = outside && OptionColors.joined
+    val gap = if (folder) 0.dp else m.u * if (fill != null) 3 else 2
     val tabMin = fill?.let { ((it - gap * (labels.size - 1)) / labels.size.coerceAtLeast(1)) } ?: 0.dp
     androidx.compose.foundation.layout.Column(
         Modifier
+            .then(if (folder) Modifier.zIndex(1f) else Modifier)
             .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
             .fillMaxHeight()
             .drawBehind {
@@ -361,12 +402,16 @@ fun TabRail(
             }
             .verticalScroll(rememberScrollState())
             .then(
-                if (outside) Modifier.padding(end = m.u * 4)
+                if (folder) Modifier
+                else if (outside) Modifier.padding(end = m.u * 4)
                 else Modifier.padding(start = m.u * 4, end = m.u * 6, top = m.u * 4, bottom = m.u * 4),
             ),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(gap),
     ) {
-        labels.forEachIndexed { i, label -> GroupTab(label, i == selected, small, tabMin) { onSelect(i) } }
+        labels.forEachIndexed { i, label ->
+            if (folder) FolderTab(label, i == selected, small, tabMin, focusable) { onSelect(i) }
+            else GroupTab(label, i == selected, small, tabMin) { onSelect(i) }
+        }
     }
 }
 
@@ -378,6 +423,54 @@ fun PageHint(text: String, m: GbaTextMetrics, small: GbaTextMetrics) {
             text, OptionColors.label, OptionColors.labelShadow, small, maxLines = Int.MAX_VALUE,
             modifier = Modifier.padding(horizontal = m.u * 6, vertical = m.u * 2),
         )
+    }
+}
+
+/**
+ * [TabRail]'s tab under a MENU STYLE: the window's own frame layers round its left, top and bottom, open on the right. The
+ * open one is the window's paper and runs over the window's left frame, so the two read as one; the others are the
+ * style's section colour.
+ */
+@Composable
+private fun FolderTab(
+    label: String, selected: Boolean, m: GbaTextMetrics, minHeight: androidx.compose.ui.unit.Dp, focusable: Boolean, onClick: () -> Unit,
+) {
+    val u = m.u
+    val style = OptionColors.style ?: return GroupTab(label, selected, m, minHeight, onClick)
+    val layers = OptionColors.listLayers
+    val frame = layers.sumOf { it.second }
+    val fill = if (selected) OptionColors.listFill else OptionColors.tint(style.sectionFill)
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    LaunchedEffect(focused) { if (focused && !selected) onClick() }
+    androidx.compose.foundation.layout.Box(
+        contentAlignment = androidx.compose.ui.Alignment.CenterStart,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = minHeight)
+            .drawBehind {
+                val px = u.toPx()
+                val reach = if (selected) frame * px else 0f
+                val radius = 3 * px
+                // Run past the right edge (no right-hand frame), cut where the tab meets the window, or past its frame.
+                clipRect(right = size.width + reach) {
+                    var inset = 0f
+                    var r = radius
+                    val w = size.width + reach + radius + frame * px
+                    for ((color, width) in layers) {
+                        drawPixelRoundRect(color, androidx.compose.ui.geometry.Offset(inset, inset), androidx.compose.ui.geometry.Size(w - 2 * inset, size.height - 2 * inset), r.coerceAtLeast(0f), px)
+                        inset += width * px
+                        r -= width * px
+                    }
+                    drawPixelRoundRect(fill, androidx.compose.ui.geometry.Offset(inset, inset), androidx.compose.ui.geometry.Size(w - 2 * inset, size.height - 2 * inset), r.coerceAtLeast(0f), px)
+                }
+            }
+            .focusProperties { canFocus = focusable }
+            .soundClickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .padding(start = u * (frame + 4), end = u * 6, top = u * (frame + 1), bottom = u * (frame + 1)),
+    ) {
+        if (selected) GbaText(label, OptionColors.value, OptionColors.valueShadow, m, bold = gameBoldLabels())
+        else GbaText(label, style.sectionText, style.sectionShadow, m, bold = gameBoldLabels())
     }
 }
 
@@ -436,42 +529,67 @@ private fun GroupedRowsList(
     val gameScale = com.pokedaisy.app.companion.ui.theme.LocalGameTextScale.current
     val rowHeight = m.rowHeight * 1.2f / gameScale
     val subtitleLine = if (gameScale == 1f) m.lineHeight else subtitleMetrics(m).lineHeight + m.u * 2
-    fun heightOf(row: SettingRow) = if (row.subtitle != null) rowHeight + subtitleLine else rowHeight + m.u * ONE_LINE_ROW_EXTRA
-    Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-        rows.forEachIndexed { i, row ->
-            if (row.header && row.featured) {
-                val track = if (tops == null) Modifier else Modifier.onGloballyPositioned { tops[i] = it.positionInParent().y.toInt() }
-                FeaturedTitle(row, m, top = if (i == 0) 1 else 6, modifier = track)
-            } else if (row.header) {
-                val track = if (tops == null) Modifier else Modifier.onGloballyPositioned { tops[i] = it.positionInParent().y.toInt() }
-                GroupTitleLine(row.label, m, first = i == 0, modifier = track)
-            } else {
-                OptionLine(
-                    row.label, row.value, selected = i == cursor, m,
-                    modifier = (if (i == reveal) Modifier.revealOnce(onRevealed) else Modifier)
-                        .then(if (i == firstRow && firstRowFocus != null) Modifier.focusRequester(firstRowFocus) else Modifier)
-                        // The companion's window: the D-pad starts on the cursor row.
-                        .focusStart(i == cursor),
-                    // A one-line row's letters sit low in their line (room above the capitals, none under): a little more
-                    // under them, so the space below matches the space above.
-                    height = heightOf(row),
-                    bottomPadding = if (row.subtitle != null) 0.dp else m.u * ONE_LINE_ROW_EXTRA,
-                    divider = rows.getOrNull(i + 1)?.header == false, labelBadge = row.labelBadge, labelIcon = row.labelIcon,
-                    valueBadge = row.badge, enabled = row.enabled, subtitle = row.subtitle, labelWeight = row.labelWeight ?: labelWeight,
-                    chevron = row.opensPage, slider = row.slider,
-                    onFocus = onFocused?.let { f -> { f(i) } },
-                ) { onClick(i) }
-            }
+    // DESCRIPTIONS hidden ([SettingsLook]): rows go without their grey line.
+    val descriptions = SettingsLook.descriptions
+    fun subtitleOf(row: SettingRow) = row.subtitle?.takeIf { descriptions }
+    fun heightOf(row: SettingRow) = (if (subtitleOf(row) != null) rowHeight + subtitleLine else rowHeight + m.u * ONE_LINE_ROW_EXTRA)
+        // A big icon: its size and a few pixels over and under it.
+        .let { if (row.iconPixels > 0) maxOf(it, m.u * (row.iconPixels + 8)) else it }
+    @Composable fun RowAt(i: Int, row: SettingRow) {
+        if (row.header && row.featured) {
+            val track = if (tops == null) Modifier else Modifier.onGloballyPositioned { tops[i] = it.positionInParent().y.toInt() }
+            FeaturedTitle(row, m, top = if (i == 0) 1 else 6, modifier = track)
+        } else if (row.header) {
+            val track = if (tops == null) Modifier else Modifier.onGloballyPositioned { tops[i] = it.positionInParent().y.toInt() }
+            GroupTitleLine(row.label, m, first = i == 0, modifier = track)
+        } else {
+            OptionLine(
+                row.label, row.value, selected = i == cursor, m,
+                modifier = (if (i == reveal) Modifier.revealOnce(onRevealed) else Modifier)
+                    .then(if (i == firstRow && firstRowFocus != null) Modifier.focusRequester(firstRowFocus) else Modifier)
+                    // The companion's window: the D-pad starts on the cursor row.
+                    .focusStart(i == cursor),
+                // A one-line row's letters sit low in their line (room above the capitals, none under): a little more
+                // under them, so the space below matches the space above.
+                height = heightOf(row),
+                bottomPadding = if (subtitleOf(row) != null) 0.dp else m.u * ONE_LINE_ROW_EXTRA,
+                divider = rows.getOrNull(i + 1)?.header == false, labelBadge = row.labelBadge, labelIcon = row.labelIcon,
+                labelIconSize = if (row.iconPixels > 0) m.u * row.iconPixels else null,
+                valueBadge = row.badge, enabled = row.enabled, subtitle = subtitleOf(row), labelWeight = row.labelWeight ?: labelWeight,
+                chevron = row.opensPage, slider = row.slider,
+                // A menu style's bands: every other row of a group.
+                stripe = (i - (rows.subList(0, i).indexOfLast { it.header } + 1)) % 2 == 1,
+                onFocus = onFocused?.let { f -> { f(i) } },
+            ) { onClick(i) }
         }
+    }
+    // A list of hundreds (an imported cheat file: RetroArch's Platinum one has 2321) is composed only where it's on
+    // screen: all of them at once held the UI thread for seconds, and the app stopped answering (GitHub #786). Its
+    // scroll position isn't [scroll]'s, which only SETTINGS' home pages (far shorter) keep.
+    if (rows.size > LAZY_ROWS && tops == null) {
+        val lazy = androidx.compose.foundation.lazy.rememberLazyListState(initialFirstVisibleItemIndex = cursor.coerceIn(0, rows.size - 1))
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxSize(), state = lazy) {
+            items(rows.size) { i -> RowAt(i, rows[i]) }
+            item { footer() }
+        }
+        return
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
+        rows.forEachIndexed { i, row -> RowAt(i, row) }
         footer()
     }
 }
+
+/** Past this many rows a [GroupedRows] list is lazy. */
+private const val LAZY_ROWS = 100
 
 /** A group's title in a settings list ([groupTitle]'s look, for lists built row by row: GAME BUTTONS). [first] = the
  * list's top line, with less room above it. */
 @Composable
 fun GroupTitleLine(label: String, m: GbaTextMetrics, first: Boolean, modifier: Modifier = Modifier) {
     val band = OptionColors.groupTitleFill
+    val style = OptionColors.style
+    if (style != null) return StyledGroupTitle(label, m, first, style, modifier)
     if (band == null) {
         GbaText(
             tr(label), OptionColors.value, OptionColors.valueShadow, m,
@@ -488,6 +606,27 @@ fun GroupTitleLine(label: String, m: GbaTextMetrics, first: Boolean, modifier: M
                 .padding(horizontal = m.u * 6, vertical = m.u * 2),
         )
     }
+}
+
+/**
+ * A group title in a [com.pokedaisy.app.companion.ui.theme.UiStyle] other than CLASSIC: SUMMARY / NOTEBOOK a tab sitting on
+ * a rule across the list (the summary's TRAINER MEMO, the bag's pocket tab), DEVICE a band the list's width, CARD a pill.
+ */
+@Composable
+internal fun StyledGroupTitle(
+    label: String, m: GbaTextMetrics, first: Boolean, style: com.pokedaisy.app.companion.ui.theme.UiStylePalette, modifier: Modifier,
+) {
+    val u = m.u
+    val fill = OptionColors.tint(style.sectionFill)
+    val small = rememberGbaTextMetrics(1f)
+    val text = @Composable { mod: Modifier -> GbaText(tr(label), style.sectionText, style.sectionShadow, small, modifier = mod) }
+    val top = u * (if (first) 1 else 6)
+    // The summary pages' section band, the list's width.
+    text(
+        modifier.padding(start = u * 2, end = u * 2, top = top, bottom = u * 2).fillMaxWidth()
+            .drawBehind { drawPixelRoundRect(fill, radius = u.toPx() * 3, step = u.toPx()) }
+            .padding(horizontal = u * 6, vertical = u * 2),
+    )
 }
 
 /** GBA pixels added under a [GroupedRows] row without a subtitle. */
@@ -535,12 +674,54 @@ private fun Modifier.revealOnce(done: () -> Unit): Modifier = composed {
     onSizeChanged { size = it }.bringIntoViewRequester(requester)
 }
 
+/**
+ * How SETTINGS' lists look, on both screens (the two rows at the top of HOME, [settingsLookRows]): the grey description line
+ * under a row ([descriptions]; a featured group's tagline stays) and the group tabs beside a long list ([tabs]). Compose
+ * state, so a flip redraws both screens; [onChange] keeps them (the app sets it to Prefs at start).
+ */
+object SettingsLook {
+    var descriptions by mutableStateOf(true)
+    var tabs by mutableStateOf(true)
+    var onChange: ((descriptions: Boolean, tabs: Boolean) -> Unit)? = null
+
+    fun set(descriptions: Boolean = this.descriptions, tabs: Boolean = this.tabs) {
+        this.descriptions = descriptions
+        this.tabs = tabs
+        onChange?.invoke(descriptions, tabs)
+    }
+}
+
+/** SETTINGS' first two rows, on both screens: DESCRIPTIONS and GROUP TABS ([SettingsLook]). [changed] redraws the page. */
+fun settingsLookRows(changed: () -> Unit): List<SettingRow> {
+    fun shown(on: Boolean) = if (on) tk("SHOWN") else tk("HIDDEN")
+    return listOf(
+        SettingRow(
+            tk("DESCRIPTIONS"), shown(SettingsLook.descriptions),
+            labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.SETTINGS_LOOK),
+            subtitle = "The grey line under each setting",
+        ) { SettingsLook.set(descriptions = !SettingsLook.descriptions); changed() },
+        SettingRow(
+            tk("GROUP TABS"), shown(SettingsLook.tabs),
+            labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.SETTINGS_LOOK),
+            subtitle = "The group buttons beside this list",
+        ) { SettingsLook.set(tabs = !SettingsLook.tabs); changed() },
+    )
+}
+
 /** APP > TIPS, on both screens ([com.pokedaisy.app.companion.FeatureTips]): now and then a card about a feature the
  *  player hasn't found yet. */
 fun tipsRow(on: Boolean, set: (Boolean) -> Unit): SettingRow = SettingRow(
     tk("TIPS"), if (on) tk("ON") else tk("OFF"), subtitle = "Now and then, a feature you haven't tried yet",
     labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.TIPS),
 ) { set(!on) }
+
+/** COMPANION LOOK (SCREEN, under THEME, both screens): GAME = the companion and the HUD in the running game's own look
+ * where it has one ([CompanionSkins]), CLASSIC = the app's own in every game. [changed] redraws the page. */
+fun gameLookRow(changed: () -> Unit): SettingRow = SettingRow(
+    tk("COMPANION LOOK"), if (CompanionSkins.enabled) tk("GAME") else tk("CLASSIC"),
+    labelBadge = com.pokedaisy.app.companion.NewFeatures.badge(com.pokedaisy.app.companion.NewFeatures.GAME_LOOK),
+    subtitle = "The game's own style, or the app's classic one",
+) { CompanionSkins.change(!CompanionSkins.enabled); changed() }
 
 /**
  * DISPLAY OPTIONS > LIGHT COMPANION, on both screens ([com.pokedaisy.app.companion.LightCompanion]): AUTO / ON / OFF
